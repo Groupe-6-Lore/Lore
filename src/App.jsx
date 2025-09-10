@@ -8,7 +8,8 @@ import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
 import CreateCampaign from './pages/CreateCampaign';
 import SelectUniverse from './pages/SelectUniverse';
-import SelectRules from './pages/SelectRules';
+import UniverseDetails from './pages/UniverseDetails';
+import ConfigureCampaign from './pages/ConfigureCampaign';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -98,12 +99,22 @@ function App() {
             } 
           />
           
-          {/* Route protégée - Select Rules */}
+          {/* Route protégée - Universe Details */}
           <Route 
-            path="/campaigns/create/rules" 
+            path="/campaigns/create/universe/:id/details" 
             element={
               <ProtectedRoute>
-                <SelectRules />
+                <UniverseDetails />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Configure Campaign */}
+          <Route 
+            path="/campaigns/create/configure" 
+            element={
+              <ProtectedRoute>
+                <ConfigureCampaign />
               </ProtectedRoute>
             } 
           />

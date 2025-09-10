@@ -77,3 +77,74 @@
     letter-spacing: 0.2px; /* Espacement minimal sur très petits écrans */
   }
 }
+
+/* ===== STYLES UX ADDITIONNELS ===== */
+
+/* Animation smooth pour les cartes */
+.universe-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.universe-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Effet de focus pour l'accessibilité */
+.universe-card:focus-within {
+  outline: 2px solid #E9BD72;
+  outline-offset: 2px;
+}
+
+/* Animation des tags */
+.tag-animate {
+  transition: all 0.2s ease;
+}
+
+.tag-animate:hover {
+  transform: scale(1.05);
+  background-color: rgba(233, 189, 114, 0.3);
+}
+
+/* Amélioration de la barre de recherche */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(233, 189, 114, 0.3);
+}
+
+/* Pagination hover effects */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* ===== STYLES RESPONSIVE POUR LES TAGS ===== */
+
+/* Tags des cartes d'univers */
+.universe-card-tags {
+  max-width: 140px;
+  overflow: hidden;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 640px) {
+  .universe-card-tags {
+    max-width: 120px;
+  }
+  
+  .universe-card-title {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  
+  .universe-card-subtitle {
+    font-size: 0.65rem;
+  }
+  
+  .universe-card-tags span {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+}
