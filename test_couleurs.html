@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Couleurs - Lore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .calligraphy-font {
+            font-family: 'Lucida Calligraphy', 'Brush Script MT', 'Lucida Handwriting', cursive;
+            font-style: italic;
+        }
+        .bg-primary-blue { background-color: #46718A; }
+        .bg-golden { background-color: #E9BD72; }
+        .text-light { color: #F0EAE1; }
+        .text-dark { color: #0D151A; }
+        .border-golden { border-color: #E9BD72; }
+        .from-golden { --tw-gradient-from: #E9BD72; }
+        .to-golden { --tw-gradient-to: #E9BD72; }
+        .hover\:bg-golden:hover { background-color: #E9BD72; }
+        .hover\:text-golden:hover { color: #E9BD72; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <h1 class="text-3xl font-bold text-center mb-8">🎨 Test des Couleurs - Lore</h1>
+        
+        <!-- Test des couleurs principales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-primary-blue p-6 rounded-lg">
+                <h2 class="text-light text-xl font-bold mb-4">Primary Blue (#46718A)</h2>
+                <p class="text-light/80">Texte sur fond bleu - Text Light avec opacité</p>
+                <button class="mt-4 bg-golden text-dark px-4 py-2 rounded hover:bg-golden/90 transition-colors">
+                    Bouton Golden
+                </button>
+            </div>
+            
+            <div class="bg-golden p-6 rounded-lg">
+                <h2 class="text-dark text-xl font-bold mb-4">Golden (#E9BD72)</h2>
+                <p class="text-dark/80">Texte sur fond doré - Text Dark avec opacité</p>
+                <button class="mt-4 bg-primary-blue text-light px-4 py-2 rounded hover:bg-primary-blue/90 transition-colors">
+                    Bouton Primary Blue
+                </button>
+            </div>
+        </div>
+        
+        <!-- Test des typographies -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h2 class="text-dark text-xl font-bold mb-4">Test des Typographies</h2>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-dark font-bold mb-2">Eagle Lake (Titres principaux)</h3>
+                    <p class="font-eagle text-2xl text-dark">LORE - Titre Principal</p>
+                </div>
+                <div>
+                    <h3 class="text-dark font-bold mb-2">Calligraphy Font (Sous-titres)</h3>
+                    <p class="calligraphy-font text-xl text-dark">Mes campagnes - Sous-titre</p>
+                </div>
+                <div>
+                    <h3 class="text-dark font-bold mb-2">Noto Sans (Texte normal)</h3>
+                    <p class="font-noto text-base text-dark">Texte normal de l'application</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test des interactions -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h2 class="text-dark text-xl font-bold mb-4">Test des Interactions</h2>
+            <div class="flex flex-wrap gap-4">
+                <button class="bg-golden text-dark px-6 py-3 rounded-lg hover:bg-golden/90 transition-colors">
+                    Hover Golden
+                </button>
+                <button class="bg-primary-blue text-light px-6 py-3 rounded-lg hover:bg-primary-blue/90 transition-colors">
+                    Hover Primary Blue
+                </button>
+                <button class="text-golden border border-golden px-6 py-3 rounded-lg hover:bg-golden hover:text-dark transition-colors">
+                    Hover Border
+                </button>
+            </div>
+        </div>
+        
+        <!-- Test des toasts -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h2 class="text-dark text-xl font-bold mb-4">Test des Couleurs de Toast</h2>
+            <div class="space-y-4">
+                <div class="bg-primary-blue text-light p-4 rounded-lg border border-golden">
+                    <strong>Toast par défaut :</strong> Primary Blue + Text Light + Bordure Golden
+                </div>
+                <div class="bg-golden text-dark p-4 rounded-lg">
+                    <strong>Toast de succès :</strong> Golden + Text Dark
+                </div>
+                <div class="bg-dark text-light p-4 rounded-lg">
+                    <strong>Toast d'erreur :</strong> Text Dark + Text Light
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center text-gray-600">
+            <p>✅ Si toutes les couleurs et typographies s'affichent correctement, l'application est prête !</p>
+        </div>
+    </div>
+</body>
+</html>

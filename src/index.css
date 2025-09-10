@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Noto+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Styles de base */
+body {
+  background-color: #0D151A !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  color: #F0EAE1 !important;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-family: 'Eagle Lake', cursive !important;
+}
+
+/* Classe utilitaire pour Eagle Lake */
+.font-eagle-lake {
+  font-family: 'Eagle Lake', cursive !important;
+}
+
+/* Classe utilitaire pour Lucida Unicode Calligraphy (sous-titres) */
+.font-calligraphy {
+  font-family: 'Lucida Calligraphy', 'Lucida Unicode Calligraphy', cursive !important;
+}
+
+/* Background de la page de création de campagne */
+.page-background {
+  background-image: url('/images/bg-main.svg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  position: relative !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+}
+
+.page-background::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: #2C4158 !important;
+  opacity: 0.65 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* S'assurer que le contenu est au-dessus de l'overlay */
+.page-background > * {
+  position: relative !important;
+  z-index: 10 !important;
+}

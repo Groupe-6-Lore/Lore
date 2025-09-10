@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Responsive - Lore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .calligraphy-font {
+            font-family: 'Lucida Calligraphy', 'Brush Script MT', 'Lucida Handwriting', cursive;
+            font-style: italic;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .bg-primary-blue { background-color: #46718A; }
+        .bg-golden { background-color: #E9BD72; }
+        .text-light { color: #F0EAE1; }
+        .text-dark { color: #0D151A; }
+        .text-light-high { color: #F0EAE1; opacity: 1; }
+        .text-light-medium { color: #F0EAE1; opacity: 0.9; }
+        .text-light-low { color: #F0EAE1; opacity: 0.7; }
+        .text-dark-high { color: #0D151A; opacity: 1; }
+        .text-dark-medium { color: #0D151A; opacity: 0.8; }
+        .text-dark-low { color: #0D151A; opacity: 0.6; }
+        .text-important {
+            color: #F0EAE1;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .border-golden { border-color: #E9BD72; }
+        
+        @media (max-width: 768px) {
+            .calligraphy-font {
+                font-size: 0.9em;
+                letter-spacing: 0.3px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header responsive -->
+    <header class="bg-primary-blue p-4 md:p-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl md:text-4xl font-bold tracking-wider text-important calligraphy-font">LORE</h1>
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <button class="text-light hover:text-golden transition-colors">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-golden rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base">
+                    U
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu principal responsive -->
+    <main class="p-4 md:p-6">
+        <!-- Section titre -->
+        <div class="mb-6 md:mb-8">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg md:text-2xl font-bold text-dark-high border-b-2 border-golden pb-1 inline-block calligraphy-font">
+                    Mes campagnes
+                </h2>
+                <div class="w-12 h-12 md:w-16 md:h-16 bg-golden rounded-lg flex items-center justify-center text-white font-bold text-xs md:text-sm">
+                    News
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte de campagne responsive -->
+        <div class="bg-white/15 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-8 border border-white/30 shadow-2xl mb-6">
+            <!-- Header avec système et univers -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 space-y-2 md:space-y-0">
+                <div class="text-dark-medium text-xs md:text-sm font-medium">
+                    <span>Système de jeu : </span>
+                    <button class="text-dark-high hover:text-golden underline transition-colors">
+                        DnD 4
+                    </button>
+                    <span class="mx-2 md:mx-3 text-dark-low">•</span>
+                    <span>Univers : </span>
+                    <button class="text-dark-high hover:text-golden underline transition-colors">
+                        DnD 4
+                    </button>
+                </div>
+                <button class="bg-golden hover:bg-golden/90 text-dark-high px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold transition-all text-sm md:text-base">
+                    Accéder à la campagne
+                </button>
+            </div>
+
+            <!-- Titre de la campagne -->
+            <h3 class="text-2xl md:text-4xl font-bold text-golden mb-4 md:mb-6 calligraphy-font leading-tight">
+                Les Échos de Nerath
+            </h3>
+
+            <!-- Contenu principal -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Section Résumé -->
+                <div class="lg:col-span-2">
+                    <h4 class="text-important mb-3 md:mb-4 calligraphy-font text-lg md:text-xl">Résumé</h4>
+                    <div class="text-dark-medium text-sm md:text-base leading-6 md:leading-7 space-y-3 md:space-y-4">
+                        <p class="text-justify">Depuis des siècles, les royaumes humains, elfes et nains survivent sous l'ombre de l'Obélisque Écarlate, un artefact ancien dont nul ne connaît l'origine.</p>
+                        <p class="text-justify">Aujourd'hui, son sceau se fissure, libérant des légions corrompues qui avancent de ruine en ruine.</p>
+                    </div>
+                </div>
+
+                <!-- Section Joueurs -->
+                <div>
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <h4 class="text-important calligraphy-font text-lg md:text-xl flex items-center">
+                            <svg class="w-4 h-4 md:w-5 md:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            Joueurs
+                        </h4>
+                        <button class="text-dark-low hover:text-dark-high transition-colors">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3 md:space-y-4">
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-golden rounded-full flex items-center justify-center text-white text-sm md:text-lg font-bold shadow-lg">
+                                A
+                            </div>
+                            <div>
+                                <div class="text-dark-high font-semibold text-sm md:text-base">Anas</div>
+                                <div class="text-dark-low text-xs md:text-sm italic">Kriks</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-golden rounded-full flex items-center justify-center text-white text-sm md:text-lg font-bold shadow-lg">
+                                T
+                            </div>
+                            <div>
+                                <div class="text-dark-high font-semibold text-sm md:text-base">Thomas</div>
+                                <div class="text-dark-low text-xs md:text-sm italic">Vaelene</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton de création responsive -->
+        <button class="w-full bg-golden hover:bg-golden/90 text-dark-high py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-base md:text-lg transition-all flex items-center justify-center space-x-2 md:space-x-3 shadow-xl">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span>Créer une nouvelle campagne</span>
+        </button>
+    </main>
+
+    <!-- Test de contraste -->
+    <div class="p-4 md:p-6 bg-white">
+        <h3 class="text-dark-high text-lg md:text-xl font-bold mb-4">Test de Contraste</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-primary-blue p-4 rounded-lg">
+                <h4 class="text-important text-sm md:text-base mb-2">Texte Important</h4>
+                <p class="text-light-medium text-xs md:text-sm">Texte Medium</p>
+                <p class="text-light-low text-xs md:text-sm">Texte Low</p>
+            </div>
+            <div class="bg-golden p-4 rounded-lg">
+                <h4 class="text-dark-high text-sm md:text-base mb-2">Texte Important</h4>
+                <p class="text-dark-medium text-xs md:text-sm">Texte Medium</p>
+                <p class="text-dark-low text-xs md:text-sm">Texte Low</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test de responsive
+        function checkResponsive() {
+            const width = window.innerWidth;
+            const isMobile = width <= 768;
+            console.log(`Largeur: ${width}px - ${isMobile ? 'Mobile' : 'Desktop'}`);
+        }
+        
+        window.addEventListener('resize', checkResponsive);
+        checkResponsive();
+    </script>
+</body>
+</html>

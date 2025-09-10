@@ -1,0 +1,79 @@
+/* Police Noto Sans pour tous les textes - Optimisée pour la lisibilité */
+.noto-sans-font {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  text-rendering: optimizeLegibility; /* Optimise le rendu */
+  -webkit-font-smoothing: antialiased; /* Lissage sur WebKit */
+  -moz-osx-font-smoothing: grayscale; /* Lissage sur Firefox */
+}
+
+/* Police Eagle Lake pour tous les titres - Optimisée pour la lisibilité */
+.eagle-lake-font {
+  font-family: 'Eagle Lake', 'Lucida Calligraphy', 'Brush Script MT', cursive;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.5px; /* Améliore la lisibilité */
+  text-rendering: optimizeLegibility; /* Optimise le rendu */
+  -webkit-font-smoothing: antialiased; /* Lissage sur WebKit */
+  -moz-osx-font-smoothing: grayscale; /* Lissage sur Firefox */
+}
+
+/* Garde la classe calligraphy pour les sous-titres si besoin */
+.calligraphy-font {
+  font-family: 'Lucida Calligraphy', 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-style: italic;
+}
+
+/* Nouvelles couleurs de la charte graphique */
+:root {
+  --color-primary-blue: #46718A;
+  --color-golden: #E9BD72;
+  --color-text-light: #F0EAE1;
+  --color-text-dark: #0D151A;
+}
+
+/* Classes Tailwind personnalisées */
+.bg-primary-blue { background-color: #46718A; }
+.bg-golden { background-color: #E9BD72; }
+.text-light { color: #F0EAE1; }
+.text-dark { color: #0D151A; }
+.border-golden { border-color: #E9BD72; }
+.from-golden { --tw-gradient-from: #E9BD72; }
+.to-golden { --tw-gradient-to: #E9BD72; }
+.hover\:bg-golden:hover { background-color: #E9BD72; }
+.hover\:text-golden:hover { color: #E9BD72; }
+
+/* Classes d'optimisation pour la lisibilité */
+.text-light-high { color: #F0EAE1; opacity: 1; } /* Texte clair à 100% */
+.text-light-medium { color: #F0EAE1; opacity: 0.9; } /* Texte clair à 90% */
+.text-light-low { color: #F0EAE1; opacity: 0.7; } /* Texte clair à 70% */
+.text-dark-high { color: #0D151A; opacity: 1; } /* Texte sombre à 100% */
+.text-dark-medium { color: #0D151A; opacity: 0.8; } /* Texte sombre à 80% */
+.text-dark-low { color: #0D151A; opacity: 0.6; } /* Texte sombre à 60% */
+
+/* Amélioration du contraste pour les textes importants */
+.text-important {
+  color: #F0EAE1;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive design optimisé */
+@media (max-width: 768px) {
+  .eagle-lake-font {
+    letter-spacing: 0.3px; /* Réduction de l'espacement sur mobile */
+  }
+  
+  .calligraphy-font {
+    font-size: 0.9em; /* Réduction de la taille sur mobile */
+    letter-spacing: 0.3px;
+  }
+}
+
+/* Optimisations pour les très petits écrans */
+@media (max-width: 480px) {
+  .eagle-lake-font {
+    letter-spacing: 0.2px; /* Espacement minimal sur très petits écrans */
+  }
+}

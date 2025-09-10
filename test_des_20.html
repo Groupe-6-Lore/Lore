@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dés 20 - Lore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #46718A 0%, #4A90E2 50%, #6B73FF 100%);
+            min-height: 100vh;
+            font-family: 'Eagle Lake', cursive;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #F0EAE1;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .dice-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        /* CSS des dés 20 */
+        .dice-d20 {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+
+        .dice-d20::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 70%);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            pointer-events: none;
+            border-radius: 50% 50% 0 0;
+        }
+
+        .dice-d20::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, transparent 100%);
+            border-radius: 1px;
+            pointer-events: none;
+        }
+
+        .dice-d20:hover {
+            transform: rotate(12deg) scale(1.1);
+            box-shadow: 0 12px 35px rgba(34, 197, 94, 0.6), 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 3px 6px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #16a34a 100%);
+        }
+
+        .dice-d20:active {
+            transform: rotate(-8deg) scale(1.05);
+            transition: all 0.1s ease;
+        }
+
+        @keyframes d20-pulse {
+            0%, 100% { 
+                box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4); 
+            }
+            50% { 
+                box-shadow: 0 8px 25px rgba(34, 197, 94, 0.7); 
+            }
+        }
+
+        .dice-d20:focus {
+            animation: d20-pulse 2s infinite;
+            outline: none;
+        }
+
+        /* Variantes de couleurs */
+        .dice-d20-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .dice-d20-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .dice-d20-golden {
+            background: linear-gradient(135deg, #E9BD72 0%, #d4a853 50%, #b8941f 100%);
+            box-shadow: 0 8px 25px rgba(233, 189, 114, 0.4);
+        }
+
+        /* Ajustement pour le texte dans les dés */
+        .dice-d20-text {
+            font-size: 0.7rem;
+            line-height: 1;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .dice-d20 {
+                width: 60px;
+                height: 60px;
+                font-size: 0.75rem;
+            }
+            
+            .dice-d20-text {
+                font-size: 0.6rem;
+            }
+            
+            .dice-d20::before {
+                width: 30px;
+                height: 15px;
+                top: 6px;
+            }
+            
+            .dice-d20::after {
+                height: 15px;
+                top: 8px;
+            }
+
+            .dice-container {
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .test-info {
+            color: #F0EAE1;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #E9BD72 0%, #d4a853 100%);
+            color: #0D151A;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(233, 189, 114, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Test des Dés 20 - Lore</h1>
+        
+        <div class="dice-section">
+            <h2 style="color: #F0EAE1; margin-bottom: 1rem;">Test des Variantes</h2>
+            <div class="dice-container">
+                <div>
+                    <button class="dice-d20" onclick="testDice('vert')">News</button>
+                    <p class="test-info">Dé Vert (News)</p>
+                </div>
+                <div>
+                    <button class="dice-d20 dice-d20-golden dice-d20-text" onclick="testDice('doré')">Joueurs</button>
+                    <p class="test-info">Dé Doré (Joueurs)</p>
+                </div>
+                <div>
+                    <button class="dice-d20 dice-d20-blue dice-d20-text" onclick="testDice('bleu')">Sources</button>
+                    <p class="test-info">Dé Bleu (Sources)</p>
+                </div>
+                <div>
+                    <button class="dice-d20 dice-d20-red" onclick="testDice('rouge')">!</button>
+                    <p class="test-info">Dé Rouge (Alertes)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dice-section">
+            <h2 style="color: #F0EAE1; margin-bottom: 1rem;">Tests d'Animation</h2>
+            <div class="test-info">
+                <p>✅ <strong>Hover :</strong> Survolez les dés pour voir la rotation</p>
+                <p>✅ <strong>Click :</strong> Cliquez pour tester l'animation active</p>
+                <p>✅ <strong>Focus :</strong> Utilisez Tab pour voir l'animation de pulse</p>
+                <p>✅ <strong>Mobile :</strong> Redimensionnez la fenêtre pour tester le responsive</p>
+            </div>
+            <button class="test-button" onclick="testAllAnimations()">Tester toutes les animations</button>
+        </div>
+
+        <div class="dice-section">
+            <h2 style="color: #F0EAE1; margin-bottom: 1rem;">Vérifications</h2>
+            <div class="test-info" style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <p><strong>Forme d'icosaèdre :</strong> Vérifiez que les dés ont bien 5 faces visibles</p>
+                <p><strong>Effets de lumière :</strong> Observez les reflets blancs sur le dessus</p>
+                <p><strong>Ombres 3D :</strong> Vérifiez les ombres portées réalistes</p>
+                <p><strong>Centrage du texte :</strong> Le texte doit être parfaitement centré</p>
+                <p><strong>Responsive :</strong> Les dés doivent s'adapter sur mobile (60px)</p>
+                <p><strong>Transitions :</strong> Les animations doivent être fluides</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testDice(color) {
+            alert(`Test du dé ${color} - Animation déclenchée !`);
+        }
+
+        function testAllAnimations() {
+            const dice = document.querySelectorAll('.dice-d20');
+            dice.forEach((die, index) => {
+                setTimeout(() => {
+                    die.style.transform = 'rotate(12deg) scale(1.1)';
+                    setTimeout(() => {
+                        die.style.transform = 'rotate(-8deg) scale(1.05)';
+                        setTimeout(() => {
+                            die.style.transform = '';
+                        }, 100);
+                    }, 200);
+                }, index * 300);
+            });
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            console.log('🎲 Test des dés 20 chargé avec succès !');
+            console.log('✅ Forme d\'icosaèdre : polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)');
+            console.log('✅ Variantes de couleurs : vert, doré, bleu, rouge');
+            console.log('✅ Animations : hover, active, focus');
+            console.log('✅ Responsive : 80px desktop, 60px mobile');
+        });
+    </script>
+</body>
+</html>
