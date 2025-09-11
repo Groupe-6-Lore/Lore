@@ -629,21 +629,42 @@ const SelectUniverse = () => {
       return matchesSearch && matchesThemes && matchesRules && matchesPrices && matchesDifficulty;
     });
 
-    // Tri avec priorité freemium
     const sortUniverses = (universesToSort) => {
       return universesToSort.sort((a, b) => {
-        // Les freemium passent toujours en premier
-        if (a.type === 'freemium' && b.type !== 'freemium') return -1;
-        if (b.type === 'freemium' && a.type !== 'freemium') return 1;
+        // Priorité freemium reste seulement pour le tri par popularité
+        if (sortBy === 'popularity') {
+          if (a.type === 'freemium' && b.type !== 'freemium') return -1;
+          if (b.type === 'freemium' && a.type !== 'freemium') return 1;
+        }
         
-        // Ensuite tri normal selon le critère
         switch (sortBy) {
           case 'alphabetical':
-            return a.title.localeCompare(b.title);
+            return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            
           case 'price_asc':
+            // Gratuits D'ABORD, puis prix croissant
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'paid' || b.type === 'owned')) return -1;
+            if ((b.type === 'free' || b.type === 'freemium') && 
+                (a.type === 'paid' || a.type === 'owned')) return 1;
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'free' || b.type === 'freemium')) {
+              return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            }
             return (a.price || 0) - (b.price || 0);
+            
           case 'price_desc':
+            // Gratuits À LA FIN, prix décroissant d'abord
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'paid' || b.type === 'owned')) return 1;
+            if ((b.type === 'free' || b.type === 'freemium') && 
+                (a.type === 'paid' || a.type === 'owned')) return -1;
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'free' || b.type === 'freemium')) {
+              return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            }
             return (b.price || 0) - (a.price || 0);
+            
           case 'popularity':
           default:
             return b.popularity - a.popularity;
@@ -1092,64 +1113,69 @@ const UniverseCard = ({ universe, onSelect }) => {
   return (
     <div 
       onClick={() => onSelect()}
-      className="relative rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
+      className="universe-card rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
       style={{ 
         backgroundColor: 'rgba(13, 21, 26, 0.7)',
         padding: '8px'
       }}
     >
       
-      {/* Image avec hauteur réduite */}
-      <div className="relative h-40 bg-gray-200 rounded-md overflow-hidden">
-        {/* Placeholder pour future image */}
-        <div className="w-full h-full bg-white/80 flex items-center justify-center">
-          <div className="text-gray-400 text-3xl font-bold opacity-50">IMG</div>
-        </div>
-        
-        {/* Tags EN HAUT À DROITE - ENTIÈREMENT VISIBLES */}
-        <div className="absolute top-2 right-2 flex flex-wrap gap-1 justify-end universe-card-tags">
-          {/* Tags thème */}
+      {/* Image avec tags en overlay */}
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={universe.image} 
+          alt={universe.title}
+          className="w-full h-full object-cover"
+        />
+        {/* TAGS EN HAUT DROITE */}
+        <div className="universe-tags">
           {universe.themes && universe.themes.map((theme, index) => (
-            <span key={`theme-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+            <span key={`theme-${index}`} className="universe-tag">
               {theme}
             </span>
           ))}
-          {/* Tags règles */} 
           {universe.rules && universe.rules.map((rule, index) => (
-            <span key={`rule-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+            <span key={`rule-${index}`} className="universe-tag">
               {rule}
             </span>
           ))}
-          {/* Tag difficulté */}
           {universe.difficulty && (
-            <span className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+            <span className="universe-tag">
               {universe.difficulty}
             </span>
           )}
         </div>
       </div>
 
-      {/* Section informations - avec séparation */}
-      <div className="p-3">
-        {/* Titre et informations */}
-        <h4 className="font-bold text-white text-sm mb-1 leading-tight universe-card-title">{universe.title}</h4>
-        <p className="text-white/80 text-xs mb-1 universe-card-subtitle">{universe.subtitle}</p>
-        <p className="text-white/60 text-xs mb-3">{universe.author}</p>
+      {/* Zone contenu avec espacement corrigé */}
+      <div className="card-content">
+        <h3 className="text-xl font-bold text-dark mb-2">{universe.title}</h3>
+        <p className="text-sm text-gray-600 mb-1">
+          {universe.author} • {universe.subtitle}
+        </p>
+        <p className="text-sm text-gray-700 mb-4">
+          {universe.subtitle}
+        </p>
         
-        {/* Ligne de séparation BLANCHE */}
-        <div className="border-t border-white/30 mb-3"></div>
-        
-        {/* Prix en bas à droite */}
-        <div className="flex justify-end">
-          {universe.type === 'owned' ? (
-            <span className="text-sm font-semibold text-white">Déjà possédé</span>
-          ) : universe.type === 'free' ? (
-            <span className="text-sm font-semibold text-white">Gratuit</span>
-          ) : universe.type === 'freemium' ? (
-            <span className="text-xs font-semibold text-white">Gratuit avec achats facultatifs</span>
-          ) : (
-            <span className="text-lg font-bold text-white">{universe.price} €</span>
-          )}
+        {/* SÉPARATEUR ET PRIX ALIGNÉS */}
+        <div className="separator-section">
+          <div className="price-row">
+            <span className="font-semibold text-dark">
+              {universe.type === 'owned' ? (
+                <>💰 POSSÉDÉ</>
+              ) : universe.type === 'free' ? (
+                <>💰 GRATUIT</>
+              ) : universe.type === 'freemium' ? (
+                <>
+                  💰 GRATUIT
+                  <div className="text-xs text-gray-600">avec achats fac.</div>
+                </>
+              ) : (
+                `💰 ${universe.price.toFixed(2)} €`
+              )}
+            </span>
+            {/* PAS DE BOUTON CHOISIR ICI */}
+          </div>
         </div>
       </div>
     </div>
