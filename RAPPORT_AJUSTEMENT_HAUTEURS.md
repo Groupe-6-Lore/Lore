@@ -214,3 +214,4 @@ const UniverseCard = ({ universe, onSelect }) => {
 **Les ajustements de hauteurs sont terminés et fonctionnels !** 🎯✨
 
 Le serveur est actif sur **http://localhost:3007** et les cartes ont maintenant une structure de hauteurs optimisée.
+

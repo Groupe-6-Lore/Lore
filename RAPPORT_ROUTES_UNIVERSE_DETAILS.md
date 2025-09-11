@@ -246,3 +246,4 @@ navigate(`/campaigns/create/universe/${universe.id}/details`);
 2. **Cliquez sur** : "En savoir plus" sur n'importe quelle carte
 3. **Vérifiez** : Navigation vers `/campaigns/create/universe/:id/details`
 4. **Testez** : Bouton "Retour à la sélection"
+

@@ -158,3 +158,4 @@ ALTER TABLE universes ADD COLUMN IF NOT EXISTS type TEXT CHECK (type IN ('owned'
 - ✅ **Aucune erreur** de linting
 
 Les données sont maintenant parfaitement cohérentes et prêtes pour la production !
+

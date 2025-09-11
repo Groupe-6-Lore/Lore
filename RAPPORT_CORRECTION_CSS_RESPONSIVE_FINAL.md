@@ -139,3 +139,4 @@ Le CSS responsive pour les tags des cartes d'univers a été vérifié et la cla
 ### 📝 Note
 
 Le breakpoint de 640px correspond au breakpoint `sm` de Tailwind CSS, assurant une cohérence avec le système de design existant. La largeur maximale est de 140px sur desktop et 120px sur mobile, offrant un espace optimal pour les tags tout en maintenant un affichage propre sur tous les écrans.
+

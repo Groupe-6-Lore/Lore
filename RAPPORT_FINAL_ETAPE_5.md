@@ -309,3 +309,4 @@ const unknownUniverses = paginatedUniverses.filter(u => u.type !== 'owned');
 2. **Pagination avancée** : Scroll infini, indicateurs
 3. **Responsive avancé** : Sidebar collapsible, animations
 4. **Performance** : Lazy loading, virtualisation
+

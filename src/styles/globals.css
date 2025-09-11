@@ -25,29 +25,30 @@
   font-style: italic;
 }
 
-/* Nouvelles couleurs de la charte graphique */
+/* Couleurs design system Lore */
 :root {
-  --color-primary-blue: #46718A;
-  --color-golden: #E9BD72;
-  --color-text-light: #F0EAE1;
-  --color-text-dark: #0D151A;
+  --color-primary-blue: #1a365d;
+  --color-golden: #f6ad55;
+  --color-light: #f8fafc;
+  --color-dark: #0f172a;
 }
 
-/* Classes Tailwind personnalisées */
-.bg-primary-blue { background-color: #46718A; }
-.bg-golden { background-color: #E9BD72; }
-.text-light { color: #F0EAE1; }
-.text-dark { color: #0D151A; }
-.border-golden { border-color: #E9BD72; }
-.from-golden { --tw-gradient-from: #E9BD72; }
-.to-golden { --tw-gradient-to: #E9BD72; }
-.hover\:bg-golden:hover { background-color: #E9BD72; }
-.hover\:text-golden:hover { color: #E9BD72; }
+.bg-primary-blue { background-color: #1a365d; }
+.bg-golden { background-color: #f6ad55; }
+.text-light { color: #f8fafc; }
+.text-dark { color: #0f172a; }
+.text-golden { color: #f6ad55; }
+.border-golden { border-color: #f6ad55; }
+.from-golden { --tw-gradient-from: #f6ad55; }
+.to-golden { --tw-gradient-to: #f6ad55; }
+.hover\:bg-golden:hover { background-color: #f6ad55; }
+.hover\:bg-golden\/80:hover { background-color: rgba(246, 173, 85, 0.8); }
+.hover\:text-golden:hover { color: #f6ad55; }
 
 /* Classes d'optimisation pour la lisibilité */
-.text-light-high { color: #F0EAE1; opacity: 1; } /* Texte clair à 100% */
-.text-light-medium { color: #F0EAE1; opacity: 0.9; } /* Texte clair à 90% */
-.text-light-low { color: #F0EAE1; opacity: 0.7; } /* Texte clair à 70% */
+.text-light-high { color: #f8fafc; opacity: 1; } /* Texte clair à 100% */
+.text-light-medium { color: #f8fafc; opacity: 0.9; } /* Texte clair à 90% */
+.text-light-low { color: #f8fafc; opacity: 0.7; } /* Texte clair à 70% */
 
 /* Classes line-clamp pour tronquer le texte */
 .line-clamp-1 {
@@ -63,13 +64,13 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.text-dark-high { color: #0D151A; opacity: 1; } /* Texte sombre à 100% */
-.text-dark-medium { color: #0D151A; opacity: 0.8; } /* Texte sombre à 80% */
-.text-dark-low { color: #0D151A; opacity: 0.6; } /* Texte sombre à 60% */
+.text-dark-high { color: #0f172a; opacity: 1; } /* Texte sombre à 100% */
+.text-dark-medium { color: #0f172a; opacity: 0.8; } /* Texte sombre à 80% */
+.text-dark-low { color: #0f172a; opacity: 0.6; } /* Texte sombre à 60% */
 
 /* Amélioration du contraste pour les textes importants */
 .text-important {
-  color: #F0EAE1;
+  color: #f8fafc;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
@@ -224,7 +225,7 @@
 
 /* Effet de focus pour l'accessibilité */
 .universe-card:focus-within {
-  outline: 2px solid #E9BD72;
+  outline: 2px solid #f6ad55;
   outline-offset: 2px;
 }
 

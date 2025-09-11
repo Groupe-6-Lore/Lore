@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
-import { useAuth } from './useAuth';
+import { supabase } from '../utils/supabase.js';
+import { useAuth } from './useAuth.jsx';
 import toast from 'react-hot-toast';
 
 export const useCampaigns = () => {

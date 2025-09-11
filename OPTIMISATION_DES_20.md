@@ -191,3 +191,4 @@ outline: none;
 - **Test isolé** : `http://localhost:3002/test_des_20.html`
 
 **✨ Tous les objectifs d'optimisation ont été atteints avec succès !**
+

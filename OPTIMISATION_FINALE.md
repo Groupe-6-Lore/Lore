@@ -175,3 +175,4 @@ Si tous les éléments sont validés :
 - [ ] **Performance** optimale
 
 **🚀 L'application LORE est maintenant optimisée et prête !**
+

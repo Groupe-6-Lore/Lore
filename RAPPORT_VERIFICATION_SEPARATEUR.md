@@ -90,3 +90,4 @@
 4. **Confirmer l'intégrité** : Tags, image, texte inchangés
 
 **Le serveur est prêt pour les tests sur http://localhost:3007 !** 🚀
+

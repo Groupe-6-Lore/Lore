@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Settings, Bell, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 const ExtensionDetails = () => {
   const { id, extensionId } = useParams();
@@ -69,3 +69,4 @@ const ExtensionDetails = () => {
 };
 
 export default ExtensionDetails;
+

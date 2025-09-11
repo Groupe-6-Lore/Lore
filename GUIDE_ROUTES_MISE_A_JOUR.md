@@ -353,3 +353,4 @@ const handleUniverseSelect = (universe) => {
 - **Tests validés** ✅
 
 **✨ La structure de navigation est maintenant simplifiée et prête pour les prochaines étapes de développement !**
+

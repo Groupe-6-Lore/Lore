@@ -2,15 +2,18 @@ import React from 'react';
 import './styles/globals.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import AuthPage from './components/auth/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
-import CreateCampaign from './pages/CreateCampaign';
 import SelectUniverse from './pages/SelectUniverse';
 import UniverseDetails from './pages/UniverseDetails';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
+import UniverseSelection from './pages/UniverseSelection';
+import RulesSelection from './pages/RulesSelection';
+import UniverseDetailsCreate from './pages/UniverseDetailsCreate';
+import RulesDetailsCreate from './pages/RulesDetailsCreate';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -80,32 +83,43 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Route protégée - Create Campaign */}
-          <Route 
-            path="/campaigns/create" 
-            element={
-              <ProtectedRoute>
-                <CreateCampaign />
-              </ProtectedRoute>
-            } 
-          />
           
-          {/* Route protégée - Select Universe */}
+          {/* Route protégée - Universe Selection */}
           <Route 
             path="/campaigns/create/universe" 
             element={
               <ProtectedRoute>
-                <SelectUniverse />
+                <UniverseSelection />
               </ProtectedRoute>
             } 
           />
           
           {/* Route protégée - Universe Details */}
           <Route 
-            path="/campaigns/create/universe/:id/details" 
+            path="/campaigns/create/universe/:universeId/details" 
             element={
               <ProtectedRoute>
-                <UniverseDetails />
+                <UniverseDetailsCreate />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Rules Selection */}
+          <Route 
+            path="/campaigns/create/rules" 
+            element={
+              <ProtectedRoute>
+                <RulesSelection />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Rules Details */}
+          <Route 
+            path="/campaigns/create/rules/:ruleId/details" 
+            element={
+              <ProtectedRoute>
+                <RulesDetailsCreate />
               </ProtectedRoute>
             } 
           />
@@ -165,6 +179,36 @@ function App() {
               </div>
             </ProtectedRoute>
           } />
+          
+          {/* Route protégée - Universe Page */}
+          <Route 
+            path="/universes/:universe" 
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gradient-to-br from-primary-blue/80 via-primary-blue/60 to-primary-blue/90 flex items-center justify-center">
+                  <div className="text-center text-light">
+                    <h1 className="text-4xl font-bold eagle-lake-font mb-4">Page Univers</h1>
+                    <p className="text-light/80">Page en cours de développement...</p>
+                  </div>
+                </div>
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - System Page */}
+          <Route 
+            path="/systems/:system" 
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gradient-to-br from-primary-blue/80 via-primary-blue/60 to-primary-blue/90 flex items-center justify-center">
+                  <div className="text-center text-light">
+                    <h1 className="text-4xl font-bold eagle-lake-font mb-4">Page Système</h1>
+                    <p className="text-light/80">Page en cours de développement...</p>
+                  </div>
+                </div>
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Redirection par défaut */}
           <Route path="*" element={<Navigate to="/" replace />} />

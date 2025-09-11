@@ -154,3 +154,4 @@ J'ai optimisé le responsive mobile pour que les cartes restent lisibles sur mob
 ### 📝 Note
 
 Cette optimisation améliore significativement l'expérience utilisateur sur mobile en rendant les cartes plus compactes tout en préservant la lisibilité. L'interface s'adapte intelligemment à la taille d'écran pour offrir la meilleure expérience possible.
+

@@ -320,3 +320,4 @@ const universeInfo = {
 2. **Données dynamiques** : Intégrer l'API
 3. **Images réelles** : Ajouter les vraies images
 4. **Système d'achat** : Implémenter la boutique
+

@@ -336,3 +336,4 @@
 2. **Animations avancées** : Fade-in/out, parallax
 3. **Effets visuels** : Gradients, micro-interactions
 4. **Performance** : GPU acceleration, reduced motion
+

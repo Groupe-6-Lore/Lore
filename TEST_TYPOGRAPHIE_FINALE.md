@@ -165,3 +165,4 @@ L'application **Lore** doit avoir :
 - ✅ Le responsive design fonctionne
 
 **🎨 L'application Lore a maintenant une typographie parfaitement cohérente !**
+

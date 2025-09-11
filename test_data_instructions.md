@@ -56,3 +56,4 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
 1. Retournez sur http://localhost:3001
 2. Connectez-vous
 3. Vous devriez voir la campagne "Les Échos de Nerath" avec les 4 joueurs
+

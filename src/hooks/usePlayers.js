@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../utils/supabase.js';
 import toast from 'react-hot-toast';
 
 export const usePlayers = () => {

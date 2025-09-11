@@ -117,3 +117,4 @@ const unknownUniverses = paginatedUniverses.filter(u => {
 ### 📝 Note
 
 Cette vérification confirme que les corrections précédentes ont déjà éliminé toutes les anciennes variables problématiques. Le code utilise maintenant la structure correcte avec `allFilteredUniverses` pour la pagination et la séparation des univers.
+

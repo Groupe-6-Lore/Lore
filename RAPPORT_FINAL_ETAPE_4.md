@@ -256,3 +256,4 @@
 2. **Images réelles** : Ajouter les vraies images
 3. **Tags d'affichage** : Implémenter les tags
 4. **Données dynamiques** : Intégrer l'API
+
