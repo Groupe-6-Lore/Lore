@@ -168,4 +168,3 @@ const UniverseCard = ({ universe, onSelect }) => {
 ### 📝 Note
 
 Le serveur de développement reste actif sur **http://localhost:3006** pour tester les modifications. Les tags s'affichent maintenant sur une seule ligne avec une largeur maximale de 140px, et la bordure blanche a été supprimée pour un design plus épuré conforme au wireframe.
-

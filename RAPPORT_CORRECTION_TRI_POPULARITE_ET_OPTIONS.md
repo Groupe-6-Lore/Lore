@@ -198,4 +198,3 @@ const sortUniverses = (universesToSort) => {
 ### 📝 Note
 
 Ces corrections assurent que le tri par popularité est vraiment un tri par popularité (sans priorité freemium) et que les utilisateurs comprennent clairement le comportement de chaque option de tri grâce aux labels explicites.
-

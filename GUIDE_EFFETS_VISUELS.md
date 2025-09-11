@@ -228,4 +228,3 @@ background: linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.2), transpa
 - **Effet** : Survolez les cards pour voir la brillance
 
 **🎨 Les cards ont maintenant des effets de lumière immersifs et professionnels !**
-

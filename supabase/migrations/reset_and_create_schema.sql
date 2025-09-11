@@ -115,4 +115,3 @@ CREATE INDEX idx_items_campaign_id ON items(campaign_id);
 
 
 
-

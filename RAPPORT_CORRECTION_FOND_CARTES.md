@@ -72,4 +72,3 @@
 - **Linting** ✅
 
 **✨ Le fond des cartes d'univers a été modifié avec succès !**
-

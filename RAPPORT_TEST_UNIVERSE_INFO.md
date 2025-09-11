@@ -322,4 +322,3 @@ const navigate = useNavigate();
 3. **Vérifiez** : Affichage de la page d'informations
 4. **Testez** : Tous les boutons et liens de navigation
 5. **Validez** : Responsive sur mobile et desktop
-

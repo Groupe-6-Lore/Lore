@@ -170,4 +170,3 @@ const SelectUniverse = () => {
 ### 📝 Note
 
 Cette vérification assure que tous les états nécessaires sont correctement déclarés au début du composant et que l'initialisation des données utilisateur est claire et prête pour l'intégration future avec Supabase.
-

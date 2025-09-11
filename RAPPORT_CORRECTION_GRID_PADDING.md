@@ -136,4 +136,3 @@ Les deux grilles (univers possédés et autres univers) ont été modifiées pou
 - ✅ **Fonctionnalité préservée**
 
 **La grille a maintenant un padding uniforme autour de chaque carte !** 📐
-

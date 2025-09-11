@@ -118,4 +118,3 @@ setUnknownUniverses(unknownUniverses);
 ### 📝 Note
 
 Ces corrections assurent que l'interface fonctionne correctement avec des tags bien alignés et une pagination fonctionnelle. L'utilisateur peut maintenant naviguer entre les pages et voir les tags correctement positionnés.
-

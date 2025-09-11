@@ -104,4 +104,3 @@ const UniverseCard = ({ universe, onSelect }) => {
 ### 📝 Note
 
 Le code était déjà optimisé avec seulement les paramètres nécessaires. Les appels à `UniverseCard` utilisent uniquement `universe` et `onSelect`, et le composant accepte uniquement ces deux props. La fonction `handleUniverseChoose` et le paramètre `onChoose` ont été supprimés lors des corrections précédentes.
-

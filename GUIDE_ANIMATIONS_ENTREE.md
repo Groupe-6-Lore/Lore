@@ -284,4 +284,3 @@ style={{ animationDelay: '0.2s' }}
 - **Cards** : Montent du bas avec délais
 
 **✨ L'interface s'anime de manière fluide et engageante pour une expérience utilisateur premium !**
-

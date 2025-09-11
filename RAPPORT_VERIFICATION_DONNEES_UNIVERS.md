@@ -148,4 +148,3 @@ Tous les univers ont été vérifiés et corrigés pour avoir des IDs séquentie
 ### 📝 Note
 
 Le doublon "Blades in the Dark" (ID 27) a été supprimé car nous avions déjà "Blades in the Dark" (ID 10) avec des données différentes. La version conservée est celle avec le prix de 50€ et le thème "Fantasy".
-

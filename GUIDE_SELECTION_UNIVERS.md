@@ -247,4 +247,3 @@ const matchesThemes = selectedFilters.themes.length === 0 ||
 - **Navigation** ✅
 
 **✨ L'interface offre une expérience utilisateur riche pour découvrir et choisir l'univers parfait pour sa campagne !**
-

@@ -164,4 +164,3 @@ const UniverseCard = ({ universe, onSelect }) => {
 - ✅ **Fonctionnalité préservée** (clic pour sélectionner)
 
 **Les cartes d'univers correspondent maintenant exactement au wireframe !** 🎨
-

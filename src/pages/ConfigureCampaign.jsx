@@ -13,14 +13,14 @@ const ConfigureCampaign = () => {
           Configuration de la campagne
         </h1>
         {selectedUniverse && (
-          <p className="text-light/80 mb-6">
+          <p className="text-light/80 mb-6 noto-sans-font">
             Univers sélectionné : {selectedUniverse.title}
           </p>
         )}
-        <p className="text-light/80 mb-6">Configuration finale - Coming Soon</p>
+        <p className="text-light/80 mb-6 noto-sans-font">Configuration finale - Coming Soon</p>
         <button
           onClick={() => navigate('/campaigns/create/universe')}
-          className="bg-golden text-dark px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
+          className="bg-golden text-dark px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors noto-sans-font"
         >
           Retour à la sélection
         </button>

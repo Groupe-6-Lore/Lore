@@ -23,4 +23,3 @@ FROM players p
 JOIN campaigns c ON p.campaign_id = c.id
 WHERE c.user_id = 'TON_USER_ID'
 ORDER BY c.title, p.name;
-

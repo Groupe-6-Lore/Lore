@@ -252,4 +252,3 @@ const handleUniverseSelect = (universe) => {
 - **Tests** ✅
 
 **✨ La navigation vers les informations d'univers est maintenant opérationnelle !**
-

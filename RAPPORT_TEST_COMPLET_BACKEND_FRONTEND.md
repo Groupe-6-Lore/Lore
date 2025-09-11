@@ -295,4 +295,3 @@ const filterOptions = {
 - ✅ **Serveur opérationnel** sur http://localhost:3000
 
 **Le projet est prêt pour les tests utilisateur !** 🚀
-

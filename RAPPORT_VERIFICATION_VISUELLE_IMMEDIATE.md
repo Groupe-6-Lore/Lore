@@ -163,4 +163,3 @@ themes: ["Horreur & Mystère"]
 ### 📝 Note
 
 Le serveur est actif sur **http://localhost:3006** et toutes les fonctionnalités sont opérationnelles. L'interface est maintenant conforme au wireframe avec des cartes plus étroites, des tags entièrement visibles, et un responsive optimisé pour mobile et desktop.
-

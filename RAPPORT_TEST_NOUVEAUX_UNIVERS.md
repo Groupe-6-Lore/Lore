@@ -291,4 +291,3 @@
 3. **Testez** : Pagination (2 pages)
 4. **Validez** : Tous les filtres et tris
 5. **Explorez** : Les nouveaux univers ajoutés
-

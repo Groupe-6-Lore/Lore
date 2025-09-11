@@ -199,4 +199,3 @@ xl: 1280px  /* Extra large devices */
 - **Desktop** : Redimensionnez la fenêtre ≥ 1024px
 
 **✨ L'interface s'adapte parfaitement à tous les appareils avec une expérience optimale !**
-

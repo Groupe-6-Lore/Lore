@@ -1,12 +1,19 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { ArrowLeft, Star, Users, Clock, BookOpen, Settings, Bell } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+=======
+import { ArrowLeft, Star, Users, Clock, BookOpen } from 'lucide-react';
+>>>>>>> parent of 39cef2c (changement 11/09)
 
 const UniverseInfo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+<<<<<<< HEAD
   const { user } = useAuth();
+=======
+>>>>>>> parent of 39cef2c (changement 11/09)
 
   // Données d'exemple pour la page d'informations
   const universeInfo = {
@@ -56,6 +63,7 @@ const UniverseInfo = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+<<<<<<< HEAD
           <button className="text-light hover:text-golden transition-colors">
             <Settings size={24} />
           </button>
@@ -64,6 +72,10 @@ const UniverseInfo = () => {
           </button>
           <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
             {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+=======
+          <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
+            U
+>>>>>>> parent of 39cef2c (changement 11/09)
           </div>
         </div>
       </header>
@@ -77,6 +89,7 @@ const UniverseInfo = () => {
           >
             Mes campagnes
           </button>
+<<<<<<< HEAD
           <span className="text-light/60">›</span>
           <button
             onClick={() => navigate('/campaigns/create')}
@@ -85,18 +98,31 @@ const UniverseInfo = () => {
             Créer une campagne
           </button>
           <span className="text-light/60">›</span>
+=======
+          <span className="text-light/60">/</span>
+>>>>>>> parent of 39cef2c (changement 11/09)
           <button
             onClick={() => navigate('/campaigns/create/universe')}
             className="hover:text-light transition-colors"
           >
+<<<<<<< HEAD
             Choisir un univers
           </button>
           <span className="text-light/60">›</span>
           <span className="text-golden">{universeInfo.title}</span>
+=======
+            Créer une campagne
+          </button>
+          <span className="text-light/60">/</span>
+          <span className="text-golden border-b border-golden pb-1">
+            Informations univers
+          </span>
+>>>>>>> parent of 39cef2c (changement 11/09)
         </nav>
       </div>
 
       {/* Contenu principal */}
+<<<<<<< HEAD
       <div className="max-w-7xl mx-auto px-6 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           
@@ -187,6 +213,136 @@ const UniverseInfo = () => {
               >
                 <span>Choisir cet univers</span>
               </button>
+=======
+      <div className="px-6 pb-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Image et informations principales */}
+            <div className="lg:col-span-2">
+              <div className="bg-light/10 backdrop-blur-sm rounded-2xl p-8">
+                
+                {/* Image */}
+                <div className="relative h-64 mb-6 rounded-xl overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-golden/20 to-golden/40 flex items-center justify-center">
+                    <div className="text-golden/60 text-8xl font-bold opacity-50">JDR</div>
+                  </div>
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-golden text-dark px-3 py-1 rounded-full text-sm font-semibold">
+                      {universeInfo.price}€
+                    </span>
+                  </div>
+                </div>
+
+                {/* Titre et auteur */}
+                <div className="mb-6">
+                  <h1 className="text-3xl font-bold text-light eagle-lake-font mb-2">
+                    {universeInfo.title}
+                  </h1>
+                  <h2 className="text-xl text-golden calligraphy-font mb-2">
+                    {universeInfo.subtitle}
+                  </h2>
+                  <p className="text-light/80 noto-sans-font">
+                    par {universeInfo.author}
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <h3 className="text-light font-semibold text-lg mb-3 calligraphy-font">
+                    Description
+                  </h3>
+                  <p className="text-light/90 noto-sans-font leading-relaxed">
+                    {universeInfo.description}
+                  </p>
+                </div>
+
+                {/* Caractéristiques */}
+                <div className="mb-6">
+                  <h3 className="text-light font-semibold text-lg mb-3 calligraphy-font">
+                    Caractéristiques
+                  </h3>
+                  <ul className="space-y-2">
+                    {universeInfo.features.map((feature, index) => (
+                      <li key={index} className="flex items-center text-light/90 noto-sans-font">
+                        <div className="w-2 h-2 bg-golden rounded-full mr-3"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar informations */}
+            <div className="lg:col-span-1">
+              <div className="bg-light/10 backdrop-blur-sm rounded-2xl p-6 sticky top-6">
+                
+                {/* Note et avis */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-2">
+                    <Star className="text-golden mr-2" size={20} />
+                    <span className="text-light font-semibold text-lg">
+                      {universeInfo.rating}/5
+                    </span>
+                  </div>
+                  <p className="text-light/80 text-sm noto-sans-font">
+                    Basé sur 1,247 avis
+                  </p>
+                </div>
+
+                {/* Informations de jeu */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center">
+                    <Users className="text-golden mr-3" size={20} />
+                    <div>
+                      <p className="text-light/80 text-sm noto-sans-font">Joueurs</p>
+                      <p className="text-light font-semibold">{universeInfo.players}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Clock className="text-golden mr-3" size={20} />
+                    <div>
+                      <p className="text-light/80 text-sm noto-sans-font">Durée</p>
+                      <p className="text-light font-semibold">{universeInfo.duration}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <BookOpen className="text-golden mr-3" size={20} />
+                    <div>
+                      <p className="text-light/80 text-sm noto-sans-font">Difficulté</p>
+                      <p className="text-light font-semibold">{universeInfo.difficulty}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Boutons d'action */}
+                <div className="space-y-3">
+                  <button
+                    onClick={handleChoose}
+                    className="w-full bg-golden text-dark py-3 px-6 rounded-lg font-semibold hover:bg-golden/80 transition-colors noto-sans-font"
+                  >
+                    Choisir cet univers
+                  </button>
+                  
+                  <button
+                    onClick={handlePurchase}
+                    className="w-full bg-light/20 text-light border border-light/30 py-3 px-6 rounded-lg font-semibold hover:bg-light/30 transition-colors noto-sans-font"
+                  >
+                    Acheter maintenant
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate('/campaigns/create/universe')}
+                    className="w-full text-light/80 hover:text-light transition-colors noto-sans-font"
+                  >
+                    Retour à la sélection
+                  </button>
+                </div>
+              </div>
+>>>>>>> parent of 39cef2c (changement 11/09)
             </div>
           </div>
         </div>

@@ -129,4 +129,3 @@
 4. **Validez** : Clic sur carte pour navigation
 
 **🎯 Toutes les corrections demandées ont été appliquées exactement comme demandé !**
-

@@ -215,4 +215,3 @@ La section a été insérée :
 ### 📝 Note
 
 Cette implémentation améliore significativement l'expérience utilisateur en permettant de voir clairement quels filtres sont actifs et de les supprimer individuellement ou tous d'un coup. L'interface est maintenant plus intuitive et conforme au wireframe.
-

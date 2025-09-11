@@ -176,4 +176,3 @@ className="px-4 py-2 bg-light/20 text-light rounded-lg hover:bg-light/30 disable
 ### 📝 Note
 
 Cette correction améliore significativement l'expérience utilisateur en limitant le nombre de boutons de page affichés et en fournissant des informations claires sur la position actuelle et le total d'univers disponibles.
-

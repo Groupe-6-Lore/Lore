@@ -120,4 +120,3 @@ className="appearance-none bg-golden text-dark border border-golden rounded-lg p
 4. **Validez** : Icône sombre et contraste
 
 **🎯 Toutes les corrections demandées ont été appliquées exactement comme demandé !**
-

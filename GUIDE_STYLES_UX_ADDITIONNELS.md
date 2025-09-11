@@ -318,4 +318,3 @@ className="pagination-btn px-3 sm:px-4 py-2 bg-light/20 text-light rounded-lg ho
 - **Documentation complète** ✅
 
 **✨ L'interface LORE offre maintenant une expérience utilisateur exceptionnelle avec des animations fluides et une accessibilité renforcée !**
-

@@ -348,4 +348,3 @@ const unknownUniverses = paginatedUniverses.filter(u => u.type !== 'Déjà poss�
 - **Documentation complète** ✅
 
 **✨ La page SelectUniverse offre maintenant une expérience utilisateur optimale avec une pagination intelligente et un responsive parfait !**
-
