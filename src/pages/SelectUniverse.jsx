@@ -28,12 +28,38 @@ const SelectUniverse = () => {
   // Données de test pour les univers
   const allUniverses = [
     {
+      id: 2,
+      title: "Fate Core System",
+      subtitle: "Fate Core System est un jeu où les héros sont définis par leurs convictions, leurs failles et leurs choix. Vos aspects deviennent des leviers narratifs : une phrase peut changer le cours d'une bataille ou d'un destin.",
+      author: "Evil Hat Productions",
+      price: null,
+      type: "free",
+      themes: ["Narratif", "Multi-genre"],
+      rules: ["Libres"],
+      difficulty: "Intermédiaire",
+      image: "/images/fate-core.jpg",
+      popularity: 85
+    },
+    {
+      id: 3,
+      title: "Symbaroum Core Rulebook",
+      subtitle: "Symbaroum est un jeu de rôle sombre et mystérieux qui se déroule dans un monde où la magie est dangereuse et la nature sauvage regorge de créatures terrifiantes. Un univers unique où l'exploration et la découverte sont au cœur de l'aventure.",
+      author: "Free League Publishing",
+      price: 49,
+      type: "paid",
+      themes: ["Fantasy sombre", "Exploration"],
+      rules: ["Libres"],
+      difficulty: "Intermédiaire",
+      image: "/images/symbaroum.jpg",
+      popularity: 88
+    },
+    {
       id: 1,
       title: "Dungeons & Dragons 5e",
-      subtitle: "Manuel des joueurs",
+      subtitle: "Dungeons & Dragons 5e est le système de jeu de rôle le plus populaire au monde. Cette édition simplifie les règles tout en conservant la profondeur tactique qui fait la renommée de D&D. Parfait pour les débutants comme pour les vétérans.",
       author: "Wizards of the Coast",
-      price: null,
-      type: "owned",
+      price: 49,
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -41,7 +67,7 @@ const SelectUniverse = () => {
       popularity: 95
     },
     {
-      id: 2,
+      id: 4,
       title: "Donjons & Dragons de l'Ère Moderne",
       subtitle: "Livre de règles",
       author: "Wizards of the Coast",
@@ -134,7 +160,7 @@ const SelectUniverse = () => {
     {
       id: 9,
       title: "Fiasco",
-      subtitle: "Jeu de rôle narratif",
+      subtitle: "Jeu de rôle narratif - Une expérience de jeu unique qui explore les conséquences dramatiques et comiques de décisions malheureuses",
       author: "Bully Pulpit Games",
       price: null,
       type: "free",
@@ -639,21 +665,42 @@ const SelectUniverse = () => {
       return matchesSearch && matchesThemes && matchesRules && matchesPrices && matchesDifficulty;
     });
 
-    // Tri avec priorité freemium
     const sortUniverses = (universesToSort) => {
       return universesToSort.sort((a, b) => {
-        // Les freemium passent toujours en premier
-        if (a.type === 'freemium' && b.type !== 'freemium') return -1;
-        if (b.type === 'freemium' && a.type !== 'freemium') return 1;
+        // Priorité freemium reste seulement pour le tri par popularité
+        if (sortBy === 'popularity') {
+          if (a.type === 'freemium' && b.type !== 'freemium') return -1;
+          if (b.type === 'freemium' && a.type !== 'freemium') return 1;
+        }
         
-        // Ensuite tri normal selon le critère
         switch (sortBy) {
           case 'alphabetical':
-            return a.title.localeCompare(b.title);
+            return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            
           case 'price_asc':
+            // Gratuits D'ABORD, puis prix croissant
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'paid' || b.type === 'owned')) return -1;
+            if ((b.type === 'free' || b.type === 'freemium') && 
+                (a.type === 'paid' || a.type === 'owned')) return 1;
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'free' || b.type === 'freemium')) {
+              return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            }
             return (a.price || 0) - (b.price || 0);
+            
           case 'price_desc':
+            // Gratuits À LA FIN, prix décroissant d'abord
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'paid' || b.type === 'owned')) return 1;
+            if ((b.type === 'free' || b.type === 'freemium') && 
+                (a.type === 'paid' || a.type === 'owned')) return -1;
+            if ((a.type === 'free' || a.type === 'freemium') && 
+                (b.type === 'free' || b.type === 'freemium')) {
+              return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+            }
             return (b.price || 0) - (a.price || 0);
+            
           case 'popularity':
           default:
             return b.popularity - a.popularity;
@@ -984,7 +1031,8 @@ const SelectUniverse = () => {
                     <UniverseCard 
                       key={universe.id}
                       universe={universe} 
-                      onSelect={() => handleUniverseSelect(universe)}
+                      onClick={(id) => handleUniverseSelect(universe)}
+                      isKnown={true}
                     />
                   ))}
                 </div>
@@ -1011,7 +1059,8 @@ const SelectUniverse = () => {
                     <UniverseCard 
                       key={universe.id}
                       universe={universe} 
-                      onSelect={() => handleUniverseSelect(universe)}
+                      onClick={(id) => handleUniverseSelect(universe)}
+                      isKnown={false}
                     />
                   ))}
                 </div>
@@ -1082,40 +1131,33 @@ const SelectUniverse = () => {
   );
 };
 
-// Composant carte d'univers
-const UniverseCard = ({ universe, onSelect }) => {
+// Composant carte d'univers - Structure harmonisée pour toutes les cartes
+const UniverseCard = ({ universe, onClick, isKnown = false }) => {
   return (
     <div 
-      onClick={() => onSelect()}
-      className="relative rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
-      style={{ 
-        backgroundColor: 'rgba(13, 21, 26, 0.7)',
-        padding: '8px'
-      }}
+      onClick={() => onClick(universe.id)}
+      className="universe-card rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer"
+      style={{ backgroundColor: 'rgba(13, 21, 26, 0.7)' }}
     >
       
-      {/* Image avec hauteur réduite */}
+      {/* Image avec tags en overlay */}
       <div className="relative h-40 bg-gray-200 rounded-md overflow-hidden">
-        {/* Placeholder pour future image */}
         <div className="w-full h-full bg-white/80 flex items-center justify-center">
           <div className="text-gray-400 text-3xl font-bold opacity-50">IMG</div>
         </div>
         
-        {/* Tags EN HAUT À DROITE - ENTIÈREMENT VISIBLES */}
-        <div className="universe-card-tags absolute top-2 right-2 flex flex-wrap gap-1 justify-end max-w-[calc(100%-1rem)]">
-          {/* Tags thème */}
+        {/* Tags positionnés en haut droite sur l'image */}
+        <div className="absolute top-2 right-2 flex flex-wrap gap-1 justify-end pointer-events-none">
           {universe.themes && universe.themes.map((theme, index) => (
             <span key={`theme-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
               {theme}
             </span>
           ))}
-          {/* Tags règles */} 
           {universe.rules && universe.rules.map((rule, index) => (
             <span key={`rule-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
               {rule}
             </span>
           ))}
-          {/* Tag difficulté */}
           {universe.difficulty && (
             <span className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
               {universe.difficulty}
@@ -1124,27 +1166,37 @@ const UniverseCard = ({ universe, onSelect }) => {
         </div>
       </div>
 
-      {/* Section informations - avec séparation */}
-      <div className="p-3">
-        {/* Titre et informations */}
-        <h4 className="universe-card-title font-bold text-white text-sm mb-1 leading-tight">{universe.title}</h4>
-        <p className="universe-card-subtitle text-white/80 text-xs mb-1">{universe.subtitle}</p>
-        <p className="text-white/60 text-xs mb-3">{universe.author}</p>
+      {/* Contenu avec espacement corrigé */}
+      <div className="universe-card-content p-4">
+        {/* Titre et infos - TEXTES EN BLANC */}
+        <h3 className="text-base font-bold text-white mb-1 line-clamp-1">{universe.title}</h3>
+        <p className="text-sm text-white/70 mb-2">
+          {universe.author}
+        </p>
         
-        {/* Ligne de séparation BLANCHE */}
-        <div className="border-t border-white/30 mb-3"></div>
+        {/* Description avec PLUS D'ESPACE EN BAS */}
+        <p className="universe-description text-xs text-white/60 mb-6 line-clamp-2 min-h-[2.5rem]">
+          {universe.subtitle}
+        </p>
         
-        {/* Prix en bas à droite */}
-        <div className="flex justify-end">
-          {universe.type === 'owned' ? (
-            <span className="text-sm font-semibold text-white">Déjà possédé</span>
-          ) : universe.type === 'free' ? (
-            <span className="text-sm font-semibold text-white">Gratuit</span>
-          ) : universe.type === 'freemium' ? (
-            <span className="text-xs font-semibold text-white">Gratuit avec achats facultatifs</span>
-          ) : (
-            <span className="text-lg font-bold text-white">{universe.price} €</span>
-          )}
+        {/* Zone séparateur et prix - MÊME HAUTEUR GARANTIE */}
+        <div className="universe-separator-section border-t border-white/20 pt-3" style={{ minHeight: '48px' }}>
+          <div className="universe-price-row flex items-start justify-end min-h-[48px]">
+            <div className="universe-price-content text-right">
+              <div className="universe-price-text font-semibold text-white text-sm leading-6">
+                {universe.price === null ? (
+                  universe.type === 'freemium' ? "Gratuit" : universe.type === 'owned' ? "Déjà possédé" : "Gratuit"
+                ) : (
+                  `${universe.price} €`
+                )}
+              </div>
+              {universe.price === null && universe.type === 'freemium' && (
+                <div className="universe-price-subtext text-xs text-white/60 leading-4">
+                  avec achats facultatifs
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

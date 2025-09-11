@@ -104,3 +104,4 @@ CREATE INDEX idx_characters_campaign_id ON characters(campaign_id);
 CREATE INDEX idx_quests_campaign_id ON quests(campaign_id);
 CREATE INDEX idx_documents_campaign_id ON documents(campaign_id);
 CREATE INDEX idx_items_campaign_id ON items(campaign_id);
+

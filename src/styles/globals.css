@@ -48,6 +48,21 @@
 .text-light-high { color: #F0EAE1; opacity: 1; } /* Texte clair à 100% */
 .text-light-medium { color: #F0EAE1; opacity: 0.9; } /* Texte clair à 90% */
 .text-light-low { color: #F0EAE1; opacity: 0.7; } /* Texte clair à 70% */
+
+/* Classes line-clamp pour tronquer le texte */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .text-dark-high { color: #0D151A; opacity: 1; } /* Texte sombre à 100% */
 .text-dark-medium { color: #0D151A; opacity: 0.8; } /* Texte sombre à 80% */
 .text-dark-low { color: #0D151A; opacity: 0.6; } /* Texte sombre à 60% */
@@ -68,6 +83,123 @@
   .calligraphy-font {
     font-size: 0.9em; /* Réduction de la taille sur mobile */
     letter-spacing: 0.3px;
+  }
+}
+
+/* Responsive pour les tags d'univers sur mobile */
+@media (max-width: 640px) {
+  .universe-tags {
+    gap: 2px;
+  }
+  
+  .universe-tags span {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+  }
+}
+
+/* Responsive pour l'espacement des cartes sur mobile */
+@media (max-width: 640px) {
+  .universe-card-spacing {
+    padding-bottom: 0.5rem; /* Réduit sur mobile */
+  }
+}
+
+/* ===== CSS POUR ALIGNEMENT PARFAIT DES CARTES ===== */
+
+/* Container principal de la carte */
+.universe-card {
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.universe-card-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 188px; /* Hauteur minimale pour le contenu */
+}
+
+/* Description avec espace suffisant */
+.universe-description {
+  margin-bottom: 1.5rem !important; /* PLUS D'ESPACE AVANT SÉPARATEUR */
+  flex-grow: 1;
+  min-height: 2.5rem; /* Hauteur minimale pour cohérence */
+}
+
+/* Zone séparateur - toujours à la même position */
+.universe-separator-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 0.75rem;
+  margin-top: auto; /* Pousse automatiquement vers le bas */
+}
+
+/* Ligne prix - alignement horizontal parfait */
+.universe-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 24px; /* HAUTEUR FIXE POUR MÊME NIVEAU */
+  line-height: 1.5;
+}
+
+/* Texte prix - hauteur de ligne constante */
+.universe-price-text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 24px; /* MÊME HAUTEUR QUE LE CONTAINER */
+  color: white;
+}
+
+.universe-price-subtext {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 16px;
+  margin-top: 2px;
+}
+
+/* ===== RESPONSIVE ALIGNEMENT ===== */
+
+/* Tablet et mobile - alignement adapté */
+@media (max-width: 768px) {
+  .universe-card-content {
+    min-height: 180px; /* Hauteur réduite sur mobile */
+  }
+  
+  .universe-description {
+    margin-bottom: 1rem; /* Espace réduit sur mobile */
+  }
+}
+
+/* Mobile - optimisations supplémentaires */
+@media (max-width: 640px) {
+  .universe-card {
+    min-height: 360px; /* Hauteur réduite sur mobile */
+  }
+  
+  .universe-card-content {
+    padding: 0.75rem; /* Padding réduit sur mobile */
+    min-height: 160px; /* Hauteur encore plus réduite */
+  }
+  
+  .universe-description {
+    margin-bottom: 0.75rem; /* Espace encore plus réduit */
+    min-height: 2rem; /* Hauteur minimale réduite */
+  }
+  
+  .universe-separator-section {
+    padding-top: 0.5rem; /* Padding réduit sur mobile */
+  }
+  
+  .universe-price-row {
+    min-height: 20px; /* Hauteur réduite sur mobile */
+  }
+  
+  .universe-price-text {
+    font-size: 13px; /* Taille de police réduite */
+    line-height: 20px; /* Line-height adapté */
   }
 }
 

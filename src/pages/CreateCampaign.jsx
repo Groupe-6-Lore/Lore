@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -6,6 +6,18 @@ import { useAuth } from '../hooks/useAuth';
 const CreateCampaign = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Ajoute cet état
+  const [selectedUniverse, setSelectedUniverse] = useState(null);
+
+  // useEffect pour récupérer l'univers
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('selectedUniverse');
+    if (storedData) {
+      const universeData = JSON.parse(storedData);
+      setSelectedUniverse(universeData);
+    }
+  }, []);
 
   const handleUniverseClick = () => {
     navigate('/campaigns/create/universe');
@@ -159,23 +171,33 @@ const CreateCampaign = () => {
             className="group cursor-pointer transform transition-all duration-300 hover:scale-105 animate-fade-in-up"
             style={{ animationDelay: '0.1s' }}
           >
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-80 lg:h-96 card-shine">
-              {/* Image */}
-              <div className="h-3/4 relative overflow-hidden">
-                <img 
-                  src="/images/fantasy-universe.jpg" 
-                  alt="Univers fantasy"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-purple-500/20"></div>
-                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+            {selectedUniverse ? (
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96 ring-2 ring-amber-500">
+                <div className="h-3/4 bg-gradient-to-br from-slate-600/20 to-slate-800/20 flex flex-col items-center justify-center">
+                  <div className="text-slate-700 text-2xl font-bold mb-2">{selectedUniverse.universe.name}</div>
+                  <div className="text-slate-600 text-sm">{selectedUniverse.universe.publisher}</div>
+                  {selectedUniverse.extensions.length > 0 && (
+                    <div className="text-slate-500 text-xs mt-2">
+                      + {selectedUniverse.extensions.length} extension(s)
+                    </div>
+                  )}
+                </div>
+                <div className="h-1/4 flex items-center justify-center bg-white">
+                  <h3 className="text-xl font-bold text-slate-900">Univers sélectionné</h3>
+                </div>
               </div>
-              
-              {/* Titre */}
-              <div className="h-1/4 flex items-center justify-center bg-white">
-                <h3 className="text-2xl font-bold text-dark calligraphy-font">Univers</h3>
+            ) : (
+              <div onClick={handleUniverseClick} className="group cursor-pointer transform transition-all duration-300 hover:scale-105">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96">
+                  <div className="h-3/4 bg-gradient-to-br from-purple-500/80 to-pink-500/80 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                  </div>
+                  <div className="h-1/4 flex items-center justify-center bg-white">
+                    <h3 className="text-2xl font-bold text-slate-900 eagle-lake-font">Univers</h3>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Card Règles */}

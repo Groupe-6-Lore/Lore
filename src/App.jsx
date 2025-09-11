@@ -9,6 +9,7 @@ import CampaignSelection from './pages/CampaignSelection';
 import CreateCampaign from './pages/CreateCampaign';
 import SelectUniverse from './pages/SelectUniverse';
 import UniverseDetails from './pages/UniverseDetails';
+import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
 
 function ProtectedRoute({ children }) {
@@ -105,6 +106,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <UniverseDetails />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Extension Details */}
+          <Route 
+            path="/campaigns/create/universe/:id/extension/:extensionId" 
+            element={
+              <ProtectedRoute>
+                <ExtensionDetails />
               </ProtectedRoute>
             } 
           />
