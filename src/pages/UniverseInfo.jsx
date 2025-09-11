@@ -1,12 +1,10 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Users, Clock, BookOpen, Settings, Bell } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
 
 const UniverseInfo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   // Données d'exemple pour la page d'informations
   const universeInfo = {
@@ -23,7 +21,7 @@ const UniverseInfo = () => {
     features: [
       "Règles simplifiées et intuitives",
       "Système d'avantage/désavantage",
-      "Classes et races diversifiées",
+      "Classes et races diversifiées", 
       "Magie équilibrée",
       "Compatible avec tous les suppléments 5e"
     ],
@@ -36,7 +34,9 @@ const UniverseInfo = () => {
   };
 
   const handleChoose = () => {
-    navigate('/campaigns/create/configure', { state: { selectedUniverse: universeInfo } });
+    navigate('/campaigns/create/configure', { 
+      state: { selectedUniverse: universeInfo } 
+    });
   };
 
   return (
@@ -61,7 +61,7 @@ const UniverseInfo = () => {
             <Bell size={24} />
           </button>
           <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
-            {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+            U
           </div>
         </div>
       </header>

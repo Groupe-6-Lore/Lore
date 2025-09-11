@@ -108,6 +108,16 @@ function App() {
             } 
           />
           
+          {/* Route protégée - Universe Details (alternative) */}
+          <Route 
+            path="/campaigns/create/universe/:id/details" 
+            element={
+              <ProtectedRoute>
+                <UniverseDetails />
+              </ProtectedRoute>
+            } 
+          />
+          
           {/* Route protégée - Extension Details */}
           <Route 
             path="/campaigns/create/universe/:id/extension/:extensionId" 

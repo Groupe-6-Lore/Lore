@@ -55,6 +55,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 
 .line-clamp-2 {
@@ -62,6 +63,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .text-dark-high { color: #0D151A; opacity: 1; } /* Texte sombre à 100% */
 .text-dark-medium { color: #0D151A; opacity: 0.8; } /* Texte sombre à 80% */
@@ -260,12 +262,340 @@
   overflow: hidden;
 }
 
-/* Responsive pour mobile */
 @media (max-width: 640px) {
   .universe-card-tags {
     max-width: 120px;
   }
-  
+}
+
+/* ===== STYLES UX POUR SELECTUNIVERSE ===== */
+
+/* Animation smooth pour les cartes */
+.universe-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.universe-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Effet de focus pour l'accessibilité */
+.universe-card:focus-within {
+  outline: 2px solid #E9BD72;
+  outline-offset: 2px;
+}
+
+/* Animation des tags */
+.tag-animate {
+  transition: all 0.2s ease;
+}
+
+.tag-animate:hover {
+  transform: scale(1.05);
+  background-color: rgba(233, 189, 114, 0.3);
+}
+
+/* Amélioration de la barre de recherche */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(233, 189, 114, 0.3);
+}
+
+/* Pagination hover effects */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Animation pour les boutons de filtres */
+.filter-checkbox {
+  transition: all 0.2s ease;
+}
+
+.filter-checkbox:checked {
+  background-color: #E9BD72;
+  border-color: #E9BD72;
+}
+
+/* Effet de hover pour les cartes d'extension */
+.extension-card {
+  transition: all 0.3s ease;
+}
+
+.extension-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation pour les boutons d'action */
+.action-btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+/* Amélioration des tooltips */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* ===== STYLES UX POUR SELECTUNIVERSE ===== */
+
+/* Animation smooth pour les cartes */
+.universe-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.universe-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Effet de focus pour l'accessibilité */
+.universe-card:focus-within {
+  outline: 2px solid #E9BD72;
+  outline-offset: 2px;
+}
+
+/* Animation des tags */
+.tag-animate {
+  transition: all 0.2s ease;
+}
+
+.tag-animate:hover {
+  transform: scale(1.05);
+  background-color: rgba(233, 189, 114, 0.3);
+}
+
+/* Amélioration de la barre de recherche */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(233, 189, 114, 0.3);
+}
+
+/* Pagination hover effects */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Amélioration des checkboxes de filtres */
+.filter-checkbox:checked {
+  background-color: #E9BD72;
+  border-color: #E9BD72;
+}
+
+/* Effet shimmer pour les boutons d'action */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+/* Tooltip CSS pur pour les cartes */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* ===== STYLES UX POUR SELECTUNIVERSE ===== */
+
+/* Animation smooth pour les cartes */
+.universe-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.universe-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Effet de focus pour l'accessibilité */
+.universe-card:focus-within {
+  outline: 2px solid #E9BD72;
+  outline-offset: 2px;
+}
+
+/* Animation des tags */
+.tag-animate {
+  transition: all 0.2s ease;
+}
+
+.tag-animate:hover {
+  transform: scale(1.05);
+  background-color: rgba(233, 189, 114, 0.3);
+}
+
+/* Amélioration de la barre de recherche */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(233, 189, 114, 0.3);
+}
+
+/* Pagination hover effects */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Amélioration des checkboxes de filtres */
+.filter-checkbox {
+  transition: all 0.2s ease;
+}
+
+.filter-checkbox:checked {
+  background-color: #E9BD72;
+  border-color: #E9BD72;
+}
+
+.filter-checkbox:hover {
+  border-color: #E9BD72;
+}
+
+/* Animation des sections */
+.section-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Amélioration des boutons d'action */
+.action-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+/* Amélioration des cartes d'univers */
+.universe-card-image {
+  transition: transform 0.3s ease;
+}
+
+.universe-card:hover .universe-card-image {
+  transform: scale(1.05);
+}
+
+/* Effet de chargement pour les images */
+.image-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive mobile pour les cartes d'univers */
+@media (max-width: 640px) {
   .universe-card-title {
     font-size: 0.75rem;
     line-height: 1rem;

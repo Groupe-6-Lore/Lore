@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight, Search, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+// import { supabase } from '../services/supabase'; // TODO: Décommenter quand Supabase sera configuré
 
 const SelectUniverse = () => {
   const { user } = useAuth();
@@ -16,9 +17,14 @@ const SelectUniverse = () => {
     prices: [],
     difficulty: []
   });
+  // États pour pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [universes, setUniverses] = useState([]);
+  const [allFilteredUniverses, setAllFilteredUniverses] = useState([]);
   const itemsPerPage = 12;
+  
+  // États pour la bibliothèque utilisateur
+  const [userLibrary, setUserLibrary] = useState([]); // Jeux achetés
+  const [userPlayedGames, setUserPlayedGames] = useState([]); // Jeux joués avec d'autres MJ
 
   // Données de test pour les univers
   const allUniverses = [
@@ -28,7 +34,7 @@ const SelectUniverse = () => {
       subtitle: "Manuel des joueurs",
       author: "Wizards of the Coast",
       price: 49.99,
-      type: "Déjà possédé",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -40,8 +46,8 @@ const SelectUniverse = () => {
       title: "Donjons & Dragons de l'Ère Moderne",
       subtitle: "Livre de règles",
       author: "Wizards of the Coast",
-      price: null,
-      type: "Déjà possédé",
+      price: 45.99,
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -53,8 +59,8 @@ const SelectUniverse = () => {
       title: "L'Univers Héroïque 2e Edition",
       subtitle: "Livre principal",
       author: "Free League",
-      price: 45,
-      type: "Gratuit",
+      price: null,
+      type: "free",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -67,7 +73,7 @@ const SelectUniverse = () => {
       subtitle: "Livre de base",
       author: "Chaosium et Sans-Détour",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -76,16 +82,16 @@ const SelectUniverse = () => {
     },
     {
       id: 5,
-      title: "Legend of the Five Rings",
-      subtitle: "5e édition",
-      author: "Max / FFG / Edge",
-      price: 49,
-      type: "Payant",
-      themes: ["Historique & Réaliste"],
-      rules: ["Liées"],
-      difficulty: "Expert",
-      image: "/images/l5r.jpg",
-      popularity: 70
+      title: "Roll20 Universe",
+      subtitle: "Plateforme en ligne",
+      author: "Roll20",
+      price: null,
+      type: "owned",
+      themes: ["Autres"],
+      rules: ["Libres"],
+      difficulty: "Débutant",
+      image: "/images/roll20.jpg",
+      popularity: 60
     },
     {
       id: 6,
@@ -93,7 +99,7 @@ const SelectUniverse = () => {
       subtitle: "Livre de base",
       author: "Greg Stafford / Chaosium",
       price: 40,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -106,7 +112,7 @@ const SelectUniverse = () => {
       subtitle: "Jeu narratif",
       author: "John Harper",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -119,7 +125,7 @@ const SelectUniverse = () => {
       subtitle: "Règles narratives",
       author: "Sage Kobold",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -132,7 +138,7 @@ const SelectUniverse = () => {
       subtitle: "5e édition",
       author: "White Wolf",
       price: 55,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -145,7 +151,7 @@ const SelectUniverse = () => {
       subtitle: "Livre de base",
       author: "R. Talsorian Games",
       price: 60,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -158,7 +164,7 @@ const SelectUniverse = () => {
       subtitle: "Jeu de rôle narratif",
       author: "Bully Pulpit Games",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Comédie & Parodique"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -171,12 +177,12 @@ const SelectUniverse = () => {
       subtitle: "Livre de base",
       author: "John Harper",
       price: 50,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
       image: "/images/blades.jpg",
-      popularity: 88
+      popularity: 85
     },
     {
       id: 13,
@@ -184,7 +190,7 @@ const SelectUniverse = () => {
       subtitle: "7e édition",
       author: "Chaosium",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -197,7 +203,7 @@ const SelectUniverse = () => {
       subtitle: "Discovery & Destiny",
       author: "Monte Cook Games",
       price: 45,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -210,7 +216,7 @@ const SelectUniverse = () => {
       subtitle: "2e édition",
       author: "D. Vincent Baker",
       price: 35,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -223,7 +229,7 @@ const SelectUniverse = () => {
       subtitle: "Jeu de monstres adolescents",
       author: "Avery Alder",
       price: 25,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -236,7 +242,7 @@ const SelectUniverse = () => {
       subtitle: "Super-héros adolescents",
       author: "Brendan Conway",
       price: 30,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -249,7 +255,7 @@ const SelectUniverse = () => {
       subtitle: "Cyberpunk narratif",
       author: "Hamish Cameron",
       price: 40,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -262,7 +268,7 @@ const SelectUniverse = () => {
       subtitle: "Horreur urbaine",
       author: "Andrew Medeiros",
       price: 35,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -275,7 +281,7 @@ const SelectUniverse = () => {
       subtitle: "Fantasy épique",
       author: "Jacob Randolph",
       price: 30,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -288,7 +294,7 @@ const SelectUniverse = () => {
       subtitle: "Cyberpunk transhumaniste",
       author: "Samjoko Publishing",
       price: 25,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -301,7 +307,7 @@ const SelectUniverse = () => {
       subtitle: "Horreur gothique",
       author: "Marissa Kelly",
       price: 45,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -314,7 +320,7 @@ const SelectUniverse = () => {
       subtitle: "Post-apocalyptique queer",
       author: "Avery Alder",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -327,7 +333,7 @@ const SelectUniverse = () => {
       subtitle: "Fantasy pastoral",
       author: "Jay Dragon",
       price: 35,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Liées"],
       difficulty: "Débutant",
@@ -340,7 +346,7 @@ const SelectUniverse = () => {
       subtitle: "Fantasy queer",
       author: "April Kit Walsh",
       price: 30,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Liées"],
       difficulty: "Débutant",
@@ -353,7 +359,7 @@ const SelectUniverse = () => {
       subtitle: "Jeux narratifs",
       author: "Scott Malthouse",
       price: 38,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -366,7 +372,7 @@ const SelectUniverse = () => {
       subtitle: "Science-fiction",
       author: "Scott Malthouse",
       price: 24,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Liées"],
       difficulty: "Expert",
@@ -379,7 +385,7 @@ const SelectUniverse = () => {
       subtitle: "Jeu narratif",
       author: "John Harper",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Science-fiction"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -392,7 +398,7 @@ const SelectUniverse = () => {
       subtitle: "Système générique",
       author: "Last Unicorn / Elder Craft",
       price: 60,
-      type: "Payant",
+      type: "paid",
       themes: ["Autres"],
       rules: ["Liées"],
       difficulty: "Expert",
@@ -405,7 +411,7 @@ const SelectUniverse = () => {
       subtitle: "Création d'histoire collaborative",
       author: "Ben Robbins",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Autres"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -418,7 +424,7 @@ const SelectUniverse = () => {
       subtitle: "Exploration et survie",
       author: "Tomas Härenstam",
       price: 42,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Liées"],
       difficulty: "Intermédiaire",
@@ -431,7 +437,7 @@ const SelectUniverse = () => {
       subtitle: "Horreur cosmique",
       author: "Chaosium",
       price: 35,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Expert",
@@ -444,7 +450,7 @@ const SelectUniverse = () => {
       subtitle: "4e édition",
       author: "Cubicle 7",
       price: 45,
-      type: "Payant",
+      type: "paid",
       themes: ["Fantasy"],
       rules: ["Liées"],
       difficulty: "Expert",
@@ -457,7 +463,7 @@ const SelectUniverse = () => {
       subtitle: "6e édition",
       author: "Catalyst Game Labs",
       price: 50,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Liées"],
       difficulty: "Expert",
@@ -470,7 +476,7 @@ const SelectUniverse = () => {
       subtitle: "Système de base",
       author: "White Wolf",
       price: 35,
-      type: "Payant",
+      type: "paid",
       themes: ["Horreur & Mystère"],
       rules: ["Liées"],
       difficulty: "Intermédiaire",
@@ -483,7 +489,7 @@ const SelectUniverse = () => {
       subtitle: "Système générique",
       author: "Steve Jackson Games",
       price: 40,
-      type: "Payant",
+      type: "paid",
       themes: ["Autres"],
       rules: ["Liées"],
       difficulty: "Expert",
@@ -496,7 +502,7 @@ const SelectUniverse = () => {
       subtitle: "Jeu narratif court",
       author: "Grant Howitt",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Comédie & Parodique"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -509,7 +515,7 @@ const SelectUniverse = () => {
       subtitle: "Construction de communauté",
       author: "Avery Alder",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Autres"],
       rules: ["Libres"],
       difficulty: "Intermédiaire",
@@ -522,7 +528,7 @@ const SelectUniverse = () => {
       subtitle: "Horreur avec Jenga",
       author: "Rafael Chandler",
       price: null,
-      type: "Gratuit",
+      type: "free",
       themes: ["Horreur & Mystère"],
       rules: ["Libres"],
       difficulty: "Débutant",
@@ -535,7 +541,7 @@ const SelectUniverse = () => {
       subtitle: "Post-apocalyptique",
       author: "Free League Publishing",
       price: 45,
-      type: "Payant",
+      type: "paid",
       themes: ["Science-fiction"],
       rules: ["Liées"],
       difficulty: "Intermédiaire",
@@ -544,12 +550,55 @@ const SelectUniverse = () => {
     }
   ];
 
+  // TODO: Remplacer par vraies requêtes Supabase
+  const fetchUserLibrary = async () => {
+    try {
+      // Jeux achetés par l'utilisateur
+      const { data: purchased } = await supabase
+        .from('user_purchases')
+        .select('universe_id')
+        .eq('user_id', user.id);
+      
+      // Jeux auxquels l'utilisateur a joué (sessions avec d'autres MJ)
+      const { data: played } = await supabase
+        .from('game_sessions')
+        .select('universe_id')
+        .eq('player_id', user.id)
+        .neq('dm_id', user.id);
+      
+      setUserLibrary(purchased.map(p => p.universe_id));
+      setUserPlayedGames(played.map(p => p.universe_id));
+    } catch (error) {
+      console.error('Erreur chargement bibliothèque:', error);
+    }
+  };
+
+  // Simuler le chargement de la bibliothèque (à remplacer par vraie logique Supabase)
+  useEffect(() => {
+    if (user) {
+      // TODO: Décommenter quand Supabase sera configuré
+      // fetchUserLibrary();
+      
+      // Données utilisateur simulées (à remplacer par Supabase)
+      setUserLibrary([1, 2]); // L'utilisateur a acheté D&D 5e et Cthulhu
+      setUserPlayedGames([3, 4]); // A joué Pathfinder et Blades avec d'autres MJ
+    }
+  }, [user]);
+
   // Filtres disponibles
   const filterOptions = {
     themes: ["Fantasy", "Science-fiction", "Horreur & Mystère", "Historique & Réaliste", "Comédie & Parodique", "Autres"],
     rules: ["Liées", "Libres"],
-    prices: ["Gratuit", "Gratuit avec achats facultatifs", "Payant"],
+    prices: ["free", "freemium", "paid", "owned"],
     difficulty: ["Débutant", "Intermédiaire", "Expert"]
+  };
+
+  // Labels pour les prix (mapping technique -> affichage)
+  const priceLabels = {
+    "free": "Gratuit",
+    "freemium": "Gratuit avec achats facultatifs", 
+    "paid": "Payant",
+    "owned": "Possédé"
   };
 
   // Options de tri
@@ -560,7 +609,7 @@ const SelectUniverse = () => {
     { value: 'price_desc', label: 'Prix décroissant' }
   ];
 
-  // Fonction de filtrage et tri
+  // Logique de filtrage ET tri (sans pagination)
   useEffect(() => {
     let filtered = allUniverses.filter(universe => {
       // Recherche par terme
@@ -580,26 +629,50 @@ const SelectUniverse = () => {
       return matchesSearch && matchesThemes && matchesRules && matchesPrices && matchesDifficulty;
     });
 
-    // Tri
-    switch (sortBy) {
-      case 'alphabetical':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'price_asc':
-        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-        break;
-      case 'price_desc':
-        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
-        break;
-      case 'popularity':
-      default:
-        filtered.sort((a, b) => b.popularity - a.popularity);
-        break;
-    }
+    // Tri avec priorité freemium
+    const sortUniverses = (universesToSort) => {
+      return universesToSort.sort((a, b) => {
+        // Les freemium passent toujours en premier
+        if (a.type === 'freemium' && b.type !== 'freemium') return -1;
+        if (b.type === 'freemium' && a.type !== 'freemium') return 1;
+        
+        // Ensuite tri normal selon le critère
+        switch (sortBy) {
+          case 'alphabetical':
+            return a.title.localeCompare(b.title);
+          case 'price_asc':
+            return (a.price || 0) - (b.price || 0);
+          case 'price_desc':
+            return (b.price || 0) - (a.price || 0);
+          case 'popularity':
+          default:
+            return b.popularity - a.popularity;
+        }
+      });
+    };
 
-    setUniverses(filtered);
-    setCurrentPage(1); // Reset à la première page lors du filtrage
+    const sortedFiltered = sortUniverses([...filtered]);
+    setAllFilteredUniverses(sortedFiltered);
+    setCurrentPage(1); // Reset à la page 1 lors du filtrage
   }, [searchTerm, selectedFilters, sortBy]);
+
+  // Calcul pagination sur les univers filtrés et triés
+  const totalPages = Math.ceil(allFilteredUniverses.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUniverses = allFilteredUniverses.slice(startIndex, startIndex + itemsPerPage);
+
+  // Séparation APRÈS pagination
+  const ownedUniverses = paginatedUniverses.filter(u => {
+    return u.type === 'owned' || 
+           userLibrary.includes(u.id) || 
+           userPlayedGames.includes(u.id);
+  });
+
+  const unknownUniverses = paginatedUniverses.filter(u => {
+    return u.type !== 'owned' && 
+           !userLibrary.includes(u.id) && 
+           !userPlayedGames.includes(u.id);
+  });
 
   // Gestion des filtres
   const toggleFilter = (category, value) => {
@@ -611,43 +684,36 @@ const SelectUniverse = () => {
     }));
   };
 
-  // Pagination
-  const totalPages = Math.ceil(universes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUniverses = universes.slice(startIndex, startIndex + itemsPerPage);
+
 
   const handleUniverseSelect = (universe) => {
     // Navigation vers la page de détails de l'univers
     navigate(`/campaigns/create/universe/${universe.id}/info`);
   };
 
-  const handleUniverseChoose = (universe) => {
-    // Continuer avec cet univers pour créer la campagne
-    navigate('/campaigns/create/configure', { state: { selectedUniverse: universe } });
-  };
 
   return (
     <div className="min-h-screen bg-primary-blue">
       {/* Header */}
-      <header className="flex items-center justify-between p-6 bg-primary-blue/90">
-        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
+      <header className="flex items-center justify-between p-4 sm:p-6 bg-primary-blue/90">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <button className="text-light hover:text-golden transition-colors">
-            <Settings size={24} />
+            <Settings size={20} className="sm:w-6 sm:h-6" />
           </button>
           <button className="text-light hover:text-golden transition-colors">
-            <Bell size={24} />
+            <Bell size={20} className="sm:w-6 sm:h-6" />
           </button>
-          <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold text-sm sm:text-base">
             {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
           </div>
         </div>
       </header>
 
       {/* Breadcrumb */}
-      <div className="px-6 py-4">
-        <nav className="flex items-center space-x-2 text-light/80">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <nav className="flex items-center space-x-2 text-light/80 text-sm sm:text-base">
           <button
             onClick={() => navigate('/campaigns')}
             className="hover:text-light transition-colors"
@@ -662,11 +728,11 @@ const SelectUniverse = () => {
       </div>
 
       {/* Section principale */}
-      <div className="px-6 pb-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="px-4 sm:px-6 pb-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           
-          {/* Sidebar filtres */}
-          <div className="w-full lg:w-80 bg-light/10 backdrop-blur-sm rounded-2xl p-6">
+          {/* Sidebar collapsible sur mobile */}
+          <div className="w-full lg:w-80 bg-light/10 backdrop-blur-sm rounded-2xl p-4 lg:p-6 lg:sticky lg:top-6 lg:h-fit mb-8 lg:mb-0">
             <h3 className="text-light font-bold text-xl calligraphy-font mb-6">Filtres</h3>
             
             {/* Par thème */}
@@ -679,7 +745,7 @@ const SelectUniverse = () => {
                       type="checkbox"
                       checked={selectedFilters.themes.includes(theme)}
                       onChange={() => toggleFilter('themes', theme)}
-                      className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                      className="filter-checkbox mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
                     />
                     <span className="text-light/80 text-sm">{theme}</span>
                   </label>
@@ -697,7 +763,7 @@ const SelectUniverse = () => {
                       type="checkbox"
                       checked={selectedFilters.rules.includes(rule)}
                       onChange={() => toggleFilter('rules', rule)}
-                      className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                      className="filter-checkbox mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
                     />
                     <span className="text-light/80 text-sm">{rule}</span>
                   </label>
@@ -705,21 +771,46 @@ const SelectUniverse = () => {
               </div>
             </div>
 
-            {/* Par prix */}
+            {/* Par prix - LABELS EN FRANÇAIS */}
             <div className="mb-6">
               <h4 className="text-light/90 font-semibold mb-3">Par prix</h4>
               <div className="space-y-2">
-                {filterOptions.prices.map(price => (
-                  <label key={price} className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedFilters.prices.includes(price)}
-                      onChange={() => toggleFilter('prices', price)}
-                      className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
-                    />
-                    <span className="text-light/80 text-sm">{price}</span>
-                  </label>
-                ))}
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedFilters.prices.includes('free')}
+                    onChange={() => toggleFilter('prices', 'free')}
+                    className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                  />
+                  <span className="text-light/80 text-sm">Gratuit</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedFilters.prices.includes('freemium')}
+                    onChange={() => toggleFilter('prices', 'freemium')}
+                    className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                  />
+                  <span className="text-light/80 text-sm">Gratuit avec achats facultatifs</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedFilters.prices.includes('paid')}
+                    onChange={() => toggleFilter('prices', 'paid')}
+                    className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                  />
+                  <span className="text-light/80 text-sm">Payant</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedFilters.prices.includes('owned')}
+                    onChange={() => toggleFilter('prices', 'owned')}
+                    className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                  />
+                  <span className="text-light/80 text-sm">Possédé</span>
+                </label>
               </div>
             </div>
 
@@ -733,7 +824,7 @@ const SelectUniverse = () => {
                       type="checkbox"
                       checked={selectedFilters.difficulty.includes(diff)}
                       onChange={() => toggleFilter('difficulty', diff)}
-                      className="mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
+                      className="filter-checkbox mr-3 h-4 w-4 text-golden rounded border-light/30 focus:ring-golden"
                     />
                     <span className="text-light/80 text-sm">{diff}</span>
                   </label>
@@ -745,28 +836,28 @@ const SelectUniverse = () => {
           {/* Contenu principal */}
           <div className="flex-1">
             {/* Header avec recherche et tri */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-              <h2 className="text-4xl font-bold text-light eagle-lake-font">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 lg:mb-8 gap-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-light eagle-lake-font">
                 Choix de l'univers
               </h2>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 {/* Barre de recherche */}
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none">
                   <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark/60" />
                   <input
                     type="text"
                     placeholder="Rechercher des jeux de rôles"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 w-80 rounded-lg border border-light/30 bg-light text-dark placeholder-dark/60 focus:ring-2 focus:ring-golden focus:border-transparent"
+                    className="search-input pl-10 pr-4 py-3 w-full sm:w-80 rounded-lg border border-light/30 bg-light text-dark placeholder-dark/60 focus:ring-2 focus:ring-golden focus:border-transparent"
                   />
                 </div>
                 {/* Dropdown tri */}
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none">
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-light/20 text-light border border-light/30 rounded-lg px-4 py-3 pr-10 focus:ring-2 focus:ring-golden focus:border-transparent cursor-pointer"
+                    className="appearance-none bg-golden text-dark border border-golden rounded-lg px-4 py-3 pr-10 w-full sm:w-auto focus:ring-2 focus:ring-golden focus:border-transparent cursor-pointer font-semibold"
                   >
                     {sortOptions.map(option => (
                       <option key={option.value} value={option.value} className="text-dark">
@@ -774,28 +865,165 @@ const SelectUniverse = () => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-light pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-dark pointer-events-none" />
                 </div>
               </div>
             </div>
 
-            {/* Section "Univers déjà connus" */}
-            <div className="mb-8">
-              <h3 className="text-light/90 font-semibold text-lg mb-6">Univers déjà connus</h3>
-              {/* Grille d'univers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {paginatedUniverses.map(universe => (
-                  <UniverseCard 
-                    key={universe.id} 
-                    universe={universe} 
-                    onSelect={() => handleUniverseSelect(universe)}
-                    onChoose={() => handleUniverseChoose(universe)}
-                  />
-                ))}
+            {/* Tags sélectionnés - comme sur le wireframe */}
+            {(selectedFilters.themes.length > 0 || 
+              selectedFilters.rules.length > 0 || 
+              selectedFilters.prices.length > 0 || 
+              selectedFilters.difficulty.length > 0) && (
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  {/* Tags thèmes sélectionnés */}
+                  {selectedFilters.themes.map(theme => (
+                    <span 
+                      key={`selected-theme-${theme}`}
+                      className="bg-golden text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                    >
+                      {theme}
+                      <button
+                        onClick={() => toggleFilter('themes', theme)}
+                        className="text-white hover:text-dark transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  
+                  {/* Tags règles sélectionnés */}
+                  {selectedFilters.rules.map(rule => (
+                    <span 
+                      key={`selected-rule-${rule}`}
+                      className="bg-golden text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                    >
+                      {rule}
+                      <button
+                        onClick={() => toggleFilter('rules', rule)}
+                        className="text-white hover:text-dark transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  
+                  {/* Tags prix sélectionnés - LABELS EN FRANÇAIS */}
+                  {selectedFilters.prices.map(price => (
+                    <span 
+                      key={`selected-price-${price}`}
+                      className="bg-golden text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                    >
+                      {price === 'free' ? 'Gratuit' : 
+                       price === 'freemium' ? 'Gratuit avec achats facultatifs' :
+                       price === 'paid' ? 'Payant' : 
+                       price === 'owned' ? 'Possédé' : price}
+                      <button
+                        onClick={() => toggleFilter('prices', price)}
+                        className="text-white hover:text-dark transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  
+                  {/* Tags difficulté sélectionnés */}
+                  {selectedFilters.difficulty.map(diff => (
+                    <span 
+                      key={`selected-diff-${diff}`}
+                      className="bg-golden text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                    >
+                      {diff}
+                      <button
+                        onClick={() => toggleFilter('difficulty', diff)}
+                        className="text-white hover:text-dark transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  
+                  {/* Bouton tout effacer */}
+                  <button
+                    onClick={() => setSelectedFilters({
+                      themes: [],
+                      rules: [],
+                      prices: [],
+                      difficulty: []
+                    })}
+                    className="text-light/60 hover:text-light text-sm underline"
+                  >
+                    Effacer tous les filtres
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Pagination */}
+            {/* Section "Univers déjà connus" - SEULEMENT s'il y en a */}
+            {ownedUniverses.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-light/90 font-semibold text-lg mb-6">Univers déjà connus</h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
+                  {ownedUniverses.map(universe => (
+                    <div key={universe.id} className="p-2">
+                      <UniverseCard 
+                        universe={universe} 
+                        onSelect={() => handleUniverseSelect(universe)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ligne de séparation - SEULEMENT s'il y a les deux sections */}
+            {ownedUniverses.length > 0 && unknownUniverses.length > 0 && (
+              <div className="border-t border-light/20 my-8"></div>
+            )}
+
+            {/* Section "Autres univers disponibles" - Toujours affichée */}
+            {unknownUniverses.length > 0 && (
+              <div className="mb-8">
+                {ownedUniverses.length > 0 ? (
+                  <h3 className="text-light/90 font-semibold text-lg mb-6">Autres univers disponibles</h3>
+                ) : (
+                  <h3 className="text-light/90 font-semibold text-lg mb-6">Univers disponibles</h3>
+                )}
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
+                  {unknownUniverses.map(universe => (
+                    <div key={universe.id} className="p-2">
+                      <UniverseCard 
+                        universe={universe} 
+                        onSelect={() => handleUniverseSelect(universe)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Message si aucun univers trouvé */}
+            {ownedUniverses.length === 0 && unknownUniverses.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-light/60 text-lg mb-4">
+                  Aucun univers ne correspond à vos critères de recherche
+                </div>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedFilters({ themes: [], rules: [], prices: [], difficulty: [] });
+                  }}
+                  className="bg-golden text-dark px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
+                >
+                  Réinitialiser les filtres
+                </button>
+              </div>
+            )}
+
+            {/* Pagination - UTILISE allFilteredUniverses pour le calcul */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center space-x-2 mt-8">
                 <button
@@ -805,19 +1033,37 @@ const SelectUniverse = () => {
                 >
                   Précédent
                 </button>
-                {[...Array(totalPages)].map((_, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => setCurrentPage(index + 1)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      currentPage === index + 1
-                        ? 'bg-golden text-dark font-bold'
-                        : 'bg-light/20 text-light hover:bg-light/30'
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+                
+                {[...Array(Math.min(totalPages, 7))].map((_, index) => {
+                  let pageNumber;
+                  if (totalPages <= 7) {
+                    pageNumber = index + 1;
+                  } else {
+                    // Logique pour afficher les pages pertinentes
+                    if (currentPage <= 4) {
+                      pageNumber = index + 1;
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNumber = totalPages - 6 + index;
+                    } else {
+                      pageNumber = currentPage - 3 + index;
+                    }
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentPage === pageNumber
+                          ? 'bg-golden text-dark font-bold'
+                          : 'bg-light/20 text-light hover:bg-light/30'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+                
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
@@ -825,6 +1071,13 @@ const SelectUniverse = () => {
                 >
                   Suivant
                 </button>
+              </div>
+            )}
+
+            {/* Affichage info pagination */}
+            {allFilteredUniverses.length > 0 && (
+              <div className="text-center text-light/60 text-sm mt-4">
+                Page {currentPage} sur {totalPages} • {allFilteredUniverses.length} univers au total
               </div>
             )}
           </div>
@@ -835,61 +1088,68 @@ const SelectUniverse = () => {
 };
 
 // Composant carte d'univers
-const UniverseCard = ({ universe, onSelect, onChoose }) => {
+const UniverseCard = ({ universe, onSelect }) => {
   return (
-    <div className="bg-light rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer">
-      {/* Tags de prix en haut */}
-      <div className="relative h-48 bg-gray-200">
-        {/* Image placeholder */}
-        <div className="w-full h-full bg-gradient-to-br from-golden/20 to-golden/40 flex items-center justify-center">
-          <div className="text-golden/60 text-6xl font-bold opacity-50">JDR</div>
+    <div 
+      onClick={() => onSelect()}
+      className="relative rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
+      style={{ 
+        backgroundColor: 'rgba(13, 21, 26, 0.7)',
+        padding: '8px'
+      }}
+    >
+      
+      {/* Image avec hauteur réduite */}
+      <div className="relative h-40 bg-gray-200 rounded-md overflow-hidden">
+        {/* Placeholder pour future image */}
+        <div className="w-full h-full bg-white/80 flex items-center justify-center">
+          <div className="text-gray-400 text-3xl font-bold opacity-50">IMG</div>
         </div>
-        {/* Tags prix */}
-        <div className="absolute top-3 left-3 flex gap-2">
-          {universe.type === 'Gratuit' && (
-            <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
-              Gratuit
+        
+        {/* Tags EN HAUT À DROITE - ENTIÈREMENT VISIBLES */}
+        <div className="absolute top-2 right-2 flex flex-wrap gap-1 justify-end universe-card-tags">
+          {/* Tags thème */}
+          {universe.themes && universe.themes.map((theme, index) => (
+            <span key={`theme-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+              {theme}
             </span>
-          )}
-          {universe.type === 'Déjà possédé' && (
-            <span className="bg-golden text-dark px-2 py-1 rounded text-xs font-semibold">
-              Déjà possédé
+          ))}
+          {/* Tags règles */} 
+          {universe.rules && universe.rules.map((rule, index) => (
+            <span key={`rule-${index}`} className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+              {rule}
             </span>
-          )}
-          {universe.price && (
-            <span className="bg-dark text-light px-2 py-1 rounded text-xs font-semibold">
-              {universe.price}€
+          ))}
+          {/* Tag difficulté */}
+          {universe.difficulty && (
+            <span className="bg-golden text-white text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
+              {universe.difficulty}
             </span>
           )}
         </div>
-        {/* Overlay hover */}
-        <div className="absolute inset-0 bg-dark/0 group-hover:bg-dark/20 transition-all duration-300"></div>
       </div>
-      {/* Contenu */}
-      <div className="p-4">
-        <h4 className="font-bold text-dark text-sm mb-1 line-clamp-2">{universe.title}</h4>
-        <p className="text-dark/70 text-xs mb-2">{universe.subtitle}</p>
-        <p className="text-dark/60 text-xs mb-4">{universe.author}</p>
-        {/* Boutons */}
-        <div className="flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect();
-            }}
-            className="flex-1 bg-light border border-golden text-golden px-3 py-2 rounded text-xs font-semibold hover:bg-golden hover:text-dark transition-colors"
-          >
-            En savoir plus sur cet univers
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onChoose();
-            }}
-            className="flex-1 bg-golden text-dark px-3 py-2 rounded text-xs font-semibold hover:bg-golden/80 transition-colors"
-          >
-            Choisir cet univers
-          </button>
+
+      {/* Section informations - avec séparation */}
+      <div className="p-3">
+        {/* Titre et informations */}
+        <h4 className="font-bold text-white text-sm mb-1 leading-tight universe-card-title">{universe.title}</h4>
+        <p className="text-white/80 text-xs mb-1 universe-card-subtitle">{universe.subtitle}</p>
+        <p className="text-white/60 text-xs mb-3">{universe.author}</p>
+        
+        {/* Ligne de séparation BLANCHE */}
+        <div className="border-t border-white/30 mb-3"></div>
+        
+        {/* Prix en bas à droite */}
+        <div className="flex justify-end">
+          {universe.type === 'owned' ? (
+            <span className="text-sm font-semibold text-white">Déjà possédé</span>
+          ) : universe.type === 'free' ? (
+            <span className="text-sm font-semibold text-white">Gratuit</span>
+          ) : universe.type === 'freemium' ? (
+            <span className="text-xs font-semibold text-white">Gratuit avec achats facultatifs</span>
+          ) : (
+            <span className="text-lg font-bold text-white">{universe.price} €</span>
+          )}
         </div>
       </div>
     </div>
