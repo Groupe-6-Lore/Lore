@@ -8,8 +8,10 @@ import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
 import SelectUniverse from './pages/SelectUniverse';
 import UniverseDetails from './pages/UniverseDetails';
+import UniverseInfo from './pages/UniverseInfo';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
+import CreateCampaign from './pages/CreateCampaign';
 import UniverseSelection from './pages/UniverseSelection';
 import RulesSelection from './pages/RulesSelection';
 import UniverseDetailsCreate from './pages/UniverseDetailsCreate';
@@ -83,23 +85,29 @@ function App() {
             </ProtectedRoute>
           } />
           
+          {/* Route protégée - Create Campaign */}
+          <Route path="/campaigns/create" element={
+            <ProtectedRoute>
+              <CreateCampaign />
+            </ProtectedRoute>
+          } />
           
           {/* Route protégée - Universe Selection */}
           <Route 
             path="/campaigns/create/universe" 
             element={
               <ProtectedRoute>
-                <UniverseSelection />
+                <SelectUniverse />
               </ProtectedRoute>
             } 
           />
           
           {/* Route protégée - Universe Details */}
           <Route 
-            path="/campaigns/create/universe/:universeId/details" 
+            path="/campaigns/create/universe/:id/info" 
             element={
               <ProtectedRoute>
-                <UniverseDetailsCreate />
+                <UniverseInfo />
               </ProtectedRoute>
             } 
           />

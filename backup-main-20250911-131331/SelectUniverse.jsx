@@ -618,7 +618,7 @@ const SelectUniverse = () => {
 
   const handleUniverseSelect = (universe) => {
     // Navigation vers la page de détails de l'univers
-    navigate(`/campaigns/create/universe/${universe.id}/info`);
+    navigate(`/campaigns/create/universe/${universe.id}/details`);
   };
 
   const handleUniverseChoose = (universe) => {
