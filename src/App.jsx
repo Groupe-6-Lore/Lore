@@ -14,6 +14,7 @@ import UniverseInfo from './pages/UniverseInfo';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
 import CreateCampaign from './pages/CreateCampaign';
+import Payment from './pages/Payment';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -156,6 +157,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ConfigureCampaign />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Payment */}
+          <Route 
+            path="/campaigns/create/payment" 
+            element={
+              <ProtectedRoute>
+                <Payment />
               </ProtectedRoute>
             } 
           />

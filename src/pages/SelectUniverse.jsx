@@ -661,7 +661,7 @@ const UniverseCard = ({ universe, onClick, isKnown = false }) => {
         <div className="absolute top-2 right-2 z-10 universe-tags-container">
           <div className="flex flex-wrap gap-1 justify-end">
             {/* Badge "Déjà possédé" - Pour section univers connus OU si réellement possédé */}
-            {(isKnown || universe.isOwned) && (
+            {(isKnown || universe.isOwned || universe.type === 'owned') && (
               <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
                 Possédé
               </span>
@@ -722,6 +722,7 @@ const UniverseCard = ({ universe, onClick, isKnown = false }) => {
               <div className="universe-price-text font-semibold text-white text-sm">
                 {isKnown ? "Déjà possédé" : 
                  universe.isOwned ? "Déjà possédé" : 
+                 universe.type === 'owned' ? "Déjà possédé" :
                  universe.type === 'freemium' ? "Gratuit avec achats facultatifs" :
                  universe.price === null ? "Gratuit" : `${universe.price} €`}
               </div>

@@ -1421,8 +1421,8 @@ const UniverseDetails = () => {
   }, [id]);
 
   const handleExtensionClick = (extension) => {
-    // Navigation vers page détails de l'extension
-    navigate(`/campaigns/create/universe/${id}/extension/${extension.id}`);
+    // Toggle de la sélection de l'extension
+    handleExtensionToggle(extension.id);
   };
 
   const handleExtensionToggle = (extensionId) => {
@@ -1435,18 +1435,21 @@ const UniverseDetails = () => {
 
   const calculateTotal = () => {
     if (!universe) return 0;
-    const basePrice = universe.price || 0;
+    // Pour les éléments possédés, le prix de base est 0
+    const basePrice = universe.type === 'owned' ? 0 : (universe.price || 0);
     const extensionsPrice = selectedExtensions.reduce((total, extId) => {
       const extension = universe.extensions.find(ext => ext.id === extId);
       return total + (extension ? extension.price : 0);
     }, 0);
-    return basePrice + extensionsPrice;
+    return Math.round((basePrice + extensionsPrice) * 100) / 100; // Arrondir à 2 décimales
   };
 
   const handleUseUniverse = () => {
     // Stocker l'univers sélectionné et retourner à la création de campagne
+    const total = calculateTotal();
     const selectedData = {
       universe: universe,
+      totalPrice: total,
       extensions: selectedExtensions.map(extId => 
         universe.extensions.find(ext => ext.id === extId)
       ).filter(Boolean)
@@ -1463,6 +1466,7 @@ const UniverseDetails = () => {
     );
   }
 
+  // Recalculer le total à chaque rendu pour assurer la mise à jour dynamique
   const total = calculateTotal();
 
   return (
@@ -1520,7 +1524,7 @@ const UniverseDetails = () => {
           </div>
 
           {/* Colonne droite - Contenu */}
-          <div>
+          <div className="flex flex-col justify-start">
 
             {/* Section Présentation avec tags */}
             <div className="mb-8">
@@ -1557,57 +1561,69 @@ const UniverseDetails = () => {
             <div className="mb-8">
               <h4 className="text-xl font-bold text-light eagle-lake-font mb-4">Achats facultatifs</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {universe.extensions.map(extension => (
-                  <div 
-                    key={extension.id}
-                    onClick={() => handleExtensionClick(extension)}
-                    className={`cursor-pointer rounded-lg overflow-hidden transition-all duration-300 ${
-                      selectedExtensions.includes(extension.id)
-                        ? 'ring-2 ring-golden'
-                        : 'hover:ring-1 hover:ring-light/30'
-                    }`}
-                    style={{ backgroundColor: 'rgba(13, 21, 26, 0.7)' }}
-                  >
-                    <div className="aspect-[4/3] bg-light/20 flex items-center justify-center p-3">
-                      <div className="w-full h-full bg-light/30 rounded-lg border border-white flex items-center justify-center">
-                        <div className="text-light/40 text-4xl font-bold opacity-50">IMG</div>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h5 className="text-light font-semibold text-sm mb-1">{extension.name}</h5>
-                          <p className="text-light/70 text-xs">{extension.type}</p>
+                {universe.extensions.map(extension => {
+                  const isSelected = selectedExtensions.includes(extension.id);
+                  return (
+                    <div 
+                      key={extension.id}
+                      onClick={() => handleExtensionClick(extension)}
+                      className={`cursor-pointer rounded-lg overflow-hidden transition-all duration-300 relative ${isSelected ? 'ring-2 ring-golden bg-golden/10' : 'hover:ring-1 hover:ring-light/30'}`}
+                      style={{ backgroundColor: isSelected ? 'rgba(233, 189, 114, 0.1)' : 'rgba(13, 21, 26, 0.7)' }}
+                    >
+                      {/* Indicateur de sélection */}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 z-10">
+                          <div className="w-6 h-6 bg-golden rounded-full flex items-center justify-center">
+                            <span className="text-dark text-xs font-bold">✓</span>
+                          </div>
                         </div>
-                        <div className="ml-4 pl-4 border-l-2 border-white/30">
-                          <p className="text-light font-bold text-lg">{extension.price} €</p>
+                      )}
+                      
+                      <div className="aspect-[4/3] bg-light/20 flex items-center justify-center p-3">
+                        <div className="w-full h-full bg-light/30 rounded-lg border border-white flex items-center justify-center">
+                          <div className="text-light/40 text-4xl font-bold opacity-50">IMG</div>
                         </div>
                       </div>
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <h5 className={`font-semibold text-sm mb-1 ${isSelected ? 'text-golden' : 'text-light'}`}>{extension.name}</h5>
+                            <p className="text-light/70 text-xs">Achats facultatifs</p>
+                          </div>
+                          <div className="ml-4 pl-4 border-l-2 border-white/30">
+                            <p className={`font-bold text-lg ${isSelected ? 'text-golden' : 'text-light'}`}>{Math.round(extension.price * 100) / 100} €</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* Prix et bouton - CALCUL DYNAMIQUE */}
             <div className="flex items-center justify-between">
               <div className="text-4xl font-bold text-light">
-                {universe.type === 'owned' ? "Déjà possédé" :
+                {universe.type === 'owned' ? (
+                   selectedExtensions.length > 0 ? `${total} €` : "Déjà possédé"
+                 ) :
                  universe.type === 'freemium' ? (
                    selectedExtensions.length > 0 ? `${total} €` : "Gratuit avec achats facultatifs"
                  ) : 
                  universe.type === 'free' ? (
                    selectedExtensions.length > 0 ? `${total} €` : "Gratuit"
                  ) : (
-                   selectedExtensions.length > 0 ? `${total} €` : `${universe.price} €`
+                   selectedExtensions.length > 0 ? `${total} €` : `${Math.round(universe.price * 100) / 100} €`
                  )}
-                {selectedExtensions.length > 0 && universe.type !== 'owned' && (
+                {selectedExtensions.length > 0 && (
                   <div className="text-lg text-light/70 mt-1">
-                    {universe.type === 'freemium' ? 
-                      `Gratuit + ${total}€ achats` : 
-                      universe.type === 'free' ? 
-                        `${total}€ achats` : 
-                        `${universe.price}€ base + ${total - universe.price}€ achats`
+                    {universe.type === 'owned' ? 
+                      `${total}€ achats` :
+                      universe.type === 'freemium' ? 
+                        `Gratuit + ${total}€ achats` : 
+                        universe.type === 'free' ? 
+                          `${total}€ achats` : 
+                          `${Math.round(universe.price * 100) / 100}€ base + ${Math.round((total - universe.price) * 100) / 100}€ achats`
                     }
                   </div>
                 )}

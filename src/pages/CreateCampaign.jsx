@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Bell, ChevronRight, Check, CreditCard } from 'lucide-react';
+import { Settings, Bell, ChevronRight, ChevronLeft, Check, CreditCard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -15,16 +15,27 @@ const CreateCampaign = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
 
-  // Récupérer les sélections depuis le sessionStorage (venant des pages existantes)
+  // Nettoyer les sélections au démarrage (quand on vient de la page campagnes)
   useEffect(() => {
-    const storedData = sessionStorage.getItem('selectedUniverse');
-    if (storedData) {
-      const universeData = JSON.parse(storedData);
-      setSelectedUniverse(universeData);
-    }
-    const rules = localStorage.getItem('selectedRules');
-    if (rules) {
-      setSelectedRules(JSON.parse(rules));
+    // Vérifier si on vient de la page campagnes (pas de sélections précédentes)
+    const hasExistingSelections = sessionStorage.getItem('selectedUniverse') || sessionStorage.getItem('selectedRules');
+    
+    if (!hasExistingSelections) {
+      // Nettoyer les états si pas de sélections
+      setSelectedUniverse(null);
+      setSelectedRules(null);
+      setIsValidated(false);
+    } else {
+      // Charger les sélections existantes
+      const storedData = sessionStorage.getItem('selectedUniverse');
+      if (storedData) {
+        const universeData = JSON.parse(storedData);
+        setSelectedUniverse(universeData);
+      }
+      const rules = sessionStorage.getItem('selectedRules');
+      if (rules) {
+        setSelectedRules(JSON.parse(rules));
+      }
     }
   }, []);
 
@@ -36,17 +47,24 @@ const CreateCampaign = () => {
         const universeData = JSON.parse(storedData);
         setSelectedUniverse(universeData);
       }
-      const rules = localStorage.getItem('selectedRules');
+      const rules = sessionStorage.getItem('selectedRules');
       if (rules) {
         setSelectedRules(JSON.parse(rules));
       }
     };
 
+    // Charger les données immédiatement
+    handleStorageChange();
+    
     // Vérifier au focus de la fenêtre (quand on revient sur la page)
     window.addEventListener('focus', handleStorageChange);
+    
+    // Écouter les changements du sessionStorage
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('focus', handleStorageChange);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -65,10 +83,50 @@ const CreateCampaign = () => {
     }
   };
 
+  // Fonction pour nettoyer les sélections (appelée depuis la page campagnes)
+  const clearSelections = () => {
+    setSelectedUniverse(null);
+    setSelectedRules(null);
+    setIsValidated(false);
+    sessionStorage.removeItem('selectedUniverse');
+    sessionStorage.removeItem('selectedRules');
+    sessionStorage.removeItem('campaignTotalPrice');
+    sessionStorage.removeItem('campaignData');
+  };
+
   const handleValidate = () => {
     if (selectedUniverse && selectedRules) {
       setIsValidated(true);
-      toast.success('Choix validés ! Vous pouvez maintenant créer votre campagne.');
+      
+      // Calculer le prix total
+      const universePrice = selectedUniverse.universe.type === 'owned' ? 0 : 
+                           selectedUniverse.universe.type === 'free' ? 0 :
+                           selectedUniverse.universe.type === 'freemium' ? 0 :
+                           selectedUniverse.universe.price || 0;
+      
+      const rulesPrice = selectedRules.type === 'owned' ? 0 :
+                        selectedRules.type === 'free' ? 0 :
+                        selectedRules.type === 'freemium' ? 0 :
+                        selectedRules.price || 0;
+      
+      const extensionsPrice = (selectedUniverse.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0) +
+                             (selectedRules.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+      
+      const totalPrice = universePrice + rulesPrice + extensionsPrice;
+      
+      // Stocker le prix total pour la page de paiement
+      sessionStorage.setItem('campaignTotalPrice', totalPrice.toString());
+      sessionStorage.setItem('campaignData', JSON.stringify({
+        universe: selectedUniverse,
+        rules: selectedRules,
+        totalPrice: totalPrice
+      }));
+      
+      if (totalPrice > 0) {
+        toast.success(`Choix validés ! Total à payer : ${Math.round(totalPrice * 100) / 100}€`);
+      } else {
+        toast.success('Choix validés ! Vous pouvez créer votre campagne gratuitement.');
+      }
     } else {
       toast.error('Veuillez sélectionner un univers et des règles avant de valider.');
     }
@@ -79,9 +137,22 @@ const CreateCampaign = () => {
   };
 
   const calculateTotalPrice = () => {
-    const universePrice = selectedUniverse?.price || 0;
-    const rulesPrice = selectedRules?.price || 0;
-    return universePrice + rulesPrice;
+    if (!selectedUniverse || !selectedRules) return 0;
+    
+    const universePrice = selectedUniverse.universe.type === 'owned' ? 0 : 
+                         selectedUniverse.universe.type === 'free' ? 0 :
+                         selectedUniverse.universe.type === 'freemium' ? 0 :
+                         selectedUniverse.universe.price || 0;
+    
+    const rulesPrice = selectedRules.type === 'owned' ? 0 :
+                      selectedRules.type === 'free' ? 0 :
+                      selectedRules.type === 'freemium' ? 0 :
+                      selectedRules.price || 0;
+    
+    const extensionsPrice = (selectedUniverse.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0) +
+                           (selectedRules.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+    
+    return Math.round((universePrice + rulesPrice + extensionsPrice) * 100) / 100; // Arrondir à 2 décimales
   };
 
   const handlePayAndValidate = async () => {
@@ -91,57 +162,59 @@ const CreateCampaign = () => {
     }
 
     const totalPrice = calculateTotalPrice();
-    setIsCreating(true);
 
-    try {
-      if (totalPrice > 0) {
-        // Simuler le processus de paiement
-        toast.loading('Traitement du paiement...', { duration: 2000 });
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        toast.success('Paiement effectué avec succès !');
-        await new Promise(resolve => setTimeout(resolve, 500));
+    if (totalPrice > 0) {
+      // Rediriger vers la page de paiement
+      navigate('/campaigns/create/payment');
+    } else {
+      // Créer directement la campagne
+      setIsCreating(true);
+      try {
+        await createCampaign();
+      } catch (error) {
+        console.error('Erreur lors de la création:', error);
+        toast.error('Erreur lors de la création de la campagne');
+      } finally {
+        setIsCreating(false);
       }
-
-      // Créer la campagne
-      await createCampaign();
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
-      toast.error('Erreur lors de la création de la campagne');
-    } finally {
-      setIsCreating(false);
     }
   };
 
   const createCampaign = async () => {
     try {
       // Générer un titre automatique
-      const campaignTitle = `Campagne ${selectedUniverse.name}`;
+      const campaignTitle = `Campagne ${selectedUniverse.universe.name}`;
       
-      const { data, error } = await supabase
-        .from('campaigns')
-        .insert({
-          user_id: user.id,
-          title: campaignTitle,
-          game_system: selectedRules.name,
-          universe: selectedUniverse.name,
-          description: `Nouvelle campagne dans l'univers ${selectedUniverse.name} utilisant les règles ${selectedRules.name}`,
-          resume: selectedUniverse.longDescription || selectedUniverse.description || 'Une nouvelle aventure commence...',
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const campaignData = {
+        id: `campaign-${Date.now()}`, // ID unique pour le mode démo
+        user_id: user.id,
+        title: campaignTitle,
+        game_system: selectedRules.name,
+        universe: selectedUniverse.universe.name,
+        description: `Nouvelle campagne dans l'univers ${selectedUniverse.universe.name} utilisant les règles ${selectedRules.name}`,
+        resume: selectedUniverse.universe.description || 'Une nouvelle aventure commence...',
+        status: 'active',
+        total_price: totalPrice,
+        universe_extensions: selectedUniverse.extensions || [],
+        rules_extensions: selectedRules.extensions || [],
+        players: [] // Liste vide de joueurs
+      };
+      
+      // Mode démo : stocker la campagne dans localStorage
+      const existingCampaigns = JSON.parse(localStorage.getItem('demoCampaigns') || '[]');
+      existingCampaigns.push(campaignData);
+      localStorage.setItem('demoCampaigns', JSON.stringify(existingCampaigns));
 
       toast.success('Campagne créée avec succès !');
     } catch (error) {
       console.error('Erreur création campagne:', error);
-      // Mode démo : simuler la création même en cas d'erreur
       toast.success('Campagne créée avec succès ! (Mode démo)');
     } finally {
-      // Nettoyer le localStorage dans tous les cas
-      localStorage.removeItem('selectedUniverse');
-      localStorage.removeItem('selectedRules');
+      // Nettoyer le sessionStorage dans tous les cas
+      sessionStorage.removeItem('selectedUniverse');
+      sessionStorage.removeItem('selectedRules');
+      sessionStorage.removeItem('campaignTotalPrice');
+      sessionStorage.removeItem('campaignData');
       
       // Rediriger vers la liste
       setTimeout(() => {
@@ -209,7 +282,15 @@ const CreateCampaign = () => {
           {/* Card Univers */}
           {selectedUniverse ? (
             <div onClick={handleUniverseClick} className={`group transform transition-all duration-300 ${!isValidated ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-75'}`}>
-              <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden h-96 ring-2 ${isValidated ? 'ring-green-500' : 'ring-amber-500'}`}>
+              <div className={`bg-light rounded-2xl border border-golden/30 shadow-xl overflow-hidden h-80 relative ${isValidated ? 'ring-2 ring-golden' : ''}`}>
+                
+                {/* Status indicateur */}
+                {selectedUniverse && (
+                  <div className="absolute top-4 right-4 z-10 w-8 h-8 bg-golden rounded-full flex items-center justify-center">
+                    <Check size={16} className="text-dark" />
+                  </div>
+                )}
+
                 <div className="h-3/4 relative overflow-hidden">
                   {/* Image de l'univers sélectionné */}
                   <div
@@ -221,6 +302,16 @@ const CreateCampaign = () => {
                     }}
                   >
                     <div className="absolute inset-0 bg-black/40"></div>
+                    
+                    {/* Prix total sur l'image */}
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
+                        {selectedUniverse.universe.type === 'owned' ? 'Possédé' :
+                         selectedUniverse.totalPrice === 0 ? 'Gratuit' :
+                         `${Math.round(selectedUniverse.totalPrice * 100) / 100}€`}
+                      </span>
+                    </div>
+                    
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                       <div className="text-2xl font-bold mb-2 text-center">{selectedUniverse.universe.name}</div>
                       <div className="text-sm text-center">{selectedUniverse.universe.publisher}</div>
@@ -232,22 +323,48 @@ const CreateCampaign = () => {
                     </div>
                   </div>
                 </div>
-                <div className="h-1/4 flex items-center justify-center bg-white">
-                  <h3 className={`text-xl font-bold text-slate-900 transition-colors ${!isValidated ? 'group-hover:text-amber-600' : ''}`}>
-                    {isValidated ? 'Univers validé' : 'Univers sélectionné'}
+
+                {/* Titre et description */}
+                <div className="h-1/4 p-4 bg-light">
+                  <h3 className="text-xl font-bold text-primary-blue mb-1 flex items-center">
+                    <span className="text-2xl mr-2">🌍</span>
+                    {selectedUniverse ? selectedUniverse.universe.name : 'Univers'}
                   </h3>
+                  {selectedUniverse && (
+                    <>
+                      <p className="text-primary-blue/70 text-sm truncate">
+                        {selectedUniverse.universe.publisher}
+                      </p>
+                      {selectedUniverse.extensions && selectedUniverse.extensions.length > 0 && (
+                        <div className="mt-2">
+                          <span className="bg-golden/20 text-golden px-2 py-1 rounded-full text-xs font-medium">
+                            + {selectedUniverse.extensions.length} extension{selectedUniverse.extensions.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             // Card univers normale si rien sélectionné
             <div onClick={handleUniverseClick} className="group cursor-pointer transform transition-all duration-300 hover:scale-105">
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96">
+              <div className="bg-light rounded-2xl border border-golden/30 shadow-xl overflow-hidden h-80">
                 <div className="h-3/4 bg-gradient-to-br from-purple-500/80 to-pink-500/80 relative overflow-hidden">
                   <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <div className="text-4xl mb-2">🌍</div>
+                      <div className="text-lg font-bold">Choisir un univers</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="h-1/4 flex items-center justify-center bg-white">
-                  <h3 className="text-2xl font-bold text-slate-900 eagle-lake-font">Univers</h3>
+                <div className="h-1/4 p-4 bg-light">
+                  <h3 className="text-xl font-bold text-primary-blue flex items-center">
+                    <span className="text-2xl mr-2">🌍</span>
+                    Univers
+                  </h3>
                 </div>
               </div>
             </div>
@@ -258,12 +375,12 @@ const CreateCampaign = () => {
             onClick={handleRulesClick}
             className={`group transform transition-all duration-300 ${!isValidated ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-75'}`}
           >
-            <div className={`bg-light/15 backdrop-blur-sm rounded-2xl border border-light/20 shadow-xl overflow-hidden h-80 relative ${isValidated ? 'ring-2 ring-green-500' : ''}`}>
+            <div className={`bg-light rounded-2xl border border-golden/30 shadow-xl overflow-hidden h-80 relative ${isValidated ? 'ring-2 ring-golden' : ''}`}>
               
               {/* Status indicateur */}
               {selectedRules && (
-                <div className="absolute top-4 right-4 z-10 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check size={16} className="text-white" />
+                <div className="absolute top-4 right-4 z-10 w-8 h-8 bg-golden rounded-full flex items-center justify-center">
+                  <Check size={16} className="text-dark" />
                 </div>
               )}
 
@@ -281,14 +398,14 @@ const CreateCampaign = () => {
                   >
                     <div className="absolute inset-0 bg-black/30"></div>
                     
-                    {/* Prix sur l'image */}
-                    {selectedRules.price > 0 && (
-                      <div className="absolute top-3 left-3">
-                        <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
-                          {selectedRules.price}€
-                        </span>
-                      </div>
-                    )}
+                    {/* Prix total sur l'image */}
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
+                        {selectedRules.type === 'owned' ? 'Possédé' :
+                         selectedRules.totalPrice === 0 ? 'Gratuit' :
+                         `${Math.round(selectedRules.totalPrice * 100) / 100}€`}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   // Placeholder par défaut
@@ -307,14 +424,24 @@ const CreateCampaign = () => {
               </div>
 
               {/* Titre et description */}
-              <div className="h-1/4 p-4 bg-light/10">
-                <h3 className="text-xl font-bold text-light mb-1">
+              <div className="h-1/4 p-4 bg-light">
+                <h3 className="text-xl font-bold text-primary-blue mb-1 flex items-center">
+                  <span className="text-2xl mr-2">📚</span>
                   {selectedRules ? selectedRules.name : 'Règles'}
                 </h3>
                 {selectedRules && (
-                  <p className="text-light/70 text-sm truncate">
-                    {selectedRules.description}
-                  </p>
+                  <>
+                    <p className="text-primary-blue/70 text-sm truncate">
+                      {selectedRules.description}
+                    </p>
+                    {selectedRules.extensions && selectedRules.extensions.length > 0 && (
+                      <div className="mt-2">
+                        <span className="bg-golden/20 text-golden px-2 py-1 rounded-full text-xs font-medium">
+                          + {selectedRules.extensions.length} extension{selectedRules.extensions.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -341,22 +468,67 @@ const CreateCampaign = () => {
         <div className="px-6 pb-8">
           <div className="max-w-4xl mx-auto">
             
+            {/* Bouton Retour */}
+            <div className="mb-6">
+              <button
+                onClick={() => setIsValidated(false)}
+                className="bg-light/20 hover:bg-light/30 text-light px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
+              >
+                <ChevronLeft size={20} className="mr-2" />
+                Modifier mes choix
+              </button>
+            </div>
+
             {/* Récapitulatif des prix */}
             <div className="bg-light/10 rounded-xl p-6 mb-6 border border-light/20">
               <h3 className="text-xl font-bold text-light mb-4 eagle-lake-font">Récapitulatif</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-light">
-                  <span>Univers : {selectedUniverse.name}</span>
+                  <span>Univers : {selectedUniverse.universe.name}</span>
                   <span className="font-bold">
-                    {selectedUniverse.price === 0 ? 'Gratuit' : `${selectedUniverse.price}€`}
+                    {selectedUniverse.universe.type === 'owned' ? 'Déjà possédé' :
+                     selectedUniverse.totalPrice === 0 ? 'Gratuit' : `${Math.round(selectedUniverse.totalPrice * 100) / 100}€`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-light">
                   <span>Règles : {selectedRules.name}</span>
                   <span className="font-bold">
-                    {selectedRules.price === 0 ? 'Gratuit' : `${selectedRules.price}€`}
+                    {selectedRules.type === 'owned' ? 'Déjà possédé' :
+                     selectedRules.totalPrice === 0 ? 'Gratuit' : `${Math.round(selectedRules.totalPrice * 100) / 100}€`}
                   </span>
                 </div>
+                {(selectedUniverse.extensions && selectedUniverse.extensions.length > 0) && (
+                  <>
+                    <div className="flex justify-between items-center text-light">
+                      <span>Achats facultatifs univers :</span>
+                      <span className="font-bold">
+                        {Math.round(selectedUniverse.extensions.reduce((total, ext) => total + (ext.price || 0), 0) * 100) / 100}€
+                      </span>
+                    </div>
+                    {selectedUniverse.extensions.map((ext, index) => (
+                      <div key={index} className="flex justify-between items-center text-light/80 text-sm ml-4">
+                        <span>• {ext.name}</span>
+                        <span>{Math.round(ext.price * 100) / 100}€</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {(selectedRules.extensions && selectedRules.extensions.length > 0) && (
+                  <>
+                    <div className="flex justify-between items-center text-light">
+                      <span>Achats facultatifs règles :</span>
+                      <span className="font-bold">
+                        {Math.round(selectedRules.extensions.reduce((total, ext) => total + (ext.price || 0), 0) * 100) / 100}€
+                      </span>
+                    </div>
+                    {selectedRules.extensions.map((ext, index) => (
+                      <div key={index} className="flex justify-between items-center text-light/80 text-sm ml-4">
+                        <span>• {ext.name}</span>
+                        <span>{Math.round(ext.price * 100) / 100}€</span>
+                      </div>
+                    ))}
+                  </>
+                )}
                 <div className="border-t border-light/30 pt-3">
                   <div className="flex justify-between items-center text-light text-lg font-bold">
                     <span>Total :</span>
@@ -388,7 +560,7 @@ const CreateCampaign = () => {
                       <Check size={24} />
                     )}
                     <span>
-                      {totalPrice > 0 ? `Payer ${totalPrice.toFixed(2)}€ et créer` : 'Créer la campagne'}
+                      {totalPrice > 0 ? `Payer ${Math.round(totalPrice * 100) / 100}€ et créer` : 'Créer la campagne'}
                     </span>
                   </>
                 )}

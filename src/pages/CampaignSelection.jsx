@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Bell, Plus, Users, UserPlus, X } from 'lucide-react';
+import { Settings, Bell, Plus, Users, UserPlus, X, Edit2, Save, X as XIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 const CampaignSelection = () => {
@@ -14,6 +14,11 @@ const CampaignSelection = () => {
   const [selectedCampaignId, setSelectedCampaignId] = useState(null);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newCharacterName, setNewCharacterName] = useState('');
+  
+  // États pour l'édition des campagnes
+  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editResume, setEditResume] = useState('');
 
   // Données par défaut si pas de campagnes
   const defaultCampaign = {
@@ -40,23 +45,27 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
     fetchCampaigns();
   }, [user]);
 
+  // Recharger les campagnes quand la page devient active
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchCampaigns();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const fetchCampaigns = async () => {
     try {
       if (!user) return;
       
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select(`
-          *,
-          players (*)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'active');
+      // Mode démo : récupérer les campagnes du localStorage
+      const demoCampaigns = JSON.parse(localStorage.getItem('demoCampaigns') || '[]');
       
-      if (error) throw error;
+      // Combiner les campagnes démo avec la campagne par défaut
+      const allCampaigns = [defaultCampaign, ...demoCampaigns];
       
-      // Si pas de campagnes, utilise la campagne par défaut
-      setCampaigns(data?.length ? data : [defaultCampaign]);
+      setCampaigns(allCampaigns);
     } catch (error) {
       console.error('Erreur récupération campagnes:', error);
       // En cas d'erreur, affiche la campagne par défaut
@@ -67,6 +76,11 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
   };
 
   const handleCreateCampaign = () => {
+    // Nettoyer le sessionStorage avant de naviguer
+    sessionStorage.removeItem('selectedUniverse');
+    sessionStorage.removeItem('selectedRules');
+    sessionStorage.removeItem('campaignTotalPrice');
+    sessionStorage.removeItem('campaignData');
     navigate('/campaigns/create');
   };
 
@@ -130,6 +144,54 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
       console.error('Erreur ajout joueur:', error);
       toast.error('Erreur lors de l\'ajout du joueur');
     }
+  };
+
+  // Fonctions pour l'édition des campagnes
+  const handleEditCampaign = (campaign) => {
+    setEditingCampaign(campaign.id);
+    setEditTitle(campaign.title);
+    setEditResume(campaign.resume || '');
+  };
+
+  const handleSaveCampaign = async () => {
+    if (!editTitle.trim()) {
+      toast.error('Le titre de la campagne est requis');
+      return;
+    }
+
+    try {
+      if (editingCampaign === 'default-campaign') {
+        // Pour la campagne par défaut, simule la sauvegarde
+        toast.success('Campagne mise à jour !');
+      } else {
+        // Pour les vraies campagnes, utilise Supabase
+        const { error } = await supabase
+          .from('campaigns')
+          .update({
+            title: editTitle.trim(),
+            resume: editResume.trim()
+          })
+          .eq('id', editingCampaign);
+
+        if (error) throw error;
+        toast.success('Campagne mise à jour avec succès !');
+        fetchCampaigns(); // Rafraîchit la liste
+      }
+
+      // Reset édition
+      setEditingCampaign(null);
+      setEditTitle('');
+      setEditResume('');
+    } catch (error) {
+      console.error('Erreur mise à jour campagne:', error);
+      toast.error('Erreur lors de la mise à jour de la campagne');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCampaign(null);
+    setEditTitle('');
+    setEditResume('');
   };
 
   if (loading) {
@@ -215,10 +277,47 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                     </button>
                   </div>
 
-                  {/* Titre de la campagne */}
-                  <h3 className="text-4xl font-bold text-golden mb-8 italic eagle-lake-font">
-                    {campaign.title}
-                  </h3>
+                  {/* Titre de la campagne - Éditable */}
+                  <div className="mb-8">
+                    {editingCampaign === campaign.id ? (
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="text-4xl font-bold text-golden italic eagle-lake-font bg-transparent border-b-2 border-golden/50 focus:border-golden outline-none w-full"
+                          placeholder="Titre de la campagne"
+                        />
+                        <button
+                          onClick={handleSaveCampaign}
+                          className="text-golden hover:text-light transition-colors"
+                          title="Sauvegarder"
+                        >
+                          <Save size={24} />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="text-light/70 hover:text-light transition-colors"
+                          title="Annuler"
+                        >
+                          <XIcon size={24} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3">
+                        <h3 className="text-4xl font-bold text-golden italic eagle-lake-font">
+                          {campaign.title}
+                        </h3>
+                        <button
+                          onClick={() => handleEditCampaign(campaign)}
+                          className="text-light/50 hover:text-golden transition-colors"
+                          title="Modifier le titre et le résumé"
+                        >
+                          <Edit2 size={20} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Layout : Résumé (2/3) + Joueurs (1/3) */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -226,15 +325,24 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                     {/* Résumé à gauche (2/3) */}
                     <div className="lg:col-span-2">
                       <h4 className="text-light font-bold mb-4 italic text-xl eagle-lake-font">Résumé</h4>
-                      <div className="text-light/90 text-base leading-7 space-y-4">
-                        {campaign.resume ? (
-                          campaign.resume.split('\n\n').map((paragraph, index) => (
-                            <p key={index} className="text-justify">{paragraph}</p>
-                          ))
-                        ) : (
-                          <p className="text-light/60 italic">Aucun résumé disponible pour cette campagne.</p>
-                        )}
-                      </div>
+                      {editingCampaign === campaign.id ? (
+                        <textarea
+                          value={editResume}
+                          onChange={(e) => setEditResume(e.target.value)}
+                          className="w-full h-64 bg-light/10 border border-light/20 rounded-lg p-4 text-light/90 text-base leading-7 resize-none focus:border-golden focus:outline-none"
+                          placeholder="Décrivez votre campagne, son univers, ses enjeux, ses personnages principaux..."
+                        />
+                      ) : (
+                        <div className="text-light/90 text-base leading-7 space-y-4">
+                          {campaign.resume ? (
+                            campaign.resume.split('\n\n').map((paragraph, index) => (
+                              <p key={index} className="text-justify">{paragraph}</p>
+                            ))
+                          ) : (
+                            <p className="text-light/60 italic">Aucun résumé disponible pour cette campagne.</p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Joueurs à droite (1/3) */}

@@ -168,9 +168,21 @@ const SelectRules = () => {
           case 'alphabetical':
             return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
           case 'price_asc':
-            return a.price - b.price;
+            // Tri croissant : gratuit (0) → freemium (0.5) → payant (prix réel)
+            const getPriceValueAsc = (rule) => {
+              if (rule.type === 'free') return 0;
+              if (rule.type === 'freemium') return 0.5;
+              return rule.price || 0;
+            };
+            return getPriceValueAsc(a) - getPriceValueAsc(b);
           case 'price_desc':
-            return b.price - a.price;
+            // Tri décroissant : payant (prix réel) → freemium (0.5) → gratuit (0)
+            const getPriceValueDesc = (rule) => {
+              if (rule.type === 'free') return 0;
+              if (rule.type === 'freemium') return 0.5;
+              return rule.price || 0;
+            };
+            return getPriceValueDesc(b) - getPriceValueDesc(a);
           case 'popularity':
           default:
             return b.popularity - a.popularity;
@@ -581,7 +593,7 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
         <div className="absolute top-2 right-2 z-10 universe-tags-container">
           <div className="flex flex-wrap gap-1 justify-end">
             {/* Badge "Déjà possédé" - Pour section règles connues OU si réellement possédé */}
-            {(isKnown || rule.isOwned) && (
+            {(isKnown || rule.isOwned || rule.type === 'owned') && (
               <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
                 Possédé
               </span>
@@ -642,6 +654,7 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
               <div className="universe-price-text font-semibold text-white text-sm">
                 {isKnown ? "Déjà possédé" : 
                  rule.isOwned ? "Déjà possédé" : 
+                 rule.type === 'owned' ? "Déjà possédé" :
                  rule.type === 'freemium' ? "Gratuit avec achats facultatifs" :
                  rule.price === 0 ? "Gratuit" : `${rule.price} €`}
               </div>
