@@ -335,3 +335,4 @@
 3. **Testez la recherche** : Focus effects
 4. **Validez la pagination** : Hover effects
 5. **Explorez l'accessibilité** : Navigation clavier
+

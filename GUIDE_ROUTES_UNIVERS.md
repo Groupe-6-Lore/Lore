@@ -244,3 +244,4 @@
 - **Responsive** ✅
 
 **✨ Le flux de navigation est maintenant fluide et permet une expérience utilisateur complète pour la sélection et la configuration d'univers !**
+

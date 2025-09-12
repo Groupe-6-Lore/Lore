@@ -183,3 +183,4 @@ J'ai modifié l'affichage pour rendre conditionnelles les sections et améliorer
 ### 📝 Note
 
 Cette implémentation améliore significativement l'expérience utilisateur en masquant les sections vides et en adaptant les titres selon le contexte. L'interface est maintenant plus claire et plus intuitive.
+

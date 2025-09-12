@@ -637,3 +637,4 @@ export default SelectUniverse;
 // 7. ✅ Responsive design (1-4 colonnes)
 // 8. ✅ Navigation vers /campaigns/create/universe/:id/info
 // ========================================
+

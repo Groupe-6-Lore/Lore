@@ -109,3 +109,4 @@ J'ai réduit légèrement la hauteur de l'image pour laisser plus de place aux t
 ### 📝 Note
 
 Cette modification améliore l'équilibre visuel des cartes en réduisant la dominance de l'image et en laissant plus d'espace pour les informations importantes (tags). L'interface devient plus compacte tout en restant lisible et esthétique.
+

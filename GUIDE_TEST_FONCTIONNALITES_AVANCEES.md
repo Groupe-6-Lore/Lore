@@ -382,3 +382,4 @@ RÉSULTAT GLOBAL : ✅/❌ SUCCÈS/ÉCHEC
 5. **Remplissez le rapport de test**
 
 **✨ Toutes les fonctionnalités avancées de LORE sont maintenant testables !**
+

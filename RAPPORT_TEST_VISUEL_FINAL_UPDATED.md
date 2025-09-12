@@ -216,3 +216,4 @@ const UniverseCard = ({ universe, onSelect }) => {
 ### 📝 Note
 
 Le serveur de développement est actif et prêt pour les tests. Tous les éléments visuels demandés sont correctement implémentés selon les spécifications exactes du wireframe, avec la suppression de la bordure blanche et l'optimisation des tags sur une seule ligne.
+

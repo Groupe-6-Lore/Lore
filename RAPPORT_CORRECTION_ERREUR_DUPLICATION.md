@@ -109,3 +109,4 @@ setUserPlayedGames(mockUserPlayedGames);
 ### 📝 Note
 
 Cette erreur était due à un conflit de noms entre les états React et les constantes de données simulées. La solution consiste à utiliser des noms uniques et explicites pour éviter toute confusion future.
+

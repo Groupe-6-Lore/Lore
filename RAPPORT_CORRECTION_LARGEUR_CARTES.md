@@ -107,3 +107,4 @@ J'ai modifié les grilles pour que les cartes soient plus étroites comme sur le
 ### 📝 Note
 
 Cette modification améliore significativement l'utilisation de l'espace écran en affichant plus de cartes par ligne, tout en maintenant une bonne lisibilité et une expérience utilisateur optimale sur tous les appareils.
+

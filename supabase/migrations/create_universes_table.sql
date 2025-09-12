@@ -89,3 +89,4 @@ CREATE TRIGGER update_universes_updated_at
     BEFORE UPDATE ON universes 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
+

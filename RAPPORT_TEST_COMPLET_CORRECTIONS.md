@@ -211,3 +211,4 @@ rules: ["Liées"]
 ### 📝 Note
 
 Le test complet confirme que toutes les corrections appliquées fonctionnent correctement. L'interface est maintenant cohérente, la pagination est fonctionnelle, et les labels français sont corrects partout.
+

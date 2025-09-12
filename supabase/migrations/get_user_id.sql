@@ -9,3 +9,4 @@ FROM auth.users
 WHERE email = 'VOTRE_EMAIL@exemple.com'; -- Remplacez par votre email
 
 -- Une fois que vous avez votre user_id, utilisez-le dans le script add_test_data.sql
+

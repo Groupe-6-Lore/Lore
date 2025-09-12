@@ -43,3 +43,4 @@ Chaque pas dans ces terres maudites révèle de nouveaux mystères et dangers. L
 Pouvez-vous survivre aux horreurs de Ravenloft et trouver un moyen de fuir ce cauchemar éternel ?',
   'Une campagne horreur dans le Domaine de la Peur'
 );
+

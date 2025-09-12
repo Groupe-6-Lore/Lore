@@ -265,3 +265,4 @@ npm start
 2. **Remplir le rapport** de test
 3. **Documenter les problèmes** rencontrés
 4. **Valider les fonctionnalités** avancées
+

@@ -180,3 +180,4 @@ J'ai vérifié les données de test pour m'assurer qu'elles incluent des titres 
 ### 📝 Note
 
 Les données actuelles permettent de tester efficacement le tri alphabétique avec la locale française, incluant tous les cas spéciaux (accents, caractères spéciaux, chiffres) et offrant une bonne diversité pour valider le fonctionnement de `localeCompare('fr', { sensitivity: 'base' })`.
+

@@ -392,3 +392,4 @@ const UniverseCard = ({ universe, onSelect, onChoose }) => {
 - **Performance optimisée** ✅
 
 **✨ La page fonctionne maintenant parfaitement sur tous les appareils, du mobile au desktop !**
+

@@ -613,3 +613,4 @@ Commence par créer la structure de base et les fichiers principaux.
 - [ ] Vérifier navigation entre pages
 
 **Votre projet est maintenant entièrement sauvegardé ! 🎉**
+

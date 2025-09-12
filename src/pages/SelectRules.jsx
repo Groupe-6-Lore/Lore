@@ -9,3 +9,4 @@ const SelectRules = () => {
 };
 
 export default SelectRules;
+

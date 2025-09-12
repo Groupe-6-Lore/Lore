@@ -178,3 +178,4 @@ Si les images ne se chargent pas, vous pouvez ajouter un fallback :
 - **Images** : `http://localhost:3003/images/dm-rules.jpg`
 
 **✨ Les cards affichent maintenant de vraies images avec des effets visuels professionnels !**
+

@@ -31,3 +31,4 @@ SELECT
 FROM campaigns 
 WHERE user_id = 'TON_USER_ID'
 ORDER BY created_at DESC;
+

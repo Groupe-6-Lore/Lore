@@ -283,3 +283,4 @@
 5. **Valider la qualité** : S'assurer que tout fonctionne parfaitement
 
 **✨ La page de sélection d'univers est maintenant prête pour les tests complets !**
+
