@@ -7,7 +7,9 @@ import AuthPage from './components/auth/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
 import SelectUniverse from './pages/SelectUniverse';
+import SelectRules from './pages/SelectRules';
 import UniverseDetails from './pages/UniverseDetails';
+import RulesDetails from './pages/RulesDetails';
 import UniverseInfo from './pages/UniverseInfo';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
@@ -94,6 +96,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <SelectUniverse />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Rules Selection */}
+          <Route 
+            path="/campaigns/create/rules" 
+            element={
+              <ProtectedRoute>
+                <SelectRules />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Route protégée - Rules Details */}
+          <Route 
+            path="/campaigns/create/rules/:id/details" 
+            element={
+              <ProtectedRoute>
+                <RulesDetails />
               </ProtectedRoute>
             } 
           />

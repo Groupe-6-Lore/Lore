@@ -13,6 +13,7 @@ const CreateCampaign = () => {
   const [selectedUniverse, setSelectedUniverse] = useState(null);
   const [selectedRules, setSelectedRules] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isValidated, setIsValidated] = useState(false);
 
   // Récupérer les sélections depuis le sessionStorage (venant des pages existantes)
   useEffect(() => {
@@ -51,11 +52,26 @@ const CreateCampaign = () => {
 
   // Naviguer vers les pages de sélection
   const handleUniverseClick = () => {
-    navigate('/campaigns/create/universe');
+    // Si pas validé, on peut changer d'univers
+    if (!isValidated) {
+      navigate('/campaigns/create/universe');
+    }
   };
 
   const handleRulesClick = () => {
-    navigate('/campaigns/create/rules');
+    // Si pas validé, on peut changer de règles
+    if (!isValidated) {
+      navigate('/campaigns/create/rules');
+    }
+  };
+
+  const handleValidate = () => {
+    if (selectedUniverse && selectedRules) {
+      setIsValidated(true);
+      toast.success('Choix validés ! Vous pouvez maintenant créer votre campagne.');
+    } else {
+      toast.error('Veuillez sélectionner un univers et des règles avant de valider.');
+    }
   };
 
   const handleBreadcrumbClick = (path) => {
@@ -192,18 +208,35 @@ const CreateCampaign = () => {
           
           {/* Card Univers */}
           {selectedUniverse ? (
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96 ring-2 ring-amber-500">
-              <div className="h-3/4 bg-gradient-to-br from-slate-600/20 to-slate-800/20 flex flex-col items-center justify-center">
-                <div className="text-slate-700 text-2xl font-bold mb-2">{selectedUniverse.universe.name}</div>
-                <div className="text-slate-600 text-sm">{selectedUniverse.universe.publisher}</div>
-                {selectedUniverse.extensions.length > 0 && (
-                  <div className="text-slate-500 text-xs mt-2">
-                    + {selectedUniverse.extensions.length} extension(s)
+            <div onClick={handleUniverseClick} className={`group transform transition-all duration-300 ${!isValidated ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-75'}`}>
+              <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden h-96 ring-2 ${isValidated ? 'ring-green-500' : 'ring-amber-500'}`}>
+                <div className="h-3/4 relative overflow-hidden">
+                  {/* Image de l'univers sélectionné */}
+                  <div
+                    className="w-full h-full bg-cover bg-center"
+                    style={{
+                      backgroundImage: selectedUniverse.universe.image
+                        ? `url(${selectedUniverse.universe.image})`
+                        : `linear-gradient(135deg, #64748b 0%, #1e293b 100%)`
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-black/40"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                      <div className="text-2xl font-bold mb-2 text-center">{selectedUniverse.universe.name}</div>
+                      <div className="text-sm text-center">{selectedUniverse.universe.publisher}</div>
+                      {selectedUniverse.extensions.length > 0 && (
+                        <div className="text-xs mt-2 bg-white/20 px-2 py-1 rounded">
+                          + {selectedUniverse.extensions.length} extension(s)
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="h-1/4 flex items-center justify-center bg-white">
-                <h3 className="text-xl font-bold text-slate-900">Univers sélectionné</h3>
+                </div>
+                <div className="h-1/4 flex items-center justify-center bg-white">
+                  <h3 className={`text-xl font-bold text-slate-900 transition-colors ${!isValidated ? 'group-hover:text-amber-600' : ''}`}>
+                    {isValidated ? 'Univers validé' : 'Univers sélectionné'}
+                  </h3>
+                </div>
               </div>
             </div>
           ) : (
@@ -223,9 +256,9 @@ const CreateCampaign = () => {
           {/* Card Règles */}
           <div
             onClick={handleRulesClick}
-            className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
+            className={`group transform transition-all duration-300 ${!isValidated ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-75'}`}
           >
-            <div className="bg-light/15 backdrop-blur-sm rounded-2xl border border-light/20 shadow-xl overflow-hidden h-80 relative">
+            <div className={`bg-light/15 backdrop-blur-sm rounded-2xl border border-light/20 shadow-xl overflow-hidden h-80 relative ${isValidated ? 'ring-2 ring-green-500' : ''}`}>
               
               {/* Status indicateur */}
               {selectedRules && (
@@ -289,8 +322,22 @@ const CreateCampaign = () => {
         </div>
       </div>
 
+      {/* Bouton Valider */}
+      {selectedUniverse && selectedRules && !isValidated && (
+        <div className="px-6 mb-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <button
+              onClick={handleValidate}
+              className="bg-golden hover:bg-golden/80 text-dark px-8 py-3 rounded-lg font-bold text-lg transition-colors shadow-lg"
+            >
+              Valider mes choix
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Section Paiement et Validation */}
-      {canValidate && (
+      {canValidate && isValidated && (
         <div className="px-6 pb-8">
           <div className="max-w-4xl mx-auto">
             
