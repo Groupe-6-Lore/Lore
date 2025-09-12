@@ -295,7 +295,7 @@ const SelectUniverse = () => {
   };
 
   const handleUniverseSelect = (universeId) => {
-    navigate(`/campaigns/create/universe/${universeId}/info`);
+    navigate(`/campaigns/create/universe/${universeId}/details`);
   };
 
   return (

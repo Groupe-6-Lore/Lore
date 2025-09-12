@@ -14,37 +14,37 @@ const CreateCampaign = () => {
   const [selectedRules, setSelectedRules] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Récupérer les sélections depuis le localStorage (venant des pages existantes)
+  // Récupérer les sélections depuis le sessionStorage (venant des pages existantes)
   useEffect(() => {
-    const universe = localStorage.getItem('selectedUniverse');
-    const rules = localStorage.getItem('selectedRules');
-    if (universe) {
-      setSelectedUniverse(JSON.parse(universe));
+    const storedData = sessionStorage.getItem('selectedUniverse');
+    if (storedData) {
+      const universeData = JSON.parse(storedData);
+      setSelectedUniverse(universeData);
     }
+    const rules = localStorage.getItem('selectedRules');
     if (rules) {
       setSelectedRules(JSON.parse(rules));
     }
   }, []);
 
-  // Écouter les changements du localStorage (quand on revient des pages de sélection)
+  // Écouter les changements du sessionStorage (quand on revient des pages de sélection)
   useEffect(() => {
     const handleStorageChange = () => {
-      const universe = localStorage.getItem('selectedUniverse');
-      const rules = localStorage.getItem('selectedRules');
-      if (universe) {
-        setSelectedUniverse(JSON.parse(universe));
+      const storedData = sessionStorage.getItem('selectedUniverse');
+      if (storedData) {
+        const universeData = JSON.parse(storedData);
+        setSelectedUniverse(universeData);
       }
+      const rules = localStorage.getItem('selectedRules');
       if (rules) {
         setSelectedRules(JSON.parse(rules));
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    // Vérifier aussi au focus de la fenêtre (quand on revient sur la page)
+    // Vérifier au focus de la fenêtre (quand on revient sur la page)
     window.addEventListener('focus', handleStorageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleStorageChange);
     };
   }, []);
@@ -191,71 +191,34 @@ const CreateCampaign = () => {
         <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Card Univers */}
-          <div
-            onClick={handleUniverseClick}
-            className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-          >
-            <div className="bg-light/15 backdrop-blur-sm rounded-2xl border border-light/20 shadow-xl overflow-hidden h-80 relative">
-              
-              {/* Status indicateur */}
-              {selectedUniverse && (
-                <div className="absolute top-4 right-4 z-10 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check size={16} className="text-white" />
-                </div>
-              )}
-
-              {/* Image/Background */}
-              <div className="h-3/4 relative overflow-hidden">
-                {selectedUniverse ? (
-                  // Image de l'univers sélectionné
-                  <div
-                    className="w-full h-full bg-cover bg-center"
-                    style={{
-                      backgroundImage: selectedUniverse.image
-                        ? `url(${selectedUniverse.image})`
-                        : `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-black/30"></div>
-                    
-                    {/* Prix sur l'image */}
-                    {selectedUniverse.price > 0 && (
-                      <div className="absolute top-3 left-3">
-                        <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
-                          {selectedUniverse.price}€
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // Placeholder par défaut
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-400 to-purple-600 relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <div className="text-4xl mb-2">🌍</div>
-                        <div className="text-lg font-bold">Choisir un univers</div>
-                      </div>
-                    </div>
+          {selectedUniverse ? (
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96 ring-2 ring-amber-500">
+              <div className="h-3/4 bg-gradient-to-br from-slate-600/20 to-slate-800/20 flex flex-col items-center justify-center">
+                <div className="text-slate-700 text-2xl font-bold mb-2">{selectedUniverse.universe.name}</div>
+                <div className="text-slate-600 text-sm">{selectedUniverse.universe.publisher}</div>
+                {selectedUniverse.extensions.length > 0 && (
+                  <div className="text-slate-500 text-xs mt-2">
+                    + {selectedUniverse.extensions.length} extension(s)
                   </div>
                 )}
-
-                {/* Overlay hover */}
-                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
               </div>
-
-              {/* Titre et description */}
-              <div className="h-1/4 p-4 bg-light/10">
-                <h3 className="text-xl font-bold text-light mb-1">
-                  {selectedUniverse ? selectedUniverse.name : 'Univers'}
-                </h3>
-                {selectedUniverse && (
-                  <p className="text-light/70 text-sm truncate">
-                    {selectedUniverse.description}
-                  </p>
-                )}
+              <div className="h-1/4 flex items-center justify-center bg-white">
+                <h3 className="text-xl font-bold text-slate-900">Univers sélectionné</h3>
               </div>
             </div>
-          </div>
+          ) : (
+            // Card univers normale si rien sélectionné
+            <div onClick={handleUniverseClick} className="group cursor-pointer transform transition-all duration-300 hover:scale-105">
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-96">
+                <div className="h-3/4 bg-gradient-to-br from-purple-500/80 to-pink-500/80 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                </div>
+                <div className="h-1/4 flex items-center justify-center bg-white">
+                  <h3 className="text-2xl font-bold text-slate-900 eagle-lake-font">Univers</h3>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Card Règles */}
           <div

@@ -354,9 +354,62 @@ console.log("Universe reçu:", universe);
 5. **Configuration Supabase :**
    - ✅ Fichier `src/lib/supabase.ts` recréé avec configuration temporaire
 
+6. **Page Détails Univers (UniverseDetails.jsx) :**
+   - ✅ Création de la page détails pour Symbaroum
+   - ✅ Titre et éditeur positionnés au-dessus de l'image
+   - ✅ Image avec padding et stroke blanche
+   - ✅ Extensions avec type et prix alignés à droite
+   - ✅ Séparateur épaissi (border-l-2) entre contenu et prix des extensions
+   - ✅ Contenu principal descendu avec pt-12 pour plus d'espacement
+   - ✅ Navigation fonctionnelle depuis SelectUniverse vers /details
+
+## 🎮 PAGE DÉTAILS UNIVERS
+
+### Structure UniverseDetails.jsx :
+```javascript
+// Données hardcodées pour Symbaroum
+const universeData = {
+  1: { /* Symbaroum avec ID numérique */ },
+  'symbaroum-core': { /* Symbaroum avec ID string */ },
+  'known-2': { /* Symbaroum depuis section connus */ }
+};
+
+// Layout 2 colonnes avec titre au-dessus
+<div className="max-w-7xl mx-auto px-6 pb-8 pt-12">
+  {/* Titre et éditeur au-dessus de l'image */}
+  <div className="mb-8">
+    <h2 className="text-4xl font-bold text-light mb-2 eagle-lake-font">
+      {universe.name}
+    </h2>
+    <p className="text-light/80 text-lg mb-8">{universe.publisher}</p>
+  </div>
+  
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    {/* Image avec padding et stroke */}
+    <div className="aspect-[3/4] bg-light/10 rounded-lg flex items-center justify-center border border-light/20 p-4">
+      <div className="border border-white">IMG</div>
+    </div>
+    
+    {/* Contenu avec extensions */}
+    <div>
+      {/* Extensions avec séparateur épaissi */}
+      <div className="ml-4 pl-4 border-l-2 border-white/30">
+        <p className="text-light font-bold text-lg">{extension.price} €</p>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Navigation :
+- **Route :** `/campaigns/create/universe/:id/details`
+- **IDs supportés :** `1`, `'symbaroum-core'`, `'known-2'`
+- **Extensions :** Route `/campaigns/create/universe/:id/extension/:extensionId`
+
 ## 🚀 SERVEUR
 
 **URL :** `http://localhost:3000/campaigns/create/universe`
+**URL Détails :** `http://localhost:3000/campaigns/create/universe/known-2/details`
 **Commande :** `npm run dev`
 **HMR :** Actif (Hot Module Replacement)
 

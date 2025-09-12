@@ -10,53 +10,10 @@ const UniverseDetails = () => {
   const [universe, setUniverse] = useState(null);
   const [selectedExtensions, setSelectedExtensions] = useState([]);
 
-  // Données des univers selon wireframe
+  // Données Symbaroum selon wireframe
   const universeData = {
     1: {
       id: 1,
-      name: "Dungeons & Dragons 5e",
-      publisher: "Wizards of the Coast",
-      price: 49,
-      tags: ["Difficulté - Débutant", "Fantasy", "Liées"],
-      description: "Dungeons & Dragons 5e est le système de jeu de rôle le plus populaire au monde. Cette édition simplifie les règles tout en conservant la profondeur tactique qui fait la renommée de D&D. Parfait pour les débutants comme pour les vétérans.",
-      included: [
-        "Manuel du MJ",
-        "Manuel du Joueur"
-      ],
-      extensions: [],
-      type: 'paid'
-    },
-    2: {
-      id: 2,
-      name: "Fate Core System",
-      publisher: "Evil Hat Productions",
-      price: null,
-      tags: ["Difficulté - Facile", "Multi-genre", "Libres"],
-      description: "Fate Core System est un jeu où les héros sont définis par leurs convictions, leurs failles et leurs choix. Vos aspects deviennent des leviers narratifs : une phrase peut changer le cours d'une bataille ou d'un destin. Avec des règles simples et universelles, Fate vous permet de créer ensemble n'importe quel monde — des royaumes de fantasy aux cités cyberpunk. Gratuit en PDF et enrichi de suppléments, il place vos histoires au cœur de l'aventure.",
-      included: [
-        "Livre de base",
-        "Conseils pour MJ et joueurs"
-      ],
-      extensions: [
-        {
-          id: 11,
-          name: "Fate Worlds",
-          subtitle: "Suppléments univers",
-          price: 7.50,
-          image: "/images/fate-worlds.jpg"
-        },
-        {
-          id: 12,
-          name: "Venture City",
-          subtitle: "Suppléments univers",
-          price: 8.00,
-          image: "/images/venture-city.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    3: {
-      id: 3,
       name: "Symbaroum Core Rulebook",
       publisher: "Free League Publishing",
       price: 49,
@@ -71,12 +28,72 @@ const UniverseDetails = () => {
           id: 1,
           name: "Advanced Player's Guide",
           price: 15,
+          type: "Supplément",
           image: "/images/symbaroum-apg.jpg"
         },
         {
           id: 2,
           name: "Monster Codex", 
           price: 22,
+          type: "Bestiaire",
+          image: "/images/symbaroum-monsters.jpg"
+        }
+      ],
+      type: 'paid'
+    },
+    'symbaroum-core': {
+      id: 'symbaroum-core',
+      name: "Symbaroum Core Rulebook",
+      publisher: "Free League Publishing",
+      price: 49,
+      tags: ["Difficulté - Avancé", "Dark Fantasy", "Liées"],
+      description: "Au nord du royaume d'Ambria s'étend Davokar, une forêt ancienne emplie de ruines et de secrets maudits. Ses profondeurs promettent richesses et artefacts oubliés, mais aussi corruption et damnation pour les imprudents. Dans l'ombre des arbres colossaux, des clans barbares, des elfes millénaires et des créatures abjectes veillent sur un héritage dangereux. Les aventuriers, poussés par l'avidité ou la gloire, explorent ces terres au péril de leur âme. Le pouvoir des ombres grandit et chaque incursion rapproche le monde d'un nouvel âge de ténèbres. Symbaroum propose une dark fantasy où beauté et horreur se confondent, et où chaque victoire peut coûter votre humanité.",
+      included: [
+        "Manuel du MJ",
+        "Manuel du Joueur"
+      ],
+      extensions: [
+        {
+          id: 1,
+          name: "Advanced Player's Guide",
+          price: 15,
+          type: "Supplément",
+          image: "/images/symbaroum-apg.jpg"
+        },
+        {
+          id: 2,
+          name: "Monster Codex", 
+          price: 22,
+          type: "Bestiaire",
+          image: "/images/symbaroum-monsters.jpg"
+        }
+      ],
+      type: 'paid'
+    },
+    'known-2': {
+      id: 'known-2',
+      name: "Symbaroum Core Rulebook",
+      publisher: "Free League Publishing",
+      price: 49,
+      tags: ["Difficulté - Avancé", "Dark Fantasy", "Liées"],
+      description: "Au nord du royaume d'Ambria s'étend Davokar, une forêt ancienne emplie de ruines et de secrets maudits. Ses profondeurs promettent richesses et artefacts oubliés, mais aussi corruption et damnation pour les imprudents. Dans l'ombre des arbres colossaux, des clans barbares, des elfes millénaires et des créatures abjectes veillent sur un héritage dangereux. Les aventuriers, poussés par l'avidité ou la gloire, explorent ces terres au péril de leur âme. Le pouvoir des ombres grandit et chaque incursion rapproche le monde d'un nouvel âge de ténèbres. Symbaroum propose une dark fantasy où beauté et horreur se confondent, et où chaque victoire peut coûter votre humanité.",
+      included: [
+        "Manuel du MJ",
+        "Manuel du Joueur"
+      ],
+      extensions: [
+        {
+          id: 1,
+          name: "Advanced Player's Guide",
+          price: 15,
+          type: "Supplément",
+          image: "/images/symbaroum-apg.jpg"
+        },
+        {
+          id: 2,
+          name: "Monster Codex", 
+          price: 22,
+          type: "Bestiaire",
           image: "/images/symbaroum-monsters.jpg"
         }
       ],
@@ -85,10 +102,7 @@ const UniverseDetails = () => {
   };
 
   useEffect(() => {
-    console.log('ID reçu:', id);
-    console.log('Universe data:', universeData);
     const data = universeData[id];
-    console.log('Universe trouvé:', data);
     if (data) {
       setUniverse(data);
     }
@@ -171,24 +185,30 @@ const UniverseDetails = () => {
         </nav>
       </div>
 
-      {/* Layout principal selon wireframe */}
-      <div className="max-w-7xl mx-auto px-6 pb-8">
+        {/* Layout principal selon wireframe */}
+        <div className="max-w-7xl mx-auto px-6 pb-8 pt-12">
+        
+        {/* Titre et éditeur au-dessus de l'image */}
+        <div className="mb-8">
+          <h2 className="text-4xl font-bold text-light mb-2 eagle-lake-font">
+            {universe.name}
+          </h2>
+          <p className="text-light/80 text-lg">{universe.publisher}</p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           
           {/* Colonne gauche - Image */}
           <div>
-            <div className="aspect-[3/4] bg-light/10 rounded-lg flex items-center justify-center border border-light/20">
-              <div className="text-light/40 text-8xl font-bold opacity-50">IMG</div>
+            <div className="aspect-[3/4] bg-light/10 rounded-lg flex items-center justify-center border border-light/20 p-4">
+              <div className="w-full h-full bg-light/20 rounded-lg border border-white flex items-center justify-center">
+                <div className="text-light/40 text-8xl font-bold opacity-50">IMG</div>
+              </div>
             </div>
           </div>
 
           {/* Colonne droite - Contenu */}
           <div>
-            {/* Titre et éditeur */}
-            <h2 className="text-4xl font-bold text-light mb-2 eagle-lake-font">
-              {universe.name}
-            </h2>
-            <p className="text-light/80 text-lg mb-8">{universe.publisher}</p>
 
             {/* Section Présentation avec tags */}
             <div className="mb-8">
@@ -236,12 +256,21 @@ const UniverseDetails = () => {
                     }`}
                     style={{ backgroundColor: 'rgba(13, 21, 26, 0.7)' }}
                   >
-                    <div className="aspect-[4/3] bg-light/20 flex items-center justify-center">
-                      <div className="text-light/40 text-4xl font-bold opacity-50">IMG</div>
+                    <div className="aspect-[4/3] bg-light/20 flex items-center justify-center p-3">
+                      <div className="w-full h-full bg-light/30 rounded-lg border border-white flex items-center justify-center">
+                        <div className="text-light/40 text-4xl font-bold opacity-50">IMG</div>
+                      </div>
                     </div>
                     <div className="p-4">
-                      <h5 className="text-light font-semibold text-sm mb-2">{extension.name}</h5>
-                      <p className="text-light font-bold text-lg">{extension.price} €</p>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h5 className="text-light font-semibold text-sm mb-1">{extension.name}</h5>
+                          <p className="text-light/70 text-xs">{extension.type}</p>
+                        </div>
+                        <div className="ml-4 pl-4 border-l-2 border-white/30">
+                          <p className="text-light font-bold text-lg">{extension.price} €</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
