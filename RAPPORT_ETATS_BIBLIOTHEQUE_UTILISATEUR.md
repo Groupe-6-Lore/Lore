@@ -181,3 +181,4 @@ const totalPages = Math.ceil(universes.length / itemsPerPage);
 
 Cette implémentation utilise des données de test simplifiées. Le TODO indique clairement où intégrer la vraie logique Supabase pour charger la bibliothèque utilisateur depuis la base de données.
 
+

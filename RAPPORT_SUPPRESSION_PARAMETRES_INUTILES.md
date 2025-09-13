@@ -110,3 +110,4 @@ const handleUniverseChoose = (universe) => {
 
 Les paramètres `onChoose` avaient déjà été supprimés lors de la modification précédente du composant UniverseCard. Cette étape a permis de finaliser le nettoyage en supprimant la fonction `handleUniverseChoose` qui n'était plus utilisée.
 
+

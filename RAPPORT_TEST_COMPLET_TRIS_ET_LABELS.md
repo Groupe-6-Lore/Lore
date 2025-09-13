@@ -228,3 +228,4 @@ L'application est maintenant prête pour les tests complets :
 
 Les tests peuvent maintenant être effectués dans le navigateur à l'adresse **http://localhost:3007/**. Chaque test doit être documenté avec les résultats observés pour confirmer le bon fonctionnement de la logique de tri et de l'interface.
 
+

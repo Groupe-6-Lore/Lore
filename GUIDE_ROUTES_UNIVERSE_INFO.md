@@ -253,3 +253,4 @@ const handleUniverseSelect = (universe) => {
 
 **✨ La navigation vers les informations d'univers est maintenant opérationnelle !**
 
+

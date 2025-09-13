@@ -141,3 +141,4 @@ Les tags des cartes d'univers ont été optimisés pour s'adapter correctement a
 
 Le breakpoint de 640px correspond au breakpoint `sm` de Tailwind CSS, assurant une cohérence avec le système de design existant. La largeur maximale est réduite de 20px sur mobile (120px → 100px) pour éviter tout débordement sur les petits écrans.
 
+

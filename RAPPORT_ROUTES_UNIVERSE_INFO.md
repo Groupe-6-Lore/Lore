@@ -247,3 +247,4 @@ navigate(`/campaigns/create/universe/${universe.id}/info`);
 3. **Vérifiez** : Navigation vers `/campaigns/create/universe/:id/info`
 4. **Testez** : Bouton "Retour à la sélection"
 
+

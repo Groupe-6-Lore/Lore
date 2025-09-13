@@ -199,3 +199,4 @@ CREATE TABLE game_sessions (
 
 Cette implémentation permet une transition en douceur entre les données simulées et les vraies données Supabase. Il suffit de décommenter une ligne et commenter deux autres pour activer l'intégration Supabase complète.
 
+

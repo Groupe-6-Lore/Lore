@@ -241,3 +241,4 @@ useEffect(() => {
 ✅ **Serveur stable sur port 3000**
 
 **Le projet Lore est maintenant entièrement fonctionnel avec toutes les corrections demandées !**
+

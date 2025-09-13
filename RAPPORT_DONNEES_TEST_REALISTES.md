@@ -145,3 +145,4 @@ J'ai identifié et corrigé les univers qui avaient le type "owned" mais qui ne 
 
 Cette implémentation simule une vraie bibliothèque utilisateur avec des données réalistes. Dans une version future, ces données seraient récupérées depuis Supabase pour refléter la vraie bibliothèque de l'utilisateur connecté.
 
+

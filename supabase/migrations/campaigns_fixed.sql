@@ -54,3 +54,4 @@ CREATE POLICY "players_all_policy" ON players FOR ALL USING (
   campaign_id IN (SELECT id FROM campaigns WHERE user_id = auth.uid())
 );
 
+

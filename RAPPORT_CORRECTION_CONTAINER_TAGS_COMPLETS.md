@@ -143,3 +143,4 @@ J'ai modifié la zone des tags dans le composant UniverseCard pour qu'ils soient
 
 Cette modification améliore significativement la lisibilité des informations sur les cartes d'univers en permettant à tous les tags d'être visibles, tout en maintenant un design cohérent et responsive.
 
+

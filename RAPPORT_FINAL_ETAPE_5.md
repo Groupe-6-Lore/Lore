@@ -310,3 +310,4 @@ const unknownUniverses = paginatedUniverses.filter(u => u.type !== 'owned');
 3. **Responsive avancé** : Sidebar collapsible, animations
 4. **Performance** : Lazy loading, virtualisation
 
+

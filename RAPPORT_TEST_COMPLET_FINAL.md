@@ -228,3 +228,4 @@ const matchesDifficulty = selectedFilters.difficulty.length === 0 ||
 
 Le serveur est actif sur **http://localhost:3006** et toutes les fonctionnalités de la bibliothèque personnelle sont fonctionnelles. L'interface s'adapte intelligemment selon le contenu de la bibliothèque utilisateur et offre une expérience utilisateur optimale.
 
+

@@ -321,3 +321,4 @@ const universeInfo = {
 3. **Images réelles** : Ajouter les vraies images
 4. **Système d'achat** : Implémenter la boutique
 
+

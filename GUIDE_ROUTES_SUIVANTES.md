@@ -207,3 +207,4 @@ const handleRulesClick = () => {
 
 **✨ La structure est prête pour le développement des étapes suivantes de la création de campagne !**
 
+

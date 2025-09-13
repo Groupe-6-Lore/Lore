@@ -179,3 +179,4 @@ Si les images ne se chargent pas, vous pouvez ajouter un fallback :
 
 **✨ Les cards affichent maintenant de vraies images avec des effets visuels professionnels !**
 
+

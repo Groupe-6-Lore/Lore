@@ -184,3 +184,4 @@ const unknownUniverses = paginatedUniverses.filter(u => {
 
 Cette correction assure que la pagination fonctionne correctement en séparant la logique de filtrage/tri de la logique de pagination, et en effectuant la séparation univers connus/inconnus APRÈS la pagination plutôt qu'avant.
 
+

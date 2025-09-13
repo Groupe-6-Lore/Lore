@@ -266,3 +266,4 @@ npm start
 3. **Documenter les problèmes** rencontrés
 4. **Valider les fonctionnalités** avancées
 
+

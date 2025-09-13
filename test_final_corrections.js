@@ -42,3 +42,4 @@ console.log("   4. Tester la sélection d'univers possédés");
 console.log("   5. Tester la sélection de règles possédées");
 console.log("   6. Vérifier que les cards se mettent à jour");
 console.log("   7. Vérifier le layout des pages détails");
+

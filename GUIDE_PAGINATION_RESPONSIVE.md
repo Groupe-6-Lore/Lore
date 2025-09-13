@@ -280,3 +280,4 @@ const unknownUniverses = paginatedUniverses.filter(u => u.type !== 'owned');
 4. **Validez les breakpoints** : 1, 2, 3, 4, 6 colonnes
 5. **Explorez sur mobile** : Sidebar et grille adaptées
 
+

@@ -134,3 +134,4 @@ Un univers est considéré comme "inconnu" si :
 
 Cette implémentation utilise des données de test pour simuler une bibliothèque utilisateur. Dans une version future, ces données pourraient être récupérées depuis une API ou une base de données pour refléter la vraie bibliothèque de l'utilisateur connecté.
 
+

@@ -154,3 +154,4 @@ return (a.price || 0) - (b.price || 0);
 
 Le serveur est actif sur **http://localhost:3007** et la nouvelle logique de tri est opérationnelle.
 
+

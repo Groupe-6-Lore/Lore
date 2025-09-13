@@ -286,3 +286,4 @@ npm run dev
 - **URL** : `http://localhost:3001/campaigns/create/universe`
 
 **Le projet est prêt pour la production !** 🎉
+

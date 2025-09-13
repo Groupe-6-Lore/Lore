@@ -393,3 +393,4 @@ const UniverseCard = ({ universe, onSelect, onChoose }) => {
 
 **✨ La page fonctionne maintenant parfaitement sur tous les appareils, du mobile au desktop !**
 
+

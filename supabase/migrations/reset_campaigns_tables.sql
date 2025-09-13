@@ -57,3 +57,4 @@ CREATE POLICY "Users can manage players in their campaigns" ON players FOR ALL U
   EXISTS (SELECT 1 FROM campaigns WHERE campaigns.id = players.campaign_id AND campaigns.user_id = auth.uid())
 );
 
+

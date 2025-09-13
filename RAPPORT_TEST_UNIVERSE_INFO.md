@@ -323,3 +323,4 @@ const navigate = useNavigate();
 4. **Testez** : Tous les boutons et liens de navigation
 5. **Validez** : Responsive sur mobile et desktop
 
+
