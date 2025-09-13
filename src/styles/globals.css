@@ -663,18 +663,19 @@
   @apply relative;
 }
 
-/* États du drag handle - Style Notion exact */
+/* États du drag handle - Style Lore sans encadré */
 .notion-drag-handle {
-  @apply absolute left-[-28px] top-1 w-4 h-4 cursor-grab;
-  @apply opacity-0 group-hover:opacity-60 hover:opacity-100;
-  @apply transition-opacity duration-200;
+  @apply absolute left-[-40px] top-1 w-4 h-4 cursor-grab;
+  @apply opacity-0 group-hover:opacity-80 hover:opacity-100;
+  @apply transition-all duration-200;
   @apply text-gray-400 hover:text-gray-600;
   @apply z-10;
+  @apply flex items-center justify-center;
 }
 
-/* Bouton d'insertion - Style Notion exact */
+/* Bouton d'insertion - Style Lore sans encadré */
 .notion-insert-button {
-  @apply absolute left-[-40px] top-1 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200;
+  @apply absolute left-[-60px] top-1 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200;
   @apply opacity-0 group-hover:opacity-100 hover:opacity-100;
   @apply z-10;
 }
@@ -809,6 +810,37 @@
 
 .mention-item {
   @apply w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center space-x-2 transition-colors;
+}
+
+/* Barre de scroll personnalisée - Style Lore */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(240, 234, 225, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(233, 189, 114, 0.6);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(233, 189, 114, 0.8);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(240, 234, 225, 0.1);
+}
+
+/* Scrollbar pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(233, 189, 114, 0.6) rgba(240, 234, 225, 0.1);
 }
 
 /* Responsive pour drag & drop */

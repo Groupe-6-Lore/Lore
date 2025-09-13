@@ -69,10 +69,12 @@ const CampaignDashboard = () => {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState('');
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
 
   // États pour le drag & drop
   const [activeId, setActiveId] = useState(null);
   const [editingLine, setEditingLine] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
   const [textLines, setTextLines] = useState([
     {
       id: 'line-1',
@@ -88,6 +90,12 @@ const CampaignDashboard = () => {
       id: 'line-3',
       content: 'La session commence dans la taverne "Le Dragon de Bronze", au cœur de Pyros. Un messager essoufflé fait irruption, portant une missive scellée du Conseil des Flammes.',
       section: 'debut'
+    },
+    {
+      id: 'merchant-card',
+      content: 'merchant',
+      section: 'merchant',
+      type: 'card'
     }
   ]);
 
@@ -149,6 +157,12 @@ const CampaignDashboard = () => {
     { id: 2, name: 'Épée enchantée', price: 150, description: 'Épée longue +1' },
     { id: 3, name: 'Anneau de protection', price: 200, description: '+1 à la classe d\'armure' }
   ]);
+  
+  // États pour l'édition du tableau
+  const [editingTableField, setEditingTableField] = useState(null);
+  const [editingTableValue, setEditingTableValue] = useState('');
+  const [editingTotal, setEditingTotal] = useState(false);
+  const [totalValue, setTotalValue] = useState(0);
 
   // Templates disponibles
   const availableTemplates = [
@@ -183,18 +197,25 @@ const CampaignDashboard = () => {
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
+    const item = textLines.find(line => line.id === event.active.id);
+    setDraggedItem(item);
   };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (active.id !== over?.id && over) {
       setTextLines((items) => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          return arrayMove(items, oldIndex, newIndex);
+        }
+        return items;
       });
     }
     setActiveId(null);
+    setDraggedItem(null);
   };
 
   // Handlers pour l'édition des lignes
@@ -312,10 +333,53 @@ const CampaignDashboard = () => {
       description: 'Description de l\'objet'
     };
     setMerchantInventory(items => [...items, newItem]);
+    // Mettre automatiquement en mode édition le nom du nouvel objet
+    setTimeout(() => {
+      setEditingTableField(`${newItem.id}-name`);
+      setEditingTableValue('Nouvel objet');
+    }, 100);
   };
 
   const getTotalValue = () => {
     return merchantInventory.reduce((total, item) => total + item.price, 0);
+  };
+
+  // Fonctions pour l'édition du tableau
+  const handleEditTableField = (itemId, field, currentValue) => {
+    setEditingTableField(`${itemId}-${field}`);
+    setEditingTableValue(currentValue);
+  };
+
+  const handleSaveTableField = (itemId, field) => {
+    setMerchantInventory(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, [field]: field === 'price' ? parseInt(editingTableValue) || 0 : editingTableValue }
+          : item
+      )
+    );
+    setEditingTableField(null);
+    setEditingTableValue('');
+  };
+
+  const handleCancelTableEdit = () => {
+    setEditingTableField(null);
+    setEditingTableValue('');
+  };
+
+  // Fonctions pour l'édition du total
+  const handleEditTotal = () => {
+    setEditingTotal(true);
+    setTotalValue(getTotalValue());
+  };
+
+  const handleSaveTotal = () => {
+    // Le total est calculé automatiquement, donc on ne fait rien ici
+    setEditingTotal(false);
+  };
+
+  const handleCancelTotalEdit = () => {
+    setEditingTotal(false);
   };
 
   // Fonction pour rendre le texte avec les mentions
@@ -375,11 +439,224 @@ const CampaignDashboard = () => {
       if (showHistoryMenu) {
         setShowHistoryMenu(false);
       }
+      if (showHistoryDropdown) {
+        setShowHistoryDropdown(false);
+      }
     };
 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [showContextMenu, showHistoryMenu]);
+  }, [showContextMenu, showHistoryMenu, showHistoryDropdown]);
+
+  // Composant pour les cartes draggables
+  const DraggableCard = ({ id, type, onContextMenu, showContextMenu, contextMenuPosition, searchQuery, setSearchQuery, filteredTemplates, onTemplateSelect }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    if (type === 'merchant') {
+      return (
+        <div
+          ref={setNodeRef}
+          style={style}
+          className="notion-block group relative"
+        >
+          {/* Drag Handle */}
+          <div className="notion-drag-handle" {...attributes} {...listeners}>
+            <div className="grid grid-cols-2 gap-0.5 w-3 h-3">
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            </div>
+          </div>
+
+          {/* Bouton d'insertion */}
+          <div className="notion-insert-button">
+            <Plus size={16} className="text-gray-400 hover:text-gray-600 transition-colors duration-150" />
+          </div>
+
+          {/* Contenu de la carte */}
+          <div className="notion-content">
+            {/* Effet glassmorphisme pour les templates */}
+            <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+              <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
+            
+            <div className="space-y-4">
+              <p className="text-light leading-relaxed">{renderTextWithMentions(campaign?.rencontre.content)}</p>
+              <div className="text-sm text-light/80 font-semibold">
+                PNJ: {campaign?.rencontre.npc}
+              </div>
+
+              {/* Tableau d'inventaire - Style Notion */}
+              <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-light flex items-center">
+                    <Package size={16} className="mr-2" />
+                    Inventaire du marchand
+                  </h4>
+                  <div className="text-sm text-light/80 font-semibold">
+                    Total: {editingTotal ? (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={totalValue}
+                          onChange={(e) => setTotalValue(parseInt(e.target.value) || 0)}
+                          className="w-20 px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                          autoFocus
+                        />
+                        <span>pièces d'or</span>
+                        <button
+                          onClick={handleSaveTotal}
+                          className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                          title="Sauvegarder"
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                        <button
+                          onClick={handleCancelTotalEdit}
+                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                          title="Annuler"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEditTotal}
+                        className="hover:bg-light/10 p-1 rounded transition-colors"
+                      >
+                        {getTotalValue()} pièces d'or
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-lg border border-light/20">
+                  <div className="grid grid-cols-4 gap-4 p-3 bg-light/10 text-sm font-semibold text-light border-b border-light/20">
+                    <div>Objet</div>
+                    <div>Nom</div>
+                    <div>Prix</div>
+                    <div>Actions</div>
+                  </div>
+                  {merchantInventory.map((item, index) => (
+                    <div key={item.id} className="grid grid-cols-4 gap-4 p-3 border-b border-light/10 last:border-b-0">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <div className="text-light font-medium">
+                        {editingTableField === `${item.id}-name` ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="text"
+                              value={editingTableValue}
+                              onChange={(e) => setEditingTableValue(e.target.value)}
+                              className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleSaveTableField(item.id, 'name')}
+                              className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                              title="Sauvegarder"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            <button
+                              onClick={handleCancelTableEdit}
+                              className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                              title="Annuler"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleEditTableField(item.id, 'name', item.name)}
+                            className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                          >
+                            {item.name}
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-light/80">
+                        {editingTableField === `${item.id}-price` ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              value={editingTableValue}
+                              onChange={(e) => setEditingTableValue(e.target.value)}
+                              className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleSaveTableField(item.id, 'price')}
+                              className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                              title="Sauvegarder"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            <button
+                              onClick={handleCancelTableEdit}
+                              className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                              title="Annuler"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleEditTableField(item.id, 'price', item.price)}
+                            className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                          >
+                            {item.price} PO
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleDeleteItem(item.id)}
+                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleAddItem}
+                  className="w-full mt-4 bg-golden hover:bg-golden/80 text-dark-blue py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold"
+                >
+                  <Plus size={16} />
+                  <span>Ajouter un objet</span>
+                </button>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   // Composant pour une ligne de texte avec drag & drop
   const DraggableTextLine = ({
@@ -421,13 +698,13 @@ const CampaignDashboard = () => {
       >
         {/* Drag Handle */}
         <div className="notion-drag-handle" {...attributes} {...listeners}>
-          <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-            <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
+          <div className="grid grid-cols-2 gap-0.5 w-3 h-3">
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
           </div>
         </div>
 
@@ -436,9 +713,7 @@ const CampaignDashboard = () => {
           e.stopPropagation();
           onContextMenu(e);
         }}>
-          <div className="w-4 h-4 bg-gray-300 hover:bg-gray-400 rounded-full flex items-center justify-center transition-colors duration-150">
-            <Plus size={12} className="text-gray-600" />
-          </div>
+          <Plus size={16} className="text-gray-400 hover:text-gray-600 transition-colors duration-150" />
         </div>
 
         {/* Contenu du bloc */}
@@ -456,15 +731,17 @@ const CampaignDashboard = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => onEdit(id, false)}
-                  className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+                  className="px-3 py-2 bg-golden text-dark-blue rounded-lg text-sm font-semibold hover:bg-golden/80 transition-all duration-200 shadow-sm"
                 >
-                  ✓
+                  <Save size={14} className="inline mr-1" />
+                  Sauvegarder
                 </button>
                 <button
                   onClick={() => onDelete(id)}
-                  className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                  className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm font-semibold hover:bg-red-500/30 hover:text-red-300 transition-all duration-200"
                 >
-                  ✕
+                  <Trash2 size={14} className="inline mr-1" />
+                  Supprimer
                 </button>
               </div>
             </div>
@@ -563,21 +840,6 @@ const CampaignDashboard = () => {
         <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
         <div className="flex items-center space-x-6">
-          {/* Bouton Historique */}
-          <button
-            onClick={handleHistoryToggle}
-            className="bg-light/20 hover:bg-light/30 text-light px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <Archive size={16} />
-            <span>Historique</span>
-          </button>
-          
-          {/* Bouton Nouvelle partie */}
-          <button className="bg-golden hover:bg-golden/80 text-dark-blue px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 font-bold">
-            <Plus size={16} />
-            <span>Nouvelle partie</span>
-          </button>
-          
           {/* Bouton News hexagonal vert */}
           <button className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
             <Newspaper size={20} />
@@ -613,9 +875,93 @@ const CampaignDashboard = () => {
 
       {/* Titre principal */}
       <div className="px-6 mb-8">
-        <h2 className="text-4xl lg:text-5xl font-bold text-light eagle-lake-font border-b-2 border-golden pb-2 inline-block">
-          {campaign?.title}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-light eagle-lake-font border-b-2 border-golden pb-2 inline-block">
+            {campaign?.title}
+          </h2>
+          
+          {/* Boutons d'action */}
+          <div className="flex items-center space-x-4">
+            {/* Bouton Historique avec menu déroulant */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                className="bg-light/20 hover:bg-light/30 text-light px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <Archive size={16} />
+                <span>Historique</span>
+                <ChevronRight size={14} className={`transform transition-transform ${showHistoryDropdown ? 'rotate-90' : ''}`} />
+              </button>
+              
+              {/* Menu déroulant */}
+              {showHistoryDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Sessions précédentes</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {[
+                        { id: 1, date: '2024-01-15', title: 'Session 1 - Début de l\'aventure', status: 'completed' },
+                        { id: 2, date: '2024-01-22', title: 'Session 2 - Rencontre avec le marchand', status: 'completed' },
+                        { id: 3, date: '2024-01-29', title: 'Session 3 - Exploration des ruines', status: 'in_progress' },
+                        { id: 4, date: '2024-02-05', title: 'Session 4 - Combat contre les gobelins', status: 'planned' }
+                      ].map((session) => (
+                        <div key={session.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={selectedSessions.includes(session.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedSessions([...selectedSessions, session.id]);
+                              } else {
+                                setSelectedSessions(selectedSessions.filter(id => id !== session.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900">{session.title}</div>
+                            <div className="text-xs text-gray-500">{session.date}</div>
+                          </div>
+                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            session.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            session.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {session.status === 'completed' ? 'Terminée' :
+                             session.status === 'in_progress' ? 'En cours' : 'Planifiée'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex justify-between">
+                      <button
+                        onClick={() => setSelectedSessions([])}
+                        className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        Tout désélectionner
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('Sessions sélectionnées:', selectedSessions);
+                          setShowHistoryDropdown(false);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                      >
+                        Charger ({selectedSessions.length})
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Bouton Nouvelle partie */}
+            <button className="bg-golden hover:bg-golden/80 text-dark-blue px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 font-bold">
+              <Plus size={16} />
+              <span>Nouvelle partie</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Contenu principal */}
@@ -638,111 +984,6 @@ const CampaignDashboard = () => {
               <div className="border-t border-light/20"></div>
             </div>
 
-            {/* Quête majeure - Lien simple */}
-            <div className="pl-8">
-              <button 
-                onClick={() => {
-                  navigate(`/campaigns/${campaignId}/quest/major`);
-                }}
-                className="text-golden hover:text-golden/80 transition-colors flex items-center space-x-2 text-lg font-medium"
-              >
-                <Link size={18} />
-                <span>{campaign?.queteMajeure}</span>
-              </button>
-            </div>
-
-            {/* Carte Rencontre avec un marchand - Style Notion */}
-            <div className="pl-8 space-y-4">
-              <div className="notion-block group relative">
-                {/* Drag Handle */}
-                <div className="notion-drag-handle">
-                  <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-sm"></div>
-                  </div>
-                </div>
-
-                {/* Bouton d'insertion */}
-                <div className="notion-insert-button">
-                  <div className="w-4 h-4 bg-gray-300 hover:bg-gray-400 rounded-full flex items-center justify-center transition-colors duration-150">
-                    <Plus size={12} className="text-gray-600" />
-                  </div>
-                </div>
-
-                {/* Contenu de la carte */}
-                <div className="notion-content">
-                  <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
-                  
-                  <div className="space-y-4">
-                    <p className="text-light leading-relaxed">{renderTextWithMentions(campaign?.rencontre.content)}</p>
-                    <div className="text-sm text-light/80 font-semibold">
-                      PNJ: {campaign?.rencontre.npc}
-                    </div>
-
-                    {/* Tableau d'inventaire - Style Notion */}
-                    <div className="bg-white/10 rounded-lg p-4 border border-light/20">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-light flex items-center">
-                          <Package size={16} className="mr-2" />
-                          Inventaire du marchand
-                        </h4>
-                        <div className="text-sm text-light/80 font-semibold">
-                          Total: {getTotalValue()} pièces d'or
-                        </div>
-                      </div>
-
-                      <div className="overflow-hidden rounded-lg border border-light/20">
-                        <div className="grid grid-cols-4 gap-4 p-3 bg-light/10 text-sm font-semibold text-light border-b border-light/20">
-                          <div>Objet</div>
-                          <div>Nom</div>
-                          <div>Prix</div>
-                          <div>Actions</div>
-                        </div>
-                        {merchantInventory.map((item, index) => (
-                          <div key={item.id} className="grid grid-cols-4 gap-4 p-3 border-b border-light/10 last:border-b-0">
-                            <div className="flex items-center">
-                              <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
-                                {index + 1}
-                              </div>
-                            </div>
-                            <div className="text-light font-medium">{item.name}</div>
-                            <div className="text-light/80">{item.price} PO</div>
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => handleEditItem(item)}
-                                className="p-1 text-light/60 hover:text-light transition-colors"
-                                title="Modifier"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                                title="Supprimer"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={handleAddItem}
-                        className="w-full mt-4 bg-golden hover:bg-golden/80 text-dark-blue py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold"
-                      >
-                        <Plus size={16} />
-                        <span>Ajouter un objet</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Notes de campagne - Style Notion */}
             <div className="space-y-8">
@@ -788,6 +1029,15 @@ const CampaignDashboard = () => {
                         </AnimatePresence>
                       </div>
                     </SortableContext>
+                    <DragOverlay>
+                      {draggedItem ? (
+                        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
+                          <div className="text-gray-900 text-sm">
+                            {draggedItem.content || 'Élément en cours de déplacement...'}
+                          </div>
+                        </div>
+                      ) : null}
+                    </DragOverlay>
                   </DndContext>
                 </div>
               </div>
@@ -834,9 +1084,97 @@ const CampaignDashboard = () => {
                         </AnimatePresence>
                       </div>
                     </SortableContext>
+                    <DragOverlay>
+                      {draggedItem ? (
+                        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
+                          <div className="text-gray-900 text-sm">
+                            {draggedItem.content || 'Élément en cours de déplacement...'}
+                          </div>
+                        </div>
+                      ) : null}
+                    </DragOverlay>
                   </DndContext>
                 </div>
               </div>
+            </div>
+
+            {/* Quête majeure - Lien simple */}
+            <div className="pl-8">
+              <button 
+                onClick={() => {
+                  navigate(`/campaigns/${campaignId}/quest/major`);
+                }}
+                className="text-golden hover:text-golden/80 transition-colors flex items-center space-x-2 text-lg font-medium"
+              >
+                <Link size={18} />
+                <span>{campaign?.queteMajeure}</span>
+              </button>
+            </div>
+
+            {/* Cartes et templates - Style Notion */}
+            <div className="pl-8 space-y-4">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={textLines.filter(line => line.section === 'merchant').map(line => line.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-1">
+                    <AnimatePresence>
+                      {textLines.filter(line => line.section === 'merchant').map((line) => (
+                        <motion.div
+                          key={line.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {line.type === 'card' ? (
+                            <DraggableCard
+                              id={line.id}
+                              type={line.content}
+                              onContextMenu={handleContextMenu}
+                              showContextMenu={showContextMenu}
+                              contextMenuPosition={contextMenuPosition}
+                              searchQuery={searchQuery}
+                              setSearchQuery={setSearchQuery}
+                              filteredTemplates={filteredTemplates}
+                              onTemplateSelect={handleTemplateSelect}
+                            />
+                          ) : (
+                            <DraggableTextLine
+                              id={line.id}
+                              content={line.content}
+                              isEditing={editingLine === line.id}
+                              onEdit={handleLineEdit}
+                              onDelete={handleLineDelete}
+                              onContentChange={handleLineContentChange}
+                              onInsertAfter={handleLineInsertAfter}
+                              onContextMenu={handleContextMenu}
+                              showContextMenu={showContextMenu}
+                              contextMenuPosition={contextMenuPosition}
+                              searchQuery={searchQuery}
+                              setSearchQuery={setSearchQuery}
+                              filteredTemplates={filteredTemplates}
+                              onTemplateSelect={handleTemplateSelect}
+                            />
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </SortableContext>
+                <DragOverlay>
+                  {draggedItem ? (
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
+                      <div className="text-gray-900 text-sm">
+                        {draggedItem.type === 'card' ? 'Carte en cours de déplacement...' : (draggedItem.content || 'Élément en cours de déplacement...')}
+                      </div>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </div>
           </div>
 
@@ -858,7 +1196,7 @@ const CampaignDashboard = () => {
             </div>
 
             {/* Tracker de quêtes */}
-            <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
+            <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
               <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
               
               <div className="space-y-4">
@@ -1000,23 +1338,23 @@ const CampaignDashboard = () => {
             {/* Header avec barre de recherche */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center space-x-2 mb-3">
-                <Search size={16} className="text-gray-400" />
+                <Search size={16} className="text-blue-600" />
                 <input
                   type="text"
                   placeholder="Rechercher un template..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm border-none outline-none"
+                  className="flex-1 text-sm border-none outline-none text-gray-900 bg-white"
                   autoFocus
                 />
                 <button
                   onClick={() => setShowInsertMenu(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-blue-600 hover:text-yellow-500 transition-colors"
                 >
                   <X size={16} />
                 </button>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-blue-600 font-medium">
                 Tapez @ dans le texte ou utilisez ce menu pour insérer des templates
               </div>
             </div>
@@ -1028,31 +1366,31 @@ const CampaignDashboard = () => {
                   <button
                     key={template.id}
                     onClick={() => handleInsertTemplate(template)}
-                    className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    className="w-full text-left p-3 hover:bg-yellow-500/10 border-b border-gray-100 last:border-b-0 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold text-gray-900 text-sm">{template.name}</div>
-                        <div className="text-xs text-gray-500">{template.description}</div>
+                        <div className="text-xs text-blue-600/70">{template.description}</div>
                       </div>
-                      <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                      <div className="text-xs bg-yellow-500/20 text-blue-600 px-2 py-1 rounded font-medium">
                         {template.type}
                       </div>
                     </div>
                   </button>
                 ))
               ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
+                <div className="p-4 text-center text-blue-600 text-sm font-medium">
                   Aucun template trouvé
                 </div>
               )}
             </div>
 
             {/* Footer avec bouton de fermeture */}
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
+            <div className="p-3 border-t border-gray-200 bg-yellow-500/5">
               <button
                 onClick={() => setShowInsertMenu(false)}
-                className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm transition-colors"
+                className="w-full py-2 px-4 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded text-sm transition-colors font-semibold"
               >
                 Fermer
               </button>
