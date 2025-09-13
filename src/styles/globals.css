@@ -655,3 +655,184 @@
     padding: 1px 4px;
   }
 }
+
+/* ===== STYLES DRAG & DROP NOTION-STYLE ===== */
+
+/* Bloc Notion */
+.notion-block {
+  @apply relative;
+}
+
+/* États du drag handle - Style Notion exact */
+.notion-drag-handle {
+  @apply absolute left-[-28px] top-1 w-4 h-4 cursor-grab;
+  @apply opacity-0 group-hover:opacity-60 hover:opacity-100;
+  @apply transition-opacity duration-200;
+  @apply text-gray-400 hover:text-gray-600;
+  @apply z-10;
+}
+
+/* Bouton d'insertion - Style Notion exact */
+.notion-insert-button {
+  @apply absolute left-[-40px] top-1 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200;
+  @apply opacity-0 group-hover:opacity-100 hover:opacity-100;
+  @apply z-10;
+}
+
+/* Contenu Notion */
+.notion-content {
+  @apply relative;
+}
+
+.drag-handle.dragging {
+  @apply cursor-grabbing opacity-80;
+}
+
+/* États des lignes éditables - Version discrète */
+.editable-line {
+  @apply relative;
+}
+
+.editable-line:hover .line-content {
+  @apply bg-gray-50/50 rounded-sm;
+}
+
+.editable-line.dragging {
+  @apply opacity-80 shadow-lg transform scale-[1.02] z-50;
+}
+
+/* Zones de drop */
+.drop-zone {
+  @apply h-1 bg-blue-500 mx-4 rounded opacity-75;
+  @apply animate-pulse;
+}
+
+.drop-zone.active {
+  @apply h-2 bg-blue-400;
+}
+
+/* Zones de drop pour cartes */
+.drop-zone-card {
+  @apply border-2 border-dashed border-blue-300 bg-blue-50/50 rounded-lg p-4 mx-4;
+  @apply transition-all duration-200;
+}
+.drop-zone-card.active {
+  @apply border-blue-500 bg-blue-100/50;
+}
+
+/* États des cartes flottantes */
+.floating-card {
+  @apply transition-all duration-200;
+}
+
+.floating-card:hover {
+  @apply shadow-2xl;
+}
+
+.floating-card.dragging {
+  @apply opacity-75 scale-105 shadow-2xl;
+}
+
+/* Menu contextuel - Style Notion exact */
+.context-menu {
+  @apply fixed bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 min-w-64 max-w-80;
+}
+
+.context-menu-item {
+  @apply w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors rounded-sm;
+}
+
+/* Bouton d'insertion contextuel - Style Notion exact */
+.insert-button {
+  @apply absolute -left-6 top-2 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200;
+  @apply opacity-0 group-hover:opacity-100 hover:opacity-100;
+  @apply z-10;
+}
+
+/* Animation pour les éléments en drag */
+.drag-overlay {
+  @apply fixed inset-0 pointer-events-none z-50;
+}
+
+.drag-ghost {
+  @apply opacity-50 transform rotate-2;
+}
+
+/* États des zones de drop */
+.drop-zone-horizontal {
+  @apply h-1 bg-blue-500 mx-4 rounded opacity-75 animate-pulse;
+}
+
+.drop-zone-horizontal.active {
+  @apply h-2 bg-blue-400;
+}
+
+.drop-zone-vertical {
+  @apply w-1 bg-blue-500 my-4 rounded opacity-75 animate-pulse;
+}
+
+.drop-zone-vertical.active {
+  @apply w-2 bg-blue-400;
+}
+
+/* Animation de réorganisation */
+.reorder-animation {
+  @apply transition-transform duration-200 ease-out;
+}
+
+/* États de sélection */
+.selected-block {
+  @apply ring-2 ring-blue-400 ring-opacity-50;
+}
+
+.multi-select-block {
+  @apply ring-2 ring-blue-300 ring-opacity-30;
+}
+
+/* Menu slash command - Version discrète */
+.slash-menu {
+  @apply fixed bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50 min-w-48 max-h-64 overflow-y-auto;
+}
+
+.slash-menu-item {
+  @apply w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center space-x-2 transition-colors;
+}
+
+.slash-menu-item.selected {
+  @apply bg-blue-50;
+}
+
+/* Menu mention @ */
+.mention-menu {
+  @apply fixed bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 min-w-48 max-h-64 overflow-y-auto;
+}
+
+.mention-item {
+  @apply w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center space-x-2 transition-colors;
+}
+
+/* Responsive pour drag & drop */
+@media (max-width: 768px) {
+  .drag-handle {
+    @apply left-[-16px] w-3 h-5;
+  }
+  
+  .insert-button {
+    @apply -left-6 w-5 h-5 text-xs;
+  }
+}
+
+@media (max-width: 640px) {
+  .drag-handle {
+    @apply left-[-12px] w-2 h-4;
+  }
+  
+  .insert-button {
+    @apply -left-4 w-4 h-4 text-xs;
+  }
+  
+  .slash-menu,
+  .mention-menu {
+    @apply min-w-48 max-h-64;
+  }
+}

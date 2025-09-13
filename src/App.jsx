@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import AuthPage from './components/auth/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
+import CampaignDashboard from './pages/CampaignDashboard';
 import SelectUniverse from './pages/SelectUniverse';
 import SelectRules from './pages/SelectRules';
 import UniverseDetails from './pages/UniverseDetails';
@@ -81,6 +82,13 @@ function App() {
           <Route path="/campaigns" element={
             <ProtectedRoute>
               <CampaignSelection />
+            </ProtectedRoute>
+          } />
+          
+          {/* Route protégée - Campaign Dashboard */}
+          <Route path="/campaigns/:campaignId/dashboard" element={
+            <ProtectedRoute>
+              <CampaignDashboard />
             </ProtectedRoute>
           } />
           
