@@ -100,10 +100,10 @@ const CreateCampaign = () => {
       setIsValidated(true);
       
       // Calculer le prix total
-      const universePrice = selectedUniverse.universe.type === 'owned' ? 0 : 
-                           selectedUniverse.universe.type === 'free' ? 0 :
-                           selectedUniverse.universe.type === 'freemium' ? 0 :
-                           selectedUniverse.universe.price || 0;
+      const universePrice = selectedUniverse.type === 'owned' ? 0 : 
+                           selectedUniverse.type === 'free' ? 0 :
+                           selectedUniverse.type === 'freemium' ? 0 :
+                           selectedUniverse.price || 0;
       
       const rulesPrice = selectedRules.type === 'owned' ? 0 :
                         selectedRules.type === 'free' ? 0 :
@@ -140,10 +140,10 @@ const CreateCampaign = () => {
   const calculateTotalPrice = () => {
     if (!selectedUniverse || !selectedRules) return 0;
     
-    const universePrice = selectedUniverse.universe.type === 'owned' ? 0 : 
-                         selectedUniverse.universe.type === 'free' ? 0 :
-                         selectedUniverse.universe.type === 'freemium' ? 0 :
-                         selectedUniverse.universe.price || 0;
+    const universePrice = selectedUniverse.type === 'owned' ? 0 : 
+                         selectedUniverse.type === 'free' ? 0 :
+                         selectedUniverse.type === 'freemium' ? 0 :
+                         selectedUniverse.price || 0;
     
     const rulesPrice = selectedRules.type === 'owned' ? 0 :
                       selectedRules.type === 'free' ? 0 :
@@ -184,16 +184,16 @@ const CreateCampaign = () => {
   const createCampaign = async () => {
     try {
       // Générer un titre automatique
-      const campaignTitle = `Campagne ${selectedUniverse.universe.name}`;
+      const campaignTitle = `Campagne ${selectedUniverse.name}`;
       
       const campaignData = {
         id: `campaign-${Date.now()}`, // ID unique pour le mode démo
         user_id: user.id,
         title: campaignTitle,
         game_system: selectedRules.name,
-        universe: selectedUniverse.universe.name,
-        description: `Nouvelle campagne dans l'univers ${selectedUniverse.universe.name} utilisant les règles ${selectedRules.name}`,
-        resume: selectedUniverse.universe.description || 'Une nouvelle aventure commence...',
+        universe: selectedUniverse.name,
+        description: `Nouvelle campagne dans l'univers ${selectedUniverse.name} utilisant les règles ${selectedRules.name}`,
+        resume: selectedUniverse.description || 'Une nouvelle aventure commence...',
         status: 'active',
         total_price: totalPrice,
         universe_extensions: selectedUniverse.extensions || [],
@@ -280,8 +280,8 @@ const CreateCampaign = () => {
                   <div
                     className="w-full h-full bg-cover bg-center"
                     style={{
-                      backgroundImage: selectedUniverse.universe.image
-                        ? `url(${selectedUniverse.universe.image})`
+                      backgroundImage: selectedUniverse.image
+                        ? `url(${selectedUniverse.image})`
                         : `linear-gradient(135deg, #64748b 0%, #1e293b 100%)`
                     }}
                   >
@@ -290,15 +290,30 @@ const CreateCampaign = () => {
                     {/* Prix total sur l'image */}
                     <div className="absolute top-3 left-3">
                       <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
-                        {selectedUniverse.universe.type === 'owned' ? 'Possédé' :
-                         selectedUniverse.totalPrice === 0 ? 'Gratuit' :
-                         `${Math.round(selectedUniverse.totalPrice * 100) / 100}€`}
+                        {(() => {
+                          const universePrice = selectedUniverse.type === 'owned' ? 0 : 
+                                               selectedUniverse.type === 'free' ? 0 :
+                                               selectedUniverse.type === 'freemium' ? 0 :
+                                               selectedUniverse.price || 0;
+                          const extensionsPrice = (selectedUniverse.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+                          const totalPrice = universePrice + extensionsPrice;
+                          
+                          if (selectedUniverse.type === 'owned' && extensionsPrice === 0) {
+                            return 'Possédé';
+                          } else if (totalPrice === 0) {
+                            return 'Gratuit';
+                          } else if (selectedUniverse.type === 'owned' && extensionsPrice > 0) {
+                            return `${Math.round(extensionsPrice * 100) / 100}€`;
+                          } else {
+                            return `${Math.round(totalPrice * 100) / 100}€`;
+                          }
+                        })()}
                       </span>
                     </div>
                     
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                      <div className="text-2xl font-bold mb-2 text-center">{selectedUniverse.universe.name}</div>
-                      <div className="text-sm text-center">{selectedUniverse.universe.publisher}</div>
+                      <div className="text-2xl font-bold mb-2 text-center">{selectedUniverse.name}</div>
+                      <div className="text-sm text-center">{selectedUniverse.publisher}</div>
                       {selectedUniverse.extensions.length > 0 && (
                         <div className="text-xs mt-2 bg-white/20 px-2 py-1 rounded">
                           + {selectedUniverse.extensions.length} extension(s)
@@ -312,12 +327,12 @@ const CreateCampaign = () => {
                 <div className="h-1/4 p-4 bg-light">
                   <h3 className="text-xl font-bold text-primary-blue mb-1 flex items-center">
                     <span className="text-2xl mr-2">🌍</span>
-                    {selectedUniverse ? selectedUniverse.universe.name : 'Univers'}
+                    {selectedUniverse ? selectedUniverse.name : 'Univers'}
                   </h3>
                   {selectedUniverse && (
                     <>
                       <p className="text-primary-blue/70 text-sm truncate">
-                        {selectedUniverse.universe.publisher}
+                        {selectedUniverse.publisher}
                       </p>
                       {selectedUniverse.extensions && selectedUniverse.extensions.length > 0 && (
                         <div className="mt-2">
@@ -385,10 +400,36 @@ const CreateCampaign = () => {
                     {/* Prix total sur l'image */}
                     <div className="absolute top-3 left-3">
                       <span className="bg-golden text-dark px-2 py-1 rounded-full text-sm font-bold">
-                        {selectedRules.type === 'owned' ? 'Possédé' :
-                         selectedRules.totalPrice === 0 ? 'Gratuit' :
-                         `${Math.round(selectedRules.totalPrice * 100) / 100}€`}
+                        {(() => {
+                          const rulesPrice = selectedRules.type === 'owned' ? 0 : 
+                                            selectedRules.type === 'free' ? 0 :
+                                            selectedRules.type === 'freemium' ? 0 :
+                                            selectedRules.price || 0;
+                          const extensionsPrice = (selectedRules.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+                          const totalPrice = rulesPrice + extensionsPrice;
+                          
+                          if (selectedRules.type === 'owned' && extensionsPrice === 0) {
+                            return 'Possédé';
+                          } else if (totalPrice === 0) {
+                            return 'Gratuit';
+                          } else if (selectedRules.type === 'owned' && extensionsPrice > 0) {
+                            return `${Math.round(extensionsPrice * 100) / 100}€`;
+                          } else {
+                            return `${Math.round(totalPrice * 100) / 100}€`;
+                          }
+                        })()}
                       </span>
+                    </div>
+                    
+                    {/* Titre, publisher et nombre d'extensions sur l'image */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                      <div className="text-2xl font-bold mb-2 text-center">{selectedRules.name}</div>
+                      <div className="text-sm text-center">{selectedRules.publisher}</div>
+                      {selectedRules.extensions && selectedRules.extensions.length > 0 && (
+                        <div className="text-xs mt-2 bg-white/20 px-2 py-1 rounded">
+                          + {selectedRules.extensions.length} extension(s)
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -416,12 +457,12 @@ const CreateCampaign = () => {
                 {selectedRules && (
                   <>
                     <p className="text-primary-blue/70 text-sm truncate">
-                      {selectedRules.description}
+                      {selectedRules.publisher}
                     </p>
                     {selectedRules.extensions && selectedRules.extensions.length > 0 && (
                       <div className="mt-2">
                         <span className="bg-golden/20 text-golden px-2 py-1 rounded-full text-xs font-medium">
-                          + {selectedRules.extensions.length} extension{selectedRules.extensions.length > 1 ? 's' : ''}
+                          + {selectedRules.extensions.length} extension(s)
                         </span>
                       </div>
                     )}
@@ -468,23 +509,63 @@ const CreateCampaign = () => {
               <h3 className="text-xl font-bold text-light mb-4 eagle-lake-font">Récapitulatif</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-light">
-                  <span>Univers : {selectedUniverse.universe.name}</span>
+                  <span>Univers : {selectedUniverse.name}</span>
                   <span className="font-bold">
-                    {selectedUniverse.universe.type === 'owned' ? 'Déjà possédé' :
-                     selectedUniverse.totalPrice === 0 ? 'Gratuit' : `${Math.round(selectedUniverse.totalPrice * 100) / 100}€`}
+                    {(() => {
+                      const universePrice = selectedUniverse.type === 'owned' ? 0 : 
+                                           selectedUniverse.type === 'free' ? 0 :
+                                           selectedUniverse.type === 'freemium' ? 0 :
+                                           selectedUniverse.price || 0;
+                      const extensionsPrice = (selectedUniverse.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+                      
+                      if (selectedUniverse.type === 'owned' && extensionsPrice === 0) {
+                        return 'Déjà possédé';
+                      } else if (selectedUniverse.type === 'owned' && extensionsPrice > 0) {
+                        return 'Déjà possédé';
+                      } else if (selectedUniverse.type === 'free' && extensionsPrice === 0) {
+                        return 'Gratuit';
+                      } else if (selectedUniverse.type === 'free' && extensionsPrice > 0) {
+                        return 'Gratuit';
+                      } else if (universePrice === 0 && extensionsPrice === 0) {
+                        return 'Gratuit';
+                      } else {
+                        return `${Math.round(universePrice * 100) / 100}€`;
+                      }
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-light">
                   <span>Règles : {selectedRules.name}</span>
                   <span className="font-bold">
-                    {selectedRules.type === 'owned' ? 'Déjà possédé' :
-                     selectedRules.totalPrice === 0 ? 'Gratuit' : `${Math.round(selectedRules.totalPrice * 100) / 100}€`}
+                    {(() => {
+                      const rulesPrice = selectedRules.type === 'owned' ? 0 : 
+                                        selectedRules.type === 'free' ? 0 :
+                                        selectedRules.type === 'freemium' ? 0 :
+                                        selectedRules.price || 0;
+                      const extensionsPrice = (selectedRules.extensions || []).reduce((total, ext) => total + (ext.price || 0), 0);
+                      
+                      if (selectedRules.type === 'owned' && extensionsPrice === 0) {
+                        return 'Déjà possédé';
+                      } else if (selectedRules.type === 'owned' && extensionsPrice > 0) {
+                        return 'Déjà possédé';
+                      } else if (selectedRules.type === 'free' && extensionsPrice === 0) {
+                        return 'Gratuit';
+                      } else if (selectedRules.type === 'free' && extensionsPrice > 0) {
+                        return 'Gratuit';
+                      } else if (rulesPrice === 0 && extensionsPrice === 0) {
+                        return 'Gratuit';
+                      } else {
+                        return `${Math.round(rulesPrice * 100) / 100}€`;
+                      }
+                    })()}
                   </span>
                 </div>
                 {(selectedUniverse.extensions && selectedUniverse.extensions.length > 0) && (
                   <>
                     <div className="flex justify-between items-center text-light">
-                      <span>Achats facultatifs univers :</span>
+                      <span>
+                        Achats facultatifs univers {selectedUniverse.type === 'free' ? '(univers gratuit)' : selectedUniverse.type === 'owned' ? '(univers possédé)' : ''} :
+                      </span>
                       <span className="font-bold">
                         {Math.round(selectedUniverse.extensions.reduce((total, ext) => total + (ext.price || 0), 0) * 100) / 100}€
                       </span>
@@ -500,7 +581,9 @@ const CreateCampaign = () => {
                 {(selectedRules.extensions && selectedRules.extensions.length > 0) && (
                   <>
                     <div className="flex justify-between items-center text-light">
-                      <span>Achats facultatifs règles :</span>
+                      <span>
+                        Achats facultatifs règles {selectedRules.type === 'free' ? '(règles gratuites)' : selectedRules.type === 'owned' ? '(règles possédées)' : ''} :
+                      </span>
                       <span className="font-bold">
                         {Math.round(selectedRules.extensions.reduce((total, ext) => total + (ext.price || 0), 0) * 100) / 100}€
                       </span>
@@ -517,7 +600,10 @@ const CreateCampaign = () => {
                   <div className="flex justify-between items-center text-light text-lg font-bold">
                     <span>Total :</span>
                     <span className="text-golden">
-                      {totalPrice === 0 ? 'Gratuit' : `${totalPrice.toFixed(2)}€`}
+                      {totalPrice === 0 && selectedUniverse.type === 'owned' && selectedRules.type === 'owned' && 
+                       (!selectedUniverse.extensions || selectedUniverse.extensions.length === 0) && 
+                       (!selectedRules.extensions || selectedRules.extensions.length === 0) ? 'Déjà possédé' :
+                       totalPrice === 0 ? 'Gratuit' : `${totalPrice.toFixed(2)}€`}
                     </span>
                   </div>
                 </div>

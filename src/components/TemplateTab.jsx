@@ -43,7 +43,7 @@ const TemplateTab = ({
           </div>
           
           {/* Onglets colorés sur le côté gauche */}
-          <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
+          <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
             {tabs.map((tab, index) => (
               <motion.img
                 key={tab.id}
@@ -55,7 +55,9 @@ const TemplateTab = ({
                     onToggle(); // Ouvrir le panel
                   } else {
                     onTabChange(tab.id); // Changer d'onglet et ouvrir
-                    onToggle();
+                    if (!isOpen) {
+                      onToggle(); // Ouvrir le panel seulement s'il est fermé
+                    }
                   }
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -111,7 +113,7 @@ const TemplateTab = ({
             className="fixed right-0 top-0 h-full w-[700px] z-[9999] flex"
           >
             {/* Onglets colorés sur le côté gauche */}
-            <div className="flex flex-col justify-center gap-2 p-2">
+            <div className="flex flex-col justify-center gap-2 -ml-8">
               {tabs.map((tab) => (
                 <motion.img
                   key={tab.id}
@@ -160,11 +162,13 @@ const TemplateTab = ({
                 />
               )}
               {/* Contenu du livre - Templates */}
-              <div className="relative z-10 h-full p-6 overflow-y-auto">
-                <div className="text-golden text-xl font-bold mb-6">
-                  {tabs.find(tab => tab.id === activeTab)?.title || 'Templates'} disponibles
+              <div className="absolute inset-0 z-10 p-6 pt-14 pb-6 overflow-hidden flex flex-col">
+                <div className="text-black text-2xl font-bold mb-8 eagle-lake-font pl-16 flex-shrink-0">
+                  {tabs.find(tab => tab.id === activeTab)?.title || 'Templates'}
                 </div>
-                {children}
+                <div className="flex-1 overflow-hidden">
+                  {children}
+                </div>
               </div>
             </div>
           </motion.div>

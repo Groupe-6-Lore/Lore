@@ -23,26 +23,53 @@ const SelectUniverse = () => {
   const [userPlayedGames, setUserPlayedGames] = useState([]);
 
   const allUniverses = [
-    { id: 1, name: "Forgotten Realms", description: "L'univers fantasy le plus célèbre de D&D avec Faerûn et ses royaumes", publisher: "Wizards of the Coast", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Débutant", image: "/images/forgotten-realms.jpg", popularity: 95 },
-    { id: 2, name: "Eberron", description: "Univers steampunk fantasy avec magie et technologie", publisher: "Wizards of the Coast", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/eberron.jpg", popularity: 85 },
-    { id: 3, name: "Ravenloft", description: "Domaine de l'horreur gothique avec vampires et créatures sombres", publisher: "Wizards of the Coast", price: 45, type: "paid", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/ravenloft.jpg", popularity: 92 },
-    { id: 4, name: "Planescape", description: "Multivers cosmique avec Sigil et les plans d'existence", publisher: "Wizards of the Coast", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Expert", image: "/images/planescape.jpg", popularity: 78 },
-    { id: 5, name: "Dark Sun", description: "Désert post-apocalyptique avec magie destructrice", publisher: "Wizards of the Coast", price: 60, type: "paid", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/dark-sun.jpg", popularity: 82 },
-    { id: 6, name: "Spelljammer", description: "Voyages spatiaux fantasy avec vaisseaux magiques", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/spelljammer.jpg", popularity: 80 },
-    { id: 7, name: "Golarion", description: "Monde de Pathfinder avec nations et cultures variées", publisher: "Paizo Publishing", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/golarion.jpg", popularity: 85 },
-    { id: 8, name: "Numenera", description: "Terre du futur lointain avec technologie mystérieuse", publisher: "Monte Cook Games", price: 50, type: "paid", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/numenera-world.jpg", popularity: 85 },
-    { id: 9, name: "Shadowrun", description: "Cyberpunk fantasy avec magie et technologie", publisher: "Catalyst Game Labs", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Science-fiction"], difficulty: "Expert", image: "/images/shadowrun.jpg", popularity: 60 },
-    { id: 10, name: "Warhammer 40k", description: "Grimdark futuriste avec guerre éternelle", publisher: "Games Workshop", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/warhammer40k.jpg", popularity: 80 },
-    { id: 11, name: "Middle-earth", description: "Terre du Milieu de Tolkien avec elfes et nains", publisher: "Free League Publishing", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/middle-earth.jpg", popularity: 90 },
-    { id: 12, name: "The Witcher", description: "Monde sombre avec monstres et magie", publisher: "R. Talsorian Games", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/witcher.jpg", popularity: 85 },
-    { id: 13, name: "Star Wars", description: "Galaxie lointaine avec Force et sabres laser", publisher: "Fantasy Flight Games", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Science-fiction"], difficulty: "Débutant", image: "/images/star-wars.jpg", popularity: 95 },
-    { id: 14, name: "Cyberpunk 2077", description: "Mondes futuristes avec technologie et corruption", publisher: "R. Talsorian Games", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/cyberpunk2077.jpg", popularity: 80 },
-    { id: 15, name: "Vampire: The Masquerade", description: "Monde sombre avec vampires et politique", publisher: "White Wolf", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/vampire-masquerade.jpg", popularity: 80 },
-    { id: 16, name: "Call of Cthulhu", description: "Monde d'horreur cosmique avec investigation", publisher: "Chaosium", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/call-of-cthulhu.jpg", popularity: 85 },
-    { id: 17, name: "Dragon Age", description: "Thédas avec magie et conflits politiques", publisher: "Green Ronin", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/dragon-age.jpg", popularity: 75 },
-    { id: 18, name: "Fallout", description: "Monde post-apocalyptique avec technologie rétro", publisher: "Modiphius Entertainment", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/fallout.jpg", popularity: 70 },
-    { id: 19, name: "The Expanse", description: "Système solaire avec politique et technologie", publisher: "Green Ronin", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/expanse.jpg", popularity: 75 },
-    { id: 20, name: "Alien", description: "Espace avec horreur et survie", publisher: "Free League Publishing", price: 0, type: "freemium", hasOptionalPurchases: true, themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/alien.jpg", popularity: 80 }
+    // Univers Fantasy
+    { id: 1, name: "Forgotten Realms", description: "L'univers fantasy le plus célèbre de D&D avec Faerûn", publisher: "Wizards of the Coast", price: 0, type: "owned", themes: ["Fantasy"], difficulty: "Débutant", image: "/images/forgotten-realms.jpg", popularity: 95 },
+    { id: 2, name: "Eberron", description: "Univers steampunk fantasy avec magie industrielle", publisher: "Wizards of the Coast", price: 0, type: "owned", themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/eberron.jpg", popularity: 85 },
+    { id: 3, name: "Ravenloft", description: "Domaine de l'horreur gothique et des ténèbres", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/ravenloft.jpg", popularity: 80 },
+    { id: 4, name: "Planescape", description: "Multivers cosmique avec Sigil, la Cité des Portes", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Fantasy"], difficulty: "Expert", image: "/images/planescape.jpg", popularity: 75 },
+    { id: 5, name: "Dark Sun", description: "Désert post-apocalyptique avec magie destructrice", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Fantasy"], difficulty: "Expert", image: "/images/dark-sun.jpg", popularity: 70 },
+    { id: 6, name: "Spelljammer", description: "Voyages spatiaux fantasy avec vaisseaux magiques", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/spelljammer.jpg", popularity: 65 },
+    { id: 7, name: "Golarion", description: "Univers de Pathfinder avec Varisia et ses mystères", publisher: "Paizo Publishing", price: 0, type: "free", themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/golarion.jpg", popularity: 85 },
+    { id: 8, name: "Symbaroum", description: "Dark fantasy dans la forêt maudite de Davokar", publisher: "Free League Publishing", price: 45.99, type: "paid", themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/symbaroum.jpg", popularity: 88 },
+    { id: 9, name: "Midgard", description: "Univers fantasy européen avec mythologie réelle", publisher: "Kobold Press", price: 0, type: "free", themes: ["Fantasy"], difficulty: "Intermédiaire", image: "/images/midgard.jpg", popularity: 75 },
+    { id: 10, name: "Theros", description: "Univers inspiré de la mythologie grecque", publisher: "Wizards of the Coast", price: 0, type: "free", themes: ["Fantasy"], difficulty: "Débutant", image: "/images/theros.jpg", popularity: 70 },
+    
+    // Univers Science-Fiction
+    { id: 11, name: "Star Wars", description: "Galaxie lointaine avec la Force et les Jedi", publisher: "Fantasy Flight Games", price: 0, type: "owned", themes: ["Science-fiction"], difficulty: "Débutant", image: "/images/star-wars.jpg", popularity: 90 },
+    { id: 12, name: "Star Trek", description: "Fédération des Planètes Unies et exploration spatiale", publisher: "Modiphius Entertainment", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/star-trek.jpg", popularity: 85 },
+    { id: 13, name: "Warhammer 40K", description: "Grimdark futuriste avec l'Imperium de l'Humanité", publisher: "Games Workshop", price: 0, type: "owned", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/warhammer-40k.jpg", popularity: 80 },
+    { id: 14, name: "Shadowrun", description: "Cyberpunk avec magie et métahumains", publisher: "Catalyst Game Labs", price: 0, type: "owned", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/shadowrun.jpg", popularity: 75 },
+    { id: 15, name: "Numenera", description: "Terre du Neuvième Monde avec technologies anciennes", publisher: "Monte Cook Games", price: 45, type: "paid", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/numenera.jpg", popularity: 87 },
+    { id: 16, name: "Cyberpunk RED", description: "Nuit City en 2045 avec corporations et netrunners", publisher: "R. Talsorian Games", price: 60, type: "paid", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/cyberpunk-red.jpg", popularity: 86 },
+    { id: 17, name: "Traveller", description: "Exploration spatiale et commerce interstellaire", publisher: "Mongoose Publishing", price: 50, type: "paid", themes: ["Science-fiction"], difficulty: "Expert", image: "/images/traveller.jpg", popularity: 70 },
+    { id: 18, name: "Alien", description: "Horreur spatiale avec les Xenomorphes", publisher: "Free League Publishing", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/alien.jpg", popularity: 85 },
+    { id: 19, name: "Blade Runner", description: "Los Angeles 2037 avec réplicants et détectives", publisher: "Free League Publishing", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/blade-runner.jpg", popularity: 80 },
+    { id: 20, name: "The Expanse", description: "Système solaire colonisé avec tensions politiques", publisher: "Green Ronin Publishing", price: 0, type: "free", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/expanse.jpg", popularity: 75 },
+    
+    // Univers Horreur & Mystère
+    { id: 21, name: "Cthulhu Mythos", description: "Horreur cosmique avec les Grands Anciens", publisher: "Chaosium", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/cthulhu-mythos.jpg", popularity: 90 },
+    { id: 22, name: "World of Darkness", description: "Monde moderne sombre avec vampires et loups-garous", publisher: "White Wolf", price: 0, type: "owned", themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/world-darkness.jpg", popularity: 85 },
+    { id: 23, name: "Delta Green", description: "Agents gouvernementaux contre l'horreur cosmique", publisher: "Arc Dream Publishing", price: 60, type: "paid", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/delta-green.jpg", popularity: 89 },
+    { id: 24, name: "Call of Cthulhu", description: "Investigation dans les années 1920", publisher: "Chaosium", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/call-cthulhu.jpg", popularity: 85 },
+    { id: 25, name: "Vampire: The Masquerade", description: "Vampires dans le monde moderne", publisher: "White Wolf", price: 55, type: "paid", themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/vampire-masquerade.jpg", popularity: 88 },
+    { id: 26, name: "Werewolf: The Apocalypse", description: "Loup-garous protecteurs de Gaïa", publisher: "White Wolf", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/werewolf-apocalypse.jpg", popularity: 75 },
+    { id: 27, name: "Mage: The Ascension", description: "Mages dans la guerre de l'Ascension", publisher: "White Wolf", price: 0, type: "free", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/mage-ascension.jpg", popularity: 70 },
+    { id: 28, name: "Unknown Armies", description: "Horreur urbaine moderne avec magie occulte", publisher: "Atlas Games", price: 40, type: "paid", themes: ["Horreur & Mystère"], difficulty: "Intermédiaire", image: "/images/unknown-armies.jpg", popularity: 70 },
+    { id: 29, name: "Over the Edge", description: "Île d'Al Amarja, lieu de tous les possibles", publisher: "Atlas Games", price: 35, type: "paid", themes: ["Science-fiction"], difficulty: "Intermédiaire", image: "/images/over-edge.jpg", popularity: 65 },
+    { id: 30, name: "Bluebeard's Bride", description: "Horreur gothique et psychologique", publisher: "Magpie Games", price: 45, type: "paid", themes: ["Horreur & Mystère"], difficulty: "Expert", image: "/images/bluebeard-bride.jpg", popularity: 60 },
+    
+    // Univers Historique & Réaliste
+    { id: 31, name: "Legend of the Five Rings", description: "Japon fantastique avec samouraïs et clans", publisher: "Edge Studio", price: 49, type: "paid", themes: ["Historique & Réaliste"], difficulty: "Expert", image: "/images/l5r.jpg", popularity: 92 },
+    { id: 32, name: "Pendragon", description: "Légende arthurienne et chevalerie", publisher: "Chaosium", price: 50, type: "paid", themes: ["Historique & Réaliste"], difficulty: "Expert", image: "/images/pendragon.jpg", popularity: 85 },
+    { id: 33, name: "Ars Magica", description: "Europe médiévale avec magie hermétique", publisher: "Atlas Games", price: 55, type: "paid", themes: ["Fantasy"], difficulty: "Expert", image: "/images/ars-magica.jpg", popularity: 65 },
+    { id: 34, name: "RuneQuest", description: "Glorantha avec dieux et magie runique", publisher: "Chaosium", price: 45, type: "paid", themes: ["Fantasy"], difficulty: "Expert", image: "/images/runequest.jpg", popularity: 70 },
+    { id: 35, name: "GURPS", description: "Système générique pour tous les univers", publisher: "Steve Jackson Games", price: 0, type: "free", themes: ["Générique"], difficulty: "Expert", image: "/images/gurps.jpg", popularity: 70 },
+    { id: 36, name: "Savage Worlds", description: "Système rapide pour tous les genres", publisher: "Pinnacle Entertainment", price: 30, type: "paid", themes: ["Générique"], difficulty: "Intermédiaire", image: "/images/savage-worlds.jpg", popularity: 91 },
+    { id: 37, name: "Fate Core", description: "Système narratif flexible", publisher: "Evil Hat Productions", price: 0, type: "free", themes: ["Générique"], difficulty: "Intermédiaire", image: "/images/fate-core.jpg", popularity: 85 },
+    { id: 38, name: "Paranoia", description: "Alpha Complex dystopique et paranoïaque", publisher: "Mongoose Publishing", price: 0, type: "free", themes: ["Comédie & Parodique"], difficulty: "Débutant", image: "/images/paranoia.jpg", popularity: 75 },
+    { id: 39, name: "Toon", description: "Univers cartoon et comique", publisher: "Steve Jackson Games", price: 25, type: "paid", themes: ["Comédie & Parodique"], difficulty: "Débutant", image: "/images/toon.jpg", popularity: 65 },
+    { id: 40, name: "Mythras", description: "Fantasy réaliste et détaillé", publisher: "The Design Mechanism", price: 40, type: "paid", themes: ["Fantasy"], difficulty: "Expert", image: "/images/mythras.jpg", popularity: 65 }
   ];
 
   // Section univers déjà connus - UN SEUL RÉELLEMENT POSSÉDÉ
@@ -51,41 +78,45 @@ const SelectUniverse = () => {
       id: 'known-1',
       name: 'Forgotten Realms',
       publisher: 'Wizards of the Coast',
-      description: 'L\'univers fantasy le plus célèbre de D&D avec Faerûn et ses royaumes',
+      description: 'L\'univers fantasy le plus célèbre de D&D avec Faerûn',
       themes: ['Fantasy'],
       difficulty: 'Débutant',
       price: 0,
+      type: 'owned',
       isOwned: true // SEUL RÉELLEMENT POSSÉDÉ
     },
     {
       id: 'known-2',
-      name: 'Eberron',
-      publisher: 'Wizards of the Coast',
-      description: 'Univers steampunk fantasy avec magie et technologie',
-      themes: ['Fantasy'],
-      difficulty: 'Intermédiaire',
-      price: 0,
-      isOwned: false // Pas réellement possédé
-    },
-    {
-      id: 'known-3',
       name: 'Star Wars',
       publisher: 'Fantasy Flight Games',
-      description: 'Galaxie lointaine avec Force et sabres laser',
+      description: 'Galaxie lointaine avec la Force et les Jedi',
       themes: ['Science-fiction'],
       difficulty: 'Débutant',
       price: 0,
-      isOwned: false // Pas réellement possédé
+      type: 'owned',
+      isOwned: true // Réellement possédé
+    },
+    {
+      id: 'known-3',
+      name: 'World of Darkness',
+      publisher: 'White Wolf',
+      description: 'Monde moderne sombre avec vampires et loups-garous',
+      themes: ['Horreur & Mystère'],
+      difficulty: 'Intermédiaire',
+      price: 0,
+      type: 'owned',
+      isOwned: true // Réellement possédé
     },
     {
       id: 'known-4',
-      name: 'Middle-earth',
-      publisher: 'Free League Publishing',
-      description: 'Terre du Milieu de Tolkien avec elfes et nains',
-      themes: ['Fantasy'],
-      difficulty: 'Intermédiaire',
+      name: 'Cthulhu Mythos',
+      publisher: 'Chaosium',
+      description: 'Horreur cosmique avec les Grands Anciens',
+      themes: ['Horreur & Mystère'],
+      difficulty: 'Expert',
       price: 0,
-      isOwned: false // Pas réellement possédé
+      type: 'owned',
+      isOwned: true // Réellement possédé
     }
   ];
 
@@ -337,7 +368,7 @@ const SelectUniverse = () => {
                   <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark/60" />
                   <input
                     type="text"
-                    placeholder="Rechercher des systèmes de règles"
+                    placeholder="Rechercher des univers"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="search-input pl-10 pr-4 py-3 w-full sm:w-80 rounded-lg border border-light/30 bg-light text-dark placeholder-dark/60 focus:ring-2 focus:ring-golden focus:border-transparent"
@@ -444,10 +475,10 @@ const SelectUniverse = () => {
               </div>
             )}
 
-            {/* Section Règles déjà connues - MASQUÉE si recherche active */}
+            {/* Section Univers déjà connus - MASQUÉE si recherche active */}
             {!searchTerm && (
               <div className="mb-8">
-                <h3 className="text-xl font-semibold text-white mb-4">Règles déjà connues</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Univers déjà connus</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {knownUniverses.map((universe) => (
                     <RulesCard 
@@ -469,9 +500,9 @@ const SelectUniverse = () => {
             {!selectedFilters.prices.includes('owned') && currentUniverses.length > 0 && (
               <div className="mb-8">
                 {ownedUniverses.length > 0 && !searchTerm ? (
-                  <h3 className="text-light/90 font-semibold text-lg mb-6">Autres règles disponibles</h3>
+                  <h3 className="text-light/90 font-semibold text-lg mb-6">Autres univers disponibles</h3>
                 ) : (
-                  <h3 className="text-light/90 font-semibold text-lg mb-6">Règles disponibles</h3>
+                  <h3 className="text-light/90 font-semibold text-lg mb-6">Univers disponibles</h3>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {currentUniverses.map((universe) => (
@@ -489,7 +520,7 @@ const SelectUniverse = () => {
             {ownedUniverses.length === 0 && unknownUniverses.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-light/60 text-lg mb-4">
-                  Aucune règle ne correspond à vos critères de recherche
+                  Aucun univers ne correspond à vos critères de recherche
                 </div>
                 <button
                   onClick={() => {
@@ -541,7 +572,7 @@ const SelectUniverse = () => {
   );
 };
 
-// Pour les cartes "règles connues" ET "règles inconnues"
+// Pour les cartes "univers connus" ET "univers inconnus"
 // Même structure, même CSS, même alignement
 const RulesCard = ({ rule, onClick, isKnown = false }) => {
   return (

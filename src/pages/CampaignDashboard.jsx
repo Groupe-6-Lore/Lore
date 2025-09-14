@@ -56,7 +56,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Composant pour les lignes de texte draggables
-const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading }) => {
+const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, onEdit, onDelete, isEditing, onContentChange }) => {
   const {
     attributes,
     listeners,
@@ -111,8 +111,69 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
         <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
       </div>
 
+      {/* Boutons d'édition et suppression - Visible au survol */}
+      <div className="absolute right-[-60px] top-1 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit && onEdit(id, true);
+          }}
+          className="w-4 h-4 flex items-center justify-center bg-blue-100/80 hover:bg-blue-200/90 rounded-sm transition-colors"
+          title="Éditer"
+        >
+          <Edit2 size={10} className="text-blue-600 hover:text-blue-800" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+          className="w-4 h-4 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded-sm transition-colors"
+          title="Supprimer"
+        >
+          <X size={10} className="text-red-600 hover:text-red-800" />
+        </button>
+      </div>
+
       {/* Contenu */}
-      {isHeading ? (
+      {isEditing ? (
+        <div className="pl-8 space-y-2">
+          <textarea
+            value={content}
+            onChange={(e) => onContentChange && onContentChange(id, e.target.value)}
+            className="w-full p-2 border border-gray-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-900"
+            rows={3}
+            autoFocus
+            placeholder="Tapez votre contenu..."
+          />
+          {isLink && (
+            <div className="space-y-2">
+              <label className="text-sm text-gray-600">URL du lien :</label>
+              <input
+                type="url"
+                value={linkUrl || ''}
+                onChange={(e) => onContentChange && onContentChange(id, content, e.target.value)}
+                className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-900"
+                placeholder="https://..."
+              />
+            </div>
+          )}
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onEdit && onEdit(id, false)}
+              className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+            >
+              ✓ Sauvegarder
+            </button>
+            <button
+              onClick={() => onDelete && onDelete(id)}
+              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+            >
+              ✕ Supprimer
+            </button>
+          </div>
+        </div>
+      ) : isHeading ? (
         type === 'heading1' ? (
           <h1 
             className={`leading-relaxed pl-8 text-3xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
@@ -138,22 +199,37 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
             {content}
           </h3>
         ) : (
-          <p 
+          <div 
             className={`leading-relaxed pl-8 text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
             onClick={handleClick}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
             {content}
-          </p>
+          </div>
         )
+      ) : type === 'separator' ? (
+        <div className="flex items-center my-4 pl-8">
+          <div className="flex-1 h-px bg-light/30"></div>
+          <span className="px-3 text-light/60 text-sm">---</span>
+          <div className="flex-1 h-px bg-light/30"></div>
+        </div>
       ) : (
-        <p 
+        <div 
           className={`leading-relaxed pl-8 ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'text-light'}`}
           onClick={handleClick}
         >
-          {isLink && <Link size={14} className="inline mr-2" />}
-          {content}
-        </p>
+          {content.split(/(\*\*.*?\*\*)/).map((part, index) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              const text = part.slice(2, -2);
+              return (
+                <strong key={index} className="text-golden cursor-pointer hover:text-golden/80">
+                  {text}
+                </strong>
+              );
+            }
+            return part;
+          })}
+        </div>
       )}
     </div>
   );
@@ -185,52 +261,9 @@ const DropZone = ({ id, isActive, onTemplateDrop, targetIndex }) => {
   );
 };
 
-// Composant pour les templates draggables
-const DraggableTemplate = ({ template }) => {
-  return (
-    <motion.div
-      className="bg-slate-800/40 backdrop-blur-md rounded-lg p-3 border border-slate-700/50 shadow-lg cursor-grab hover:shadow-xl transition-all duration-200"
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData('application/json', JSON.stringify(template));
-      }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ 
-        scale: 1.05, 
-        rotateY: 5,
-        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)"
-      }}
-      whileTap={{ scale: 0.95 }}
-      whileDrag={{ 
-        scale: 1.1, 
-        rotate: 5,
-        boxShadow: "0 25px 50px rgba(0, 0, 0, 0.4)"
-      }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-    >
-      <motion.div 
-        className="flex items-center space-x-3"
-        whileHover={{ x: 5 }}
-      >
-        <motion.span 
-          className="text-2xl"
-          whileHover={{ scale: 1.2, rotate: 10 }}
-          transition={{ duration: 0.2 }}
-        >
-          {template.icon}
-        </motion.span>
-        <div>
-          <div className="text-light font-semibold text-sm">{template.name}</div>
-          <div className="text-light/70 text-xs">{template.description}</div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
 
 // Composant pour la card quêtes draggable
-const DraggableQuestCard = ({ campaign, onShowContextMenu, id }) => {
+const DraggableQuestCard = ({ campaign, onShowContextMenu, id, onEdit, onDelete, isEditing }) => {
   const {
     attributes,
     listeners,
@@ -254,21 +287,45 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id }) => {
     >
       {/* Drag Handle */}
       <div 
-        className={`absolute left-[-30px] top-6 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
-          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
+        className={`absolute left-2 top-2 w-6 h-6 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center bg-gray-100/80 hover:bg-gray-200/90 rounded ${
+          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}
         {...attributes}
         {...listeners}
       >
-        <GripVertical size={12} />
+        <GripVertical size={14} />
       </div>
 
       {/* Bouton + */}
       <div 
-        className="absolute left-[-55px] top-6 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        className="absolute left-10 top-2 w-6 h-6 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-blue-100/80 hover:bg-blue-200/90 rounded"
         onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'quest-card')}
       >
-        <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
+        <Plus size={14} className="text-blue-600 hover:text-blue-800 transition-colors duration-150" />
+      </div>
+
+      {/* Boutons d'édition et suppression - Visible au survol */}
+      <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit && onEdit(id, true);
+          }}
+          className="w-6 h-6 flex items-center justify-center bg-green-100/80 hover:bg-green-200/90 rounded transition-colors"
+          title="Éditer"
+        >
+          <Edit2 size={14} className="text-green-600 hover:text-green-800" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+          className="w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors"
+          title="Supprimer"
+        >
+          <X size={14} className="text-red-600 hover:text-red-800" />
+        </button>
       </div>
 
       <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
@@ -324,7 +381,7 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id }) => {
 };
 
 // Composant pour la card marchand draggable
-const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu, onPaste, id, ...inventoryProps }) => {
+const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu, onPaste, id, onEdit, onDelete, isEditing, ...inventoryProps }) => {
   const {
     attributes,
     listeners,
@@ -348,21 +405,45 @@ const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu,
     >
       {/* Drag Handle */}
       <div 
-        className={`absolute left-[-30px] top-6 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
-          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
+        className={`absolute left-2 top-2 w-6 h-6 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center bg-gray-100/80 hover:bg-gray-200/90 rounded ${
+          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}
         {...attributes}
         {...listeners}
       >
-        <GripVertical size={12} />
+        <GripVertical size={14} />
       </div>
 
       {/* Bouton + */}
       <div 
-        className="absolute left-[-55px] top-6 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        className="absolute left-10 top-2 w-6 h-6 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-blue-100/80 hover:bg-blue-200/90 rounded"
         onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'merchant-card')}
       >
-        <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
+        <Plus size={14} className="text-blue-600 hover:text-blue-800 transition-colors duration-150" />
+      </div>
+
+      {/* Boutons d'édition et suppression - Visible au survol */}
+      <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit && onEdit(id, true);
+          }}
+          className="w-6 h-6 flex items-center justify-center bg-green-100/80 hover:bg-green-200/90 rounded transition-colors"
+          title="Éditer"
+        >
+          <Edit2 size={14} className="text-green-600 hover:text-green-800" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+          className="w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors"
+          title="Supprimer"
+        >
+          <X size={14} className="text-red-600 hover:text-red-800" />
+        </button>
       </div>
 
       <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
@@ -626,6 +707,11 @@ const CampaignDashboard = () => {
   const [selectedSessions, setSelectedSessions] = useState([]);
   const [sessions, setSessions] = useState([]);
 
+  // États pour le système de mentions dynamiques
+  const [currentMentionImage, setCurrentMentionImage] = useState(null);
+  const [currentMentionName, setCurrentMentionName] = useState('');
+  const [currentMentionType, setCurrentMentionType] = useState('');
+
   // États pour le drag & drop
   const [activeId, setActiveId] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -642,28 +728,24 @@ const CampaignDashboard = () => {
     },
     {
       id: 'line-3',
-      content: 'La session commence dans la taverne "Le Dragon de Bronze", au cœur de Pyros. Un messager essoufflé fait irruption, portant une missive scellée du Conseil des Flammes.',
+      content: 'La session commence dans la taverne "Le Dragon de Bronze", au cœur de Pyros. Un messager essoufflé fait irruption, portant une missive scellée du **Conseil des Flammes**.',
       section: 'debut'
+    },
+    {
+      id: 'line-4',
+      content: '**Thorin Barbe-de-Fer**, le nain forgeron, examine la missive avec attention. Il reconnaît le sceau du **Roi des Cendres**.',
+      section: 'debut'
+    },
+    {
+      id: 'line-5',
+      content: 'Lien vers la carte de Pyros',
+      section: 'debut',
+      isLink: true,
+      linkUrl: 'https://example.com/pyros-map'
     }
   ]);
 
   // Templates disponibles avec catégories (5 catégories principales)
-  const [templates] = useState([
-    // Templates généraux
-    { id: 'template-general', type: 'template', name: 'Template', icon: '📄', description: 'Modèle généraliste', content: 'Nouveau template...', category: 'Templates' },
-    
-    // Quêtes
-    { id: 'template-quest', type: 'quest', name: 'Quête', icon: '🎯', description: 'Nouvelle quête', content: 'Nouvelle quête à développer...', category: 'Quêtes' },
-    
-    // Objets
-    { id: 'template-object', type: 'object', name: 'Objet', icon: '⚔️', description: 'Objet magique ou équipement', content: 'Nouvel objet à décrire...', category: 'Objets' },
-    
-    // Personnages
-    { id: 'template-character', type: 'character', name: 'Personnage', icon: '👤', description: 'Personnage non-joueur', content: 'Nouveau personnage à créer...', category: 'Personnages' },
-    
-    // Événements
-    { id: 'template-event', type: 'event', name: 'Événement', icon: '⚔️', description: 'Événement de campagne', content: 'Nouvel événement à créer...', category: 'Événements' }
-  ]);
 
   // Templates pour le menu contextuel (éléments d'édition)
   const [contextTemplates] = useState([
@@ -693,7 +775,10 @@ const CampaignDashboard = () => {
     // Événements
     { id: 'context-encounter', type: 'encounter', name: 'Rencontre', icon: '⚔️', description: 'Événement de combat', content: 'Rencontre : ', category: 'Événements' },
     { id: 'context-trap', type: 'trap', name: 'Piège', icon: '🕳️', description: 'Danger caché', content: 'Piège : ', category: 'Événements' },
-    { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' }
+    { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' },
+    
+    // Séparateur
+    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '---', category: 'Formatage' }
   ]);
 
   // États pour l'IA et l'automatisation
@@ -708,6 +793,10 @@ const CampaignDashboard = () => {
   const [contextMenuTarget, setContextMenuTarget] = useState(null);
   const [contextMenuSearch, setContextMenuSearch] = useState('');
   const [selectedContextMenuItem, setSelectedContextMenuItem] = useState(0);
+
+  // États pour l'édition en ligne
+  const [editingLines, setEditingLines] = useState({});
+  const [editingCards, setEditingCards] = useState({});
 
   // Données de campagne d'exemple
   useEffect(() => {
@@ -832,6 +921,59 @@ const CampaignDashboard = () => {
 
   const handleCancelTotalEdit = () => {
     setEditingTotal(false);
+  };
+
+  // Fonction pour détecter les mentions dans le texte
+  const detectMentions = (text) => {
+    const mentionRegex = /\*\*([^*]+)\*\*/g;
+    const mentions = [];
+    let match;
+    
+    while ((match = mentionRegex.exec(text)) !== null) {
+      const name = match[1];
+      let type = 'Personnage';
+      let image = '/images/characters/default.jpg';
+      
+      // Détection intelligente du type basée sur le nom
+      if (name.includes('Conseil') || name.includes('Guild') || name.includes('Ordre')) {
+        type = 'Organisation';
+        image = '/images/organizations/default.jpg';
+      } else if (name.includes('Roi') || name.includes('Reine') || name.includes('Seigneur') || name.includes('Dame')) {
+        type = 'Personnage Important';
+        image = '/images/characters/important.jpg';
+      } else if (name.includes('Taverne') || name.includes('Château') || name.includes('Tour') || name.includes('Temple')) {
+        type = 'Lieu';
+        image = '/images/locations/default.jpg';
+      } else if (name.includes('Épée') || name.includes('Bâton') || name.includes('Armure') || name.includes('Anneau')) {
+        type = 'Objet';
+        image = '/images/objects/default.jpg';
+      }
+      
+      mentions.push({
+        name: name,
+        type: type,
+        image: image
+      });
+    }
+    
+    return mentions;
+  };
+
+  // Fonction pour mettre à jour l'image dynamique
+  const updateDynamicImage = () => {
+    const allText = textLines.map(line => line.content).join(' ');
+    const mentions = detectMentions(allText);
+    
+    if (mentions.length > 0) {
+      const firstMention = mentions[0];
+      setCurrentMentionImage(firstMention.image);
+      setCurrentMentionName(firstMention.name);
+      setCurrentMentionType(firstMention.type);
+    } else {
+      setCurrentMentionImage(null);
+      setCurrentMentionName('');
+      setCurrentMentionType('');
+    }
   };
 
   // Fonctions pour les sessions
@@ -1145,6 +1287,52 @@ const CampaignDashboard = () => {
     setSelectedContextMenuItem(0);
   };
 
+  // Fonctions pour l'édition en ligne
+  const handleEditLine = (id, isEditing) => {
+    setEditingLines(prev => ({
+      ...prev,
+      [id]: isEditing
+    }));
+  };
+
+  const handleDeleteLine = (id) => {
+    setTextLines(prev => prev.filter(line => line.id !== id));
+    setEditingLines(prev => {
+      const newEditing = { ...prev };
+      delete newEditing[id];
+      return newEditing;
+    });
+  };
+
+  const handleContentChange = (id, newContent, newLinkUrl = null) => {
+    setTextLines(prev => prev.map(line => 
+      line.id === id ? { 
+        ...line, 
+        content: newContent,
+        ...(newLinkUrl !== null && { linkUrl: newLinkUrl })
+      } : line
+    ));
+  };
+
+  const handleLinkUrlChange = (id, newLinkUrl) => {
+    setTextLines(prev => prev.map(line => 
+      line.id === id ? { ...line, linkUrl: newLinkUrl } : line
+    ));
+  };
+
+  // Fonctions pour l'édition des cartes
+  const handleEditCard = (cardId, isEditing) => {
+    setEditingCards(prev => ({
+      ...prev,
+      [cardId]: isEditing
+    }));
+  };
+
+  const handleDeleteCard = (cardId) => {
+    // Logique pour supprimer une carte si nécessaire
+    console.log('Suppression de la carte:', cardId);
+  };
+
   // Fonction pour filtrer les templates selon la recherche
   const getFilteredTemplates = () => {
     if (!contextMenuSearch.trim()) {
@@ -1223,6 +1411,15 @@ const CampaignDashboard = () => {
           template: true,
           isHeading: true
         };
+      } else if (type === 'separator') {
+        newLine = {
+          id: `context-${Date.now()}`,
+          content: '---',
+          section: 'situation',
+          type: 'separator',
+          template: true,
+          isSeparator: true
+        };
       } else {
         newLine = {
           id: `context-${Date.now()}`,
@@ -1299,6 +1496,11 @@ const CampaignDashboard = () => {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showContextMenu]);
+
+  // Mettre à jour l'image dynamique quand le contenu change
+  useEffect(() => {
+    updateDynamicImage();
+  }, [textLines]);
 
   if (loading) {
     return (
@@ -1439,6 +1641,10 @@ const CampaignDashboard = () => {
                                onShowContextMenu={handleShowContextMenu}
                                type={line.type}
                                isHeading={line.isHeading}
+                               onEdit={handleEditLine}
+                               onDelete={handleDeleteLine}
+                               isEditing={editingLines[line.id]}
+                               onContentChange={handleContentChange}
                              />
                              {index < array.length - 1 && (
                                <DropZone 
@@ -1485,6 +1691,10 @@ const CampaignDashboard = () => {
                                onShowContextMenu={handleShowContextMenu}
                                type={line.type}
                                isHeading={line.isHeading}
+                               onEdit={handleEditLine}
+                               onDelete={handleDeleteLine}
+                               isEditing={editingLines[line.id]}
+                               onContentChange={handleContentChange}
                              />
                              {index < array.length - 1 && (
                                <DropZone 
@@ -1538,6 +1748,9 @@ const CampaignDashboard = () => {
                    merchantInventory={merchantInventory}
                    onShowContextMenu={handleShowContextMenu}
                    onPaste={handlePaste}
+                   onEdit={handleEditCard}
+                   onDelete={handleDeleteCard}
+                   isEditing={editingCards['merchant-card']}
                    editingTotal={editingTotal}
                    totalValue={totalValue}
                    setTotalValue={setTotalValue}
@@ -1562,29 +1775,39 @@ const CampaignDashboard = () => {
 
           {/* Sidebar droite - 1 colonne */}
           <div className="lg:col-span-1 space-y-6 lg:space-y-8">
-            {/* Palette de templates */}
-            <div className="bg-slate-800/40 backdrop-blur-md rounded-lg border border-slate-700/50 shadow-lg p-4">
-              <h3 className="text-light font-semibold mb-3 text-sm">Templates</h3>
-              <div className="space-y-2">
-                {templates.map((template) => (
-                  <DraggableTemplate key={template.id} template={template} />
-                ))}
-              </div>
-              
-            </div>
 
-            {/* Image atmosphérique */}
+            {/* Image dynamique basée sur les mentions */}
             <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
               <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg">
-                <Moon size={48} className="text-light/60 mb-2" />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-blue/50 to-transparent"></div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="bg-black/50 rounded-lg p-3 text-center">
-                    <Upload size={24} className="text-light mx-auto mb-2" />
-                    <div className="text-sm text-light">Cliquez pour importer</div>
-                    <div className="text-xs text-light/80">JPG, PNG, GIF (max 5MB)</div>
+                {currentMentionImage ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <img 
+                      src={currentMentionImage} 
+                      alt={currentMentionName}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <div className="absolute bottom-2 left-2 right-2 bg-black/70 rounded px-2 py-1">
+                      <div className="text-xs text-light font-semibold truncate">{currentMentionName}</div>
+                      <div className="text-xs text-light/80 truncate">{currentMentionType}</div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <Moon size={48} className="text-light/60 mb-2" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-blue/50 to-transparent"></div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="bg-black/50 rounded-lg p-3 text-center">
+                        <Upload size={24} className="text-light mx-auto mb-2" />
+                        <div className="text-sm text-light">Cliquez pour importer</div>
+                        <div className="text-xs text-light/80">JPG, PNG, GIF (max 5MB)</div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                      <div className="text-sm text-light/80">Aucune mention détectée</div>
+                      <div className="text-xs text-light/60 mt-1">L'image apparaîtra automatiquement</div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1593,6 +1816,9 @@ const CampaignDashboard = () => {
               id="quest-card"
               campaign={campaign}
               onShowContextMenu={handleShowContextMenu}
+              onEdit={handleEditCard}
+              onDelete={handleDeleteCard}
+              isEditing={editingCards['quest-card']}
             />
 
           </div>

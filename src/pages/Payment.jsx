@@ -55,7 +55,7 @@ const Payment = () => {
 
   const createCampaign = async () => {
     try {
-      const campaignTitle = `Campagne ${campaignData.universe.universe.name}`;
+      const campaignTitle = `Campagne ${campaignData.universe.name}`;
       
       const { data, error } = await supabase
         .from('campaigns')
@@ -63,9 +63,9 @@ const Payment = () => {
           user_id: user.id,
           title: campaignTitle,
           game_system: campaignData.rules.name,
-          universe: campaignData.universe.universe.name,
-          description: `Nouvelle campagne dans l'univers ${campaignData.universe.universe.name} utilisant les règles ${campaignData.rules.name}`,
-          resume: campaignData.universe.universe.description || 'Une nouvelle aventure commence...',
+          universe: campaignData.universe.name,
+          description: `Nouvelle campagne dans l'univers ${campaignData.universe.name} utilisant les règles ${campaignData.rules.name}`,
+          resume: campaignData.universe.description || 'Une nouvelle aventure commence...',
           status: 'active'
         })
         .select()
@@ -124,12 +124,12 @@ const Payment = () => {
           
           <div className="space-y-4">
             <div className="flex justify-between items-center text-light">
-              <span>Univers : {campaignData.universe.universe.name}</span>
+              <span>Univers : {campaignData.universe.name}</span>
               <span className="font-bold">
-                {campaignData.universe.universe.type === 'owned' ? 'Déjà possédé' :
-                 campaignData.universe.universe.type === 'free' ? 'Gratuit' :
-                 campaignData.universe.universe.type === 'freemium' ? 'Gratuit' :
-                 campaignData.universe.universe.price === 0 ? 'Gratuit' : `${campaignData.universe.universe.price}€`}
+                {campaignData.universe.type === 'owned' ? 'Déjà possédé' :
+                 campaignData.universe.type === 'free' ? 'Gratuit' :
+                 campaignData.universe.type === 'freemium' ? 'Gratuit' :
+                 campaignData.universe.price === 0 ? 'Gratuit' : `${campaignData.universe.price}€`}
               </span>
             </div>
             
@@ -144,21 +144,41 @@ const Payment = () => {
             </div>
             
             {(campaignData.universe.extensions && campaignData.universe.extensions.length > 0) && (
-              <div className="flex justify-between items-center text-light">
-                <span>Extensions univers :</span>
-                <span className="font-bold">
-                  {campaignData.universe.extensions.reduce((total, ext) => total + (ext.price || 0), 0)}€
-                </span>
-              </div>
+              <>
+                <div className="flex justify-between items-center text-light">
+                  <span>
+                    Extensions univers {campaignData.universe.type === 'free' ? '(univers gratuit)' : campaignData.universe.type === 'owned' ? '(univers possédé)' : ''} :
+                  </span>
+                  <span className="font-bold">
+                    {campaignData.universe.extensions.reduce((total, ext) => total + (ext.price || 0), 0)}€
+                  </span>
+                </div>
+                {campaignData.universe.extensions.map((ext, index) => (
+                  <div key={index} className="flex justify-between items-center text-light/80 text-sm ml-4">
+                    <span>• {ext.name}</span>
+                    <span>{Math.round(ext.price * 100) / 100}€</span>
+                  </div>
+                ))}
+              </>
             )}
             
             {(campaignData.rules.extensions && campaignData.rules.extensions.length > 0) && (
-              <div className="flex justify-between items-center text-light">
-                <span>Extensions règles :</span>
-                <span className="font-bold">
-                  {campaignData.rules.extensions.reduce((total, ext) => total + (ext.price || 0), 0)}€
-                </span>
-              </div>
+              <>
+                <div className="flex justify-between items-center text-light">
+                  <span>
+                    Extensions règles {campaignData.rules.type === 'free' ? '(règles gratuites)' : campaignData.rules.type === 'owned' ? '(règles possédées)' : ''} :
+                  </span>
+                  <span className="font-bold">
+                    {campaignData.rules.extensions.reduce((total, ext) => total + (ext.price || 0), 0)}€
+                  </span>
+                </div>
+                {campaignData.rules.extensions.map((ext, index) => (
+                  <div key={index} className="flex justify-between items-center text-light/80 text-sm ml-4">
+                    <span>• {ext.name}</span>
+                    <span>{Math.round(ext.price * 100) / 100}€</span>
+                  </div>
+                ))}
+              </>
             )}
             
             <div className="border-t border-light/30 pt-4">

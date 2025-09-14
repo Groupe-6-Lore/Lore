@@ -1,1429 +1,1623 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Bell, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { ArrowLeft, Star, Download, Share2, Heart, BookOpen, Users, Clock, Tag } from 'lucide-react';
 import Header from '../components/Header';
 
 const UniverseDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [universe, setUniverse] = useState(null);
   const [selectedExtensions, setSelectedExtensions] = useState([]);
 
-  // Données Symbaroum selon wireframe
   const universeData = {
+    // Univers Fantasy
     1: {
       id: 1,
-      name: "Symbaroum Core Rulebook",
-      publisher: "Free League Publishing",
-      price: 49,
-      tags: ["Difficulté - Avancé", "Dark Fantasy", "Liées"],
-      description: "Au nord du royaume d'Ambria s'étend Davokar, une forêt ancienne emplie de ruines et de secrets maudits. Ses profondeurs promettent richesses et artefacts oubliés, mais aussi corruption et damnation pour les imprudents. Dans l'ombre des arbres colossaux, des clans barbares, des elfes millénaires et des créatures abjectes veillent sur un héritage dangereux. Les aventuriers, poussés par l'avidité ou la gloire, explorent ces terres au péril de leur âme. Le pouvoir des ombres grandit et chaque incursion rapproche le monde d'un nouvel âge de ténèbres. Symbaroum propose une dark fantasy où beauté et horreur se confondent, et où chaque victoire peut coûter votre humanité.",
-      included: [
-        "Manuel du MJ",
-        "Manuel du Joueur"
-      ],
-      extensions: [
-        {
-          id: 1,
-          name: "Advanced Player's Guide",
-          price: 15,
-          type: "Supplément",
-          image: "/images/symbaroum-apg.jpg"
-        },
-        {
-          id: 2,
-          name: "Monster Codex", 
-          price: 22,
-          type: "Bestiaire",
-          image: "/images/symbaroum-monsters.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    'symbaroum-core': {
-      id: 'symbaroum-core',
-      name: "Symbaroum Core Rulebook",
-      publisher: "Free League Publishing",
-      price: 49,
-      tags: ["Difficulté - Avancé", "Dark Fantasy", "Liées"],
-      description: "Au nord du royaume d'Ambria s'étend Davokar, une forêt ancienne emplie de ruines et de secrets maudits. Ses profondeurs promettent richesses et artefacts oubliés, mais aussi corruption et damnation pour les imprudents. Dans l'ombre des arbres colossaux, des clans barbares, des elfes millénaires et des créatures abjectes veillent sur un héritage dangereux. Les aventuriers, poussés par l'avidité ou la gloire, explorent ces terres au péril de leur âme. Le pouvoir des ombres grandit et chaque incursion rapproche le monde d'un nouvel âge de ténèbres. Symbaroum propose une dark fantasy où beauté et horreur se confondent, et où chaque victoire peut coûter votre humanité.",
-      included: [
-        "Manuel du MJ",
-        "Manuel du Joueur"
-      ],
-      extensions: [
-        {
-          id: 1,
-          name: "Advanced Player's Guide",
-          price: 15,
-          type: "Supplément",
-          image: "/images/symbaroum-apg.jpg"
-        },
-        {
-          id: 2,
-          name: "Monster Codex", 
-          price: 22,
-          type: "Bestiaire",
-          image: "/images/symbaroum-monsters.jpg"
-        }
-      ],
-      type: 'owned'
-    },
-    'known-2': {
-      id: 'known-2',
-      name: "Symbaroum Core Rulebook",
-      publisher: "Free League Publishing",
-      price: 49,
-      tags: ["Difficulté - Avancé", "Dark Fantasy", "Liées"],
-      description: "Au nord du royaume d'Ambria s'étend Davokar, une forêt ancienne emplie de ruines et de secrets maudits. Ses profondeurs promettent richesses et artefacts oubliés, mais aussi corruption et damnation pour les imprudents. Dans l'ombre des arbres colossaux, des clans barbares, des elfes millénaires et des créatures abjectes veillent sur un héritage dangereux. Les aventuriers, poussés par l'avidité ou la gloire, explorent ces terres au péril de leur âme. Le pouvoir des ombres grandit et chaque incursion rapproche le monde d'un nouvel âge de ténèbres. Symbaroum propose une dark fantasy où beauté et horreur se confondent, et où chaque victoire peut coûter votre humanité.",
-      included: [
-        "Manuel du MJ",
-        "Manuel du Joueur"
-      ],
-      extensions: [
-        {
-          id: 1,
-          name: "Advanced Player's Guide",
-          price: 15,
-          type: "Supplément",
-          image: "/images/symbaroum-apg.jpg"
-        },
-        {
-          id: 2,
-          name: "Monster Codex", 
-          price: 22,
-          type: "Bestiaire",
-          image: "/images/symbaroum-monsters.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    2: {
-      id: 2,
-      name: "Fate Core System",
-      publisher: "Evil Hat Productions",
-      price: null,
-      tags: ["Difficulté - Facile", "Multi-genre", "Libres"],
-      description: "Fate Core System est un jeu où les héros sont définis par leurs convictions, leurs failles et leurs choix. Vos aspects deviennent des leviers narratifs : une phrase peut changer le cours d'une bataille ou d'un destin. Avec des règles simples et universelles, Fate vous permet de créer ensemble n'importe quel monde — des royaumes de fantasy aux cités cyberpunk. Gratuit en PDF et enrichi de suppléments, il place vos histoires au cœur de l'aventure.",
-      included: [
-        "Livre de base",
-        "Conseils pour MJ et joueurs"
-      ],
-      extensions: [
-        {
-          id: 3,
-          name: "Fate Worlds",
-          price: 7.50,
-          type: "Suppléments univers",
-          image: "/images/fate-worlds.jpg"
-        },
-        {
-          id: 4,
-          name: "Venture City",
-          price: 8.00,
-          type: "Suppléments univers",
-          image: "/images/venture-city.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    'fate-core': {
-      id: 'fate-core',
-      name: "Fate Core System",
-      publisher: "Evil Hat Productions",
-      price: null,
-      tags: ["Difficulté - Facile", "Multi-genre", "Libres"],
-      description: "Fate Core System est un jeu où les héros sont définis par leurs convictions, leurs failles et leurs choix. Vos aspects deviennent des leviers narratifs : une phrase peut changer le cours d'une bataille ou d'un destin. Avec des règles simples et universelles, Fate vous permet de créer ensemble n'importe quel monde — des royaumes de fantasy aux cités cyberpunk. Gratuit en PDF et enrichi de suppléments, il place vos histoires au cœur de l'aventure.",
-      included: [
-        "Livre de base",
-        "Conseils pour MJ et joueurs"
-      ],
-      extensions: [
-        {
-          id: 3,
-          name: "Fate Worlds",
-          price: 7.50,
-          type: "Suppléments univers",
-          image: "/images/fate-worlds.jpg"
-        },
-        {
-          id: 4,
-          name: "Venture City",
-          price: 8.00,
-          type: "Suppléments univers",
-          image: "/images/venture-city.jpg"
-        }
-      ],
-      type: 'owned'
-    },
-    'known-3': {
-      id: 'known-3',
-      name: "Fate Core System",
-      publisher: "Evil Hat Productions",
-      price: null,
-      tags: ["Difficulté - Facile", "Multi-genre", "Libres"],
-      description: "Fate Core System est un jeu où les héros sont définis par leurs convictions, leurs failles et leurs choix. Vos aspects deviennent des leviers narratifs : une phrase peut changer le cours d'une bataille ou d'un destin. Avec des règles simples et universelles, Fate vous permet de créer ensemble n'importe quel monde — des royaumes de fantasy aux cités cyberpunk. Gratuit en PDF et enrichi de suppléments, il place vos histoires au cœur de l'aventure.",
-      included: [
-        "Livre de base",
-        "Conseils pour MJ et joueurs"
-      ],
-      extensions: [
-        {
-          id: 3,
-          name: "Fate Worlds",
-          price: 7.50,
-          type: "Suppléments univers",
-          image: "/images/fate-worlds.jpg"
-        },
-        {
-          id: 4,
-          name: "Venture City",
-          price: 8.00,
-          type: "Suppléments univers",
-          image: "/images/venture-city.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // D&D 5e
-    1: {
-      id: 1,
-      name: "Dungeons & Dragons 5e",
+      name: "Forgotten Realms",
       publisher: "Wizards of the Coast",
-      price: 49.99,
+      price: 0,
       tags: ["Fantasy", "Libres", "Débutant"],
-      image: "/images/dnd5e.jpg",
-      description: "Dungeons & Dragons 5e est le système de jeu de rôle fantasy le plus populaire au monde. Avec ses règles accessibles et son univers riche, il permet aux joueurs de créer des héros épiques dans un monde de magie et d'aventure. Que vous soyez un guerrier courageux, un magicien puissant ou un voleur rusé, D&D 5e offre une expérience de jeu immersive et collaborative où chaque dé peut changer le cours de l'histoire.",
+      description: "Forgotten Realms est l'univers fantasy le plus célèbre et le plus développé de Dungeons & Dragons. Centré sur le continent de Faerûn, il offre un monde riche et détaillé avec des centaines de lieux, personnages et histoires. Des villes légendaires comme Waterdeep et Baldur's Gate aux régions sauvages comme la Forêt de Cormyr, Forgotten Realms propose un cadre épique pour toutes sortes d'aventures fantasy. L'univers inclut des dieux puissants, des organisations secrètes, des royaumes en guerre et des mystères anciens qui attendent d'être découverts.",
       included: [
-        "Manuel des Joueurs",
-        "Guide du Maître de Donjon",
-        "Bestiaire Monstrueux"
+        "Carte de Faerûn",
+        "Guide des royaumes",
+        "Personnages légendaires",
+        "Organisations et guildes",
+        "Histoire détaillée",
+        "Lieux emblématiques"
+      ],
+      features: [
+        "Monde vaste et détaillé",
+        "Histoire riche et complexe",
+        "Personnages iconiques",
+        "Organisations politiques",
+        "Magie et artefacts",
+        "Conflits épiques"
       ],
       extensions: [
         {
-          id: 5,
-          name: "Tasha's Cauldron of Everything",
-          price: 49.99,
-          type: "Supplément",
-          image: "/images/tashas-cauldron.jpg"
+          id: 1,
+          name: "Waterdeep: Dragon Heist",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/waterdeep-dragon-heist.jpg"
         },
         {
-          id: 6,
-          name: "Xanathar's Guide to Everything",
-          price: 49.99,
-          type: "Supplément",
-          image: "/images/xanathars-guide.jpg"
+          id: 2,
+          name: "Baldur's Gate: Descent into Avernus",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/baldurs-gate-avernus.jpg"
         },
         {
-          id: 7,
+          id: 3,
+          name: "Sword Coast Adventurer's Guide",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/sword-coast-guide.jpg"
+        },
+        {
+          id: 4,
           name: "Volo's Guide to Monsters",
           price: 49.99,
           type: "Bestiaire",
           image: "/images/volos-guide.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // D&D Modern
-    2: {
-      id: 2,
-      name: "Donjons & Dragons de l'Ère Moderne",
-      publisher: "Wizards of the Coast",
-      price: 45.99,
-      tags: ["Fantasy", "Libres", "Débutant"],
-      image: "/images/dnd-modern.jpg",
-      description: "Donjons & Dragons de l'Ère Moderne transpose l'univers fantasy classique dans un cadre contemporain. Les héros évoluent dans un monde où la magie coexiste avec la technologie moderne, créant des aventures uniques mêlant épées et smartphones, sorts et réseaux sociaux. Un système innovant qui réinvente D&D pour une nouvelle génération d'aventuriers.",
-      included: [
-        "Livre de règles moderne",
-        "Classes adaptées à l'ère moderne",
-        "Équipements technologiques"
-      ],
-      extensions: [
-        {
-          id: 8,
-          name: "Cyberpunk Expansion",
-          price: 29.99,
-          type: "Supplément",
-          image: "/images/cyberpunk-expansion.jpg"
         },
-        {
-          id: 9,
-          name: "Urban Fantasy Toolkit",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/urban-fantasy.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Univers Héroïque
-    3: {
-      id: 3,
-      name: "L'Univers Héroïque 2e Edition",
-      publisher: "Free League",
-      price: null,
-      tags: ["Fantasy", "Libres", "Intermédiaire"],
-      image: "/images/heroic-universe.jpg",
-      description: "L'Univers Héroïque 2e Edition est un système de jeu de rôle fantasy épique qui met l'accent sur l'héroïsme et l'aventure. Dans un monde où les héros sont destinés à accomplir de grandes choses, les joueurs incarnent des personnages exceptionnels capables de changer le cours de l'histoire. Un système qui récompense la bravoure et l'ingéniosité.",
-      included: [
-        "Livre principal",
-        "Règles de création de personnage",
-        "Guide du monde héroïque"
-      ],
-      extensions: [
-        {
-          id: 10,
-          name: "Légendes Perdues",
-          price: 19.99,
-          type: "Campagne",
-          image: "/images/legendes-perdues.jpg"
-        },
-        {
-          id: 11,
-          name: "Bestiaire Héroïque",
-          price: 24.99,
-          type: "Bestiaire",
-          image: "/images/bestiaire-heroique.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Cthulhu
-    4: {
-      id: 4,
-      name: "L'Appel de Cthulhu - 7e Edition",
-      publisher: "Chaosium et Sans-Détour",
-      price: null,
-      tags: ["Horreur & Mystère", "Libres", "Expert"],
-      image: "/images/cthulhu.jpg",
-      description: "L'Appel de Cthulhu 7e Edition plonge les joueurs dans l'univers terrifiant de H.P. Lovecraft. Enquêteurs ordinaires confrontés à des horreurs cosmiques indicibles, ils doivent résoudre des mystères qui menacent la santé mentale et la survie de l'humanité. Un système qui privilégie l'atmosphère et la tension psychologique.",
-      included: [
-        "Livre de base",
-        "Règles d'investigation",
-        "Scénarios d'introduction"
-      ],
-      extensions: [
-        {
-          id: 12,
-          name: "Masks of Nyarlathotep",
-          price: 89.99,
-          type: "Campagne",
-          image: "/images/masks-nyarlathotep.jpg"
-        },
-        {
-          id: 13,
-          name: "Horror on the Orient Express",
-          price: 79.99,
-          type: "Campagne",
-          image: "/images/horror-orient-express.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Pathfinder 2e
-    6: {
-      id: 6,
-      name: "Pathfinder 2e",
-      publisher: "Greg Stafford / Chaosium",
-      price: 40,
-      tags: ["Fantasy", "Libres", "Intermédiaire"],
-      description: "Pathfinder 2e est l'évolution moderne du système de jeu de rôle fantasy le plus détaillé. Avec ses règles tactiques sophistiquées et sa profondeur de personnalisation, il offre une expérience de jeu riche et complexe. Les joueurs peuvent créer des personnages uniques grâce à un système de classes et d'archétypes flexible, tandis que les combats tactiques offrent des défis stratégiques captivants.",
-      included: [
-        "Livre de base",
-        "Règles de combat tactique",
-        "Système de classes avancé"
-      ],
-      extensions: [
-        {
-          id: 14,
-          name: "Advanced Player's Guide",
-          price: 49.99,
-          type: "Supplément",
-          image: "/images/pathfinder-apg.jpg"
-        },
-        {
-          id: 15,
-          name: "Bestiary",
-          price: 39.99,
-          type: "Bestiaire",
-          image: "/images/pathfinder-bestiary.jpg"
-        },
-        {
-          id: 16,
-          name: "Gamemastery Guide",
-          price: 44.99,
-          type: "Guide MJ",
-          image: "/images/pathfinder-gmg.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Lasers & Feelings
-    7: {
-      id: 7,
-      name: "Lasers & Feelings",
-      publisher: "John Harper",
-      price: null,
-      tags: ["Science-fiction", "Libres", "Débutant"],
-      description: "Lasers & Feelings est un jeu de rôle minimaliste et narratif qui capture l'essence des séries de science-fiction des années 60-80. Avec une seule stat et des règles ultra-simples, il se concentre sur l'histoire et l'improvisation. Parfait pour des sessions courtes et intenses, il permet de créer des aventures épiques dans l'espace en quelques minutes de préparation.",
-      included: [
-        "Règles complètes (1 page)",
-        "Générateur d'aventures",
-        "Conseils de jeu"
-      ],
-      extensions: [
-        {
-          id: 17,
-          name: "Honey Heist",
-          price: null,
-          type: "Jeu dérivé",
-          image: "/images/honey-heist.jpg"
-        },
-        {
-          id: 18,
-          name: "The Witch is Dead",
-          price: null,
-          type: "Jeu dérivé",
-          image: "/images/witch-is-dead.jpg"
-        }
-      ],
-      type: 'freemium'
-    },
-    // Dungeon World
-    8: {
-      id: 8,
-      name: "Dungeon World",
-      publisher: "Sage Kobold",
-      price: null,
-      tags: ["Fantasy", "Libres", "Intermédiaire"],
-      description: "Dungeon World révolutionne le jeu de rôle fantasy en combinant la familiarité de D&D avec l'innovation narrative des jeux Powered by the Apocalypse. Les règles simples mais profondes encouragent la collaboration et l'improvisation, créant des histoires dynamiques où les échecs sont aussi intéressants que les succès. Un système qui met l'accent sur l'action et la narration fluide.",
-      included: [
-        "Règles de base",
-        "Classes fantasy",
-        "Guide du MJ"
-      ],
-      extensions: [
-        {
-          id: 19,
-          name: "Class Warfare",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/class-warfare.jpg"
-        },
-        {
-          id: 20,
-          name: "Perilous Wilds",
-          price: 14.99,
-          type: "Supplément",
-          image: "/images/perilous-wilds.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Vampire: The Masquerade
-    9: {
-      id: 9,
-      name: "Vampire: The Masquerade",
-      publisher: "White Wolf",
-      price: 55,
-      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
-      description: "Vampire: The Masquerade 5e édition plonge les joueurs dans l'univers sombre et gothique des vampires modernes. En tant que créatures de la nuit, ils doivent naviguer entre leur humanité perdue et leur soif de sang, tout en respectant la Masquerade qui protège leur existence secrète. Un jeu de rôle mature qui explore les thèmes de la corruption, du pouvoir et de la survie.",
-      included: [
-        "5e édition",
-        "Règles de la Masquerade",
-        "Clans vampires"
-      ],
-      extensions: [
-        {
-          id: 21,
-          name: "Camarilla",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/camarilla.jpg"
-        },
-        {
-          id: 22,
-          name: "Anarch",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/anarch.jpg"
-        },
-        {
-          id: 23,
-          name: "Chicago by Night",
-          price: 49.99,
-          type: "Campagne",
-          image: "/images/chicago-by-night.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Cyberpunk RED
-    10: {
-      id: 10,
-      name: "Cyberpunk RED",
-      publisher: "R. Talsorian Games",
-      price: 60,
-      tags: ["Science-fiction", "Libres", "Expert"],
-      description: "Cyberpunk RED transporte les joueurs dans un futur dystopique où la technologie et la cybernétique ont transformé la société. Dans Night City, les joueurs incarnent des cyberpunks, des marginaux qui vivent en marge de la loi dans un monde dominé par les mégacorporations. Un système de combat brutal et des règles de cybernétique détaillées créent une expérience immersive dans l'univers de Cyberpunk 2077.",
-      included: [
-        "Livre de base",
-        "Règles de cybernétique",
-        "Guide de Night City"
-      ],
-      extensions: [
-        {
-          id: 24,
-          name: "Black Chrome",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/black-chrome.jpg"
-        },
-        {
-          id: 25,
-          name: "Danger Gal Dossier",
-          price: 29.99,
-          type: "Campagne",
-          image: "/images/danger-gal.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Fiasco
-    11: {
-      id: 11,
-      name: "Fiasco",
-      publisher: "Bully Pulpit Games",
-      price: null,
-      tags: ["Comédie & Parodique", "Libres", "Débutant"],
-      description: "Fiasco est un jeu de rôle narratif qui simule des films de type Coen Brothers - des histoires où tout va mal de façon spectaculaire et comique. Sans MJ, les joueurs créent ensemble une histoire de désastre en utilisant des dés et des tables de résultats. Un jeu parfait pour des sessions courtes et hilarantes où l'échec est la source du divertissement.",
-      included: [
-        "Jeu de rôle narratif",
-        "Tables de génération",
-        "Scénarios prêts à jouer"
-      ],
-      extensions: [
-        {
-          id: 26,
-          name: "Fiasco Companion",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/fiasco-companion.jpg"
-        },
-        {
-          id: 27,
-          name: "Fiasco: The Diner",
-          price: 14.99,
-          type: "Scénario",
-          image: "/images/fiasco-diner.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Blades in the Dark
-    12: {
-      id: 12,
-      name: "Blades in the Dark",
-      publisher: "John Harper",
-      price: 50,
-      tags: ["Fantasy", "Libres", "Intermédiaire"],
-      description: "Blades in the Dark plonge les joueurs dans Doskvol, une ville sombre et industrielle hantée par des fantômes. Ils incarnent une bande de criminels qui tentent de faire fortune dans les bas-fonds de la ville. Avec son système de flashbacks et de stress, le jeu encourage la planification créative et les actions audacieuses dans un univers steampunk gothique unique.",
-      included: [
-        "Livre de base",
-        "Règles de bande criminelle",
-        "Guide de Doskvol"
-      ],
-      extensions: [
-        {
-          id: 28,
-          name: "Scum & Villainy",
-          price: 45.99,
-          type: "Supplément",
-          image: "/images/scum-villainy.jpg"
-        },
-        {
-          id: 29,
-          name: "Band of Blades",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/band-of-blades.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Call of Cthulhu
-    13: {
-      id: 13,
-      name: "Call of Cthulhu",
-      publisher: "Chaosium",
-      price: null,
-      tags: ["Horreur & Mystère", "Libres", "Expert"],
-      description: "Call of Cthulhu 7e édition est le jeu de rôle d'horreur cosmique par excellence. Les joueurs incarnent des enquêteurs ordinaires confrontés à des horreurs indicibles qui menacent la réalité même. Avec son système de santé mentale et ses règles d'investigation, il crée une atmosphère de tension et de terreur dans l'univers de H.P. Lovecraft.",
-      included: [
-        "7e édition",
-        "Règles d'investigation",
-        "Scénarios d'horreur"
-      ],
-      extensions: [
-        {
-          id: 30,
-          name: "Pulp Cthulhu",
-          price: 49.99,
-          type: "Supplément",
-          image: "/images/pulp-cthulhu.jpg"
-        },
-        {
-          id: 31,
-          name: "Down Darker Trails",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/down-darker-trails.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Univers déjà connus - D&D 5e
-    'known-1': {
-      id: 'known-1',
-      name: "Dungeons & Dragons 5e",
-      publisher: "Wizards of the Coast",
-      price: 49.99,
-      tags: ["Fantasy", "Libres", "Débutant"],
-      description: "Dungeons & Dragons 5e est le système de jeu de rôle fantasy le plus populaire au monde. Avec ses règles accessibles et son univers riche, il permet aux joueurs de créer des héros épiques dans un monde de magie et d'aventure. Que vous soyez un guerrier courageux, un magicien puissant ou un voleur rusé, D&D 5e offre une expérience de jeu immersive et collaborative où chaque dé peut changer le cours de l'histoire.",
-      included: [
-        "Manuel des Joueurs",
-        "Guide du Maître de Donjon",
-        "Bestiaire Monstrueux"
-      ],
-      extensions: [
         {
           id: 5,
           name: "Tasha's Cauldron of Everything",
           price: 49.99,
           type: "Supplément",
           image: "/images/tashas-cauldron.jpg"
-        },
-        {
-          id: 6,
-          name: "Xanathar's Guide to Everything",
-          price: 49.99,
-          type: "Supplément",
-          image: "/images/xanathars-guide.jpg"
         }
       ],
+      image: "/images/forgotten-realms.jpg",
       type: 'owned'
     },
-    // Univers déjà connus - L'Appel de Cthulhu
-    'known-4': {
-      id: 'known-4',
-      name: "L'Appel de Cthulhu - 7e Edition",
-      publisher: "Chaosium et Sans-Détour",
-      price: null,
-      tags: ["Horreur & Mystère", "Libres", "Expert"],
-      description: "L'Appel de Cthulhu 7e Edition plonge les joueurs dans l'univers terrifiant de H.P. Lovecraft. Enquêteurs ordinaires confrontés à des horreurs cosmiques indicibles, ils doivent résoudre des mystères qui menacent la santé mentale et la survie de l'humanité. Un système qui privilégie l'atmosphère et la tension psychologique.",
+    2: {
+      id: 2,
+      name: "Eberron",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Intermédiaire"],
+      description: "Eberron est un univers steampunk fantasy unique qui mélange magie et technologie. Dans ce monde, la magie est utilisée comme une force industrielle, créant des trains magiques, des vaisseaux volants et des villes flottantes. L'univers explore des thèmes de guerre, d'espionnage et de mystère dans un cadre où la technologie magique a transformé la société. Les maisons dragonmark, les warforged et les continents mystérieux créent un cadre riche pour des aventures variées.",
       included: [
-        "Livre de base",
-        "Règles d'investigation",
-        "Scénarios d'introduction"
+        "Guide d'Eberron",
+        "Races et classes",
+        "Organisations",
+        "Technologie magique",
+        "Maisons dragonmark",
+        "Continents et géographie"
       ],
       extensions: [
         {
-          id: 12,
-          name: "Masks of Nyarlathotep",
-          price: 89.99,
-          type: "Campagne",
-          image: "/images/masks-nyarlathotep.jpg"
+          id: 5,
+          name: "Rising from the Last War",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/eberron-rising.jpg"
         },
         {
-          id: 13,
-          name: "Horror on the Orient Express",
-          price: 79.99,
-          type: "Campagne",
-          image: "/images/horror-orient-express.jpg"
+          id: 6,
+          name: "Exploring Eberron",
+          price: 39.99,
+          type: "Supplément",
+          image: "/images/exploring-eberron.jpg"
+        },
+        {
+          id: 7,
+          name: "Eberron: Oracle of War",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/oracle-war.jpg"
         }
       ],
+      image: "/images/eberron.jpg",
+      type: 'owned'
+    },
+    3: {
+      id: 3,
+      name: "Ravenloft",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Expert"],
+      description: "Ravenloft est le domaine de l'horreur gothique dans D&D. Un monde de ténèbres où des seigneurs vampires, des liches et d'autres créatures maléfiques règnent sur des domaines isolés. Chaque domaine a ses propres règles et horreurs, créant une expérience d'horreur psychologique et gothique unique. L'univers explore les thèmes de la corruption, de la damnation et de la lutte contre les ténèbres.",
+      included: [
+        "Domaines de Ravenloft",
+        "Seigneurs des ténèbres",
+        "Règles d'horreur",
+        "Créatures gothiques",
+        "Atmosphère sombre",
+        "Mystères et secrets"
+      ],
+      extensions: [
+        {
+          id: 8,
+          name: "Van Richten's Guide to Ravenloft",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/van-richtens-guide.jpg"
+        },
+        {
+          id: 9,
+          name: "Curse of Strahd",
+          price: 49.99,
+          type: "Aventure",
+          image: "/images/curse-strahd.jpg"
+        },
+        {
+          id: 10,
+          name: "House of Lament",
+          price: 24.99,
+          type: "Aventure",
+          image: "/images/house-lament.jpg"
+        }
+      ],
+      image: "/images/ravenloft.jpg",
       type: 'free'
     },
-    // Numenera
-    14: {
-      id: 14,
-      name: "Numenera",
-      publisher: "Monte Cook Games",
-      price: 45,
-      tags: ["Science-fiction", "Libres", "Intermédiaire"],
-      description: "Numenera transporte les joueurs dans le Neuvième Monde, un futur lointain où la Terre a été transformée par huit civilisations précédentes. Les joueurs incarnent des explorateurs qui découvrent les mystères de technologies anciennes et incompréhensibles. Un système unique qui met l'accent sur la découverte et l'exploration dans un monde étrange et merveilleux.",
+    4: {
+      id: 4,
+      name: "Planescape",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Expert"],
+      description: "Planescape explore le multivers cosmique de D&D avec Sigil, la Cité des Portes. Cet univers unique mélange philosophie, cosmologie et aventure dans un cadre où les croyances façonnent la réalité. Les factions philosophiques, les plans d'existence et les portails dimensionnels créent un cadre riche pour des aventures épiques et métaphysiques.",
       included: [
-        "Discovery & Destiny",
-        "Règles de découverte",
-        "Guide du Neuvième Monde"
+        "Guide de Sigil",
+        "Factions philosophiques",
+        "Plans d'existence",
+        "Portails dimensionnels",
+        "Créatures planaires",
+        "Philosophie et cosmologie"
+      ],
+      extensions: [
+        {
+          id: 11,
+          name: "Planescape: Adventures in the Multiverse",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/planescape-multiverse.jpg"
+        },
+        {
+          id: 12,
+          name: "Sigil and the Outlands",
+          price: 39.99,
+          type: "Supplément",
+          image: "/images/sigil-outlands.jpg"
+        }
+      ],
+      image: "/images/planescape.jpg",
+      type: 'free'
+    },
+    5: {
+      id: 5,
+      name: "Dark Sun",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Expert"],
+      description: "Dark Sun présente Athas, un monde désertique post-apocalyptique où la magie a détruit l'environnement. Dans ce monde brutal, l'eau est rare, les métaux précieux, et la survie est un défi constant. Les sorciers-rois tyranniques, les créatures mutées et l'écologie unique créent un cadre sombre et unique pour des aventures de survie et de rébellion.",
+      included: [
+        "Guide d'Athas",
+        "Races adaptées au désert",
+        "Classes de survie",
+        "Magie destructrice",
+        "Créatures du désert",
+        "Écologie unique"
+      ],
+      extensions: [
+        {
+          id: 13,
+          name: "Dark Sun Campaign Setting",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/dark-sun-setting.jpg"
+        },
+        {
+          id: 14,
+          name: "Athas: The Tyrant Lands",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/athas-tyrant.jpg"
+        }
+      ],
+      image: "/images/dark-sun.jpg",
+      type: 'free'
+    },
+    6: {
+      id: 6,
+      name: "Spelljammer",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Intermédiaire"],
+      description: "Spelljammer combine fantasy et science-fiction avec des voyages spatiaux magiques. Les vaisseaux magiques naviguent dans le phlogiston, explorant des systèmes solaires entiers. Les neogi, les illithids et les créatures spatiales créent un cadre unique pour des aventures d'exploration interplanétaire.",
+      included: [
+        "Vaisseaux magiques",
+        "Systèmes solaires",
+        "Créatures spatiales",
+        "Navigation phlogiston",
+        "Races spatiales",
+        "Exploration interplanétaire"
+      ],
+      extensions: [
+        {
+          id: 15,
+          name: "Spelljammer: Adventures in Space",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/spelljammer-space.jpg"
+        },
+        {
+          id: 16,
+          name: "Light of Xaryxis",
+          price: 39.99,
+          type: "Aventure",
+          image: "/images/light-xaryxis.jpg"
+        }
+      ],
+      image: "/images/spelljammer.jpg",
+      type: 'free'
+    },
+    7: {
+      id: 7,
+      name: "Golarion",
+      publisher: "Paizo Publishing",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Intermédiaire"],
+      description: "Golarion est l'univers officiel de Pathfinder, un monde riche et détaillé avec des continents variés et des cultures distinctes. De Varisia aux terres sauvages de Numeria, Golarion offre un cadre épique pour toutes sortes d'aventures fantasy avec une attention particulière portée à l'histoire et à la géographie.",
+      included: [
+        "Carte de Golarion",
+        "Continents et royaumes",
+        "Cultures et civilisations",
+        "Histoire détaillée",
+        "Lieux emblématiques",
+        "Organisations et guildes"
+      ],
+      extensions: [
+        {
+          id: 17,
+          name: "Inner Sea World Guide",
+          price: 0,
+          type: "Guide",
+          image: "/images/inner-sea-guide.jpg"
+        },
+        {
+          id: 18,
+          name: "Lost Omens: World Guide",
+          price: 44.99,
+          type: "Supplément",
+          image: "/images/lost-omens-world.jpg"
+        },
+        {
+          id: 19,
+          name: "Kingmaker Adventure Path",
+          price: 59.99,
+          type: "Aventure",
+          image: "/images/kingmaker.jpg"
+        }
+      ],
+      image: "/images/golarion.jpg",
+      type: 'free'
+    },
+    8: {
+      id: 8,
+      name: "Symbaroum",
+      publisher: "Free League Publishing",
+      price: 45.99,
+      tags: ["Fantasy", "Payant", "Intermédiaire"],
+      description: "Symbaroum présente Ambria et la forêt maudite de Davokar, un univers dark fantasy où la magie corrompt. Les aventuriers explorent des ruines anciennes au péril de leur âme, découvrant des secrets maudits et des trésors dangereux. L'univers explore les thèmes de la corruption, de la décadence et du prix de la connaissance.",
+      included: [
+        "Guide d'Ambria",
+        "Forêt de Davokar",
+        "Races et cultures",
+        "Magie corrompue",
+        "Créatures sombres",
+        "Ruines anciennes"
+      ],
+      extensions: [
+        {
+          id: 20,
+          name: "Advanced Player's Guide",
+          price: 29.99,
+          type: "Supplément",
+          image: "/images/symbaroum-apg.jpg"
+        },
+        {
+          id: 21,
+          name: "Throne of Thorns Campaign",
+          price: 49.99,
+          type: "Aventure",
+          image: "/images/throne-thorns.jpg"
+        },
+        {
+          id: 22,
+          name: "Symbaroum: Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/symbaroum-core.jpg"
+        }
+      ],
+      image: "/images/symbaroum.jpg",
+      type: 'paid'
+    },
+    9: {
+      id: 9,
+      name: "Midgard",
+      publisher: "Kobold Press",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Intermédiaire"],
+      description: "Midgard est un univers fantasy européen qui s'inspire de la mythologie réelle. Les dieux nordiques, les créatures du folklore et les cultures historiques créent un cadre riche et authentique pour des aventures fantasy avec une touche d'historicité et de mythologie.",
+      included: [
+        "Cultures européennes",
+        "Mythologie nordique",
+        "Créatures du folklore",
+        "Dieux et divinités",
+        "Géographie historique",
+        "Traditions et légendes"
+      ],
+      extensions: [
+        {
+          id: 23,
+          name: "Midgard Worldbook",
+          price: 0,
+          type: "Guide",
+          image: "/images/midgard-worldbook.jpg"
+        },
+        {
+          id: 24,
+          name: "Southlands Campaign Setting",
+          price: 39.99,
+          type: "Supplément",
+          image: "/images/southlands.jpg"
+        }
+      ],
+      image: "/images/midgard.jpg",
+      type: 'free'
+    },
+    10: {
+      id: 10,
+      name: "Theros",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Débutant"],
+      description: "Theros s'inspire de la mythologie grecque pour créer un univers fantasy épique. Les dieux grecs, les héros légendaires et les créatures mythologiques créent un cadre riche pour des aventures épiques et héroïques dans un monde où les dieux interviennent directement dans les affaires mortelles.",
+      included: [
+        "Mythologie grecque",
+        "Dieux et divinités",
+        "Héros légendaires",
+        "Créatures mythologiques",
+        "Cités-États",
+        "Aventures épiques"
+      ],
+      extensions: [
+        {
+          id: 25,
+          name: "Mythic Odysseys of Theros",
+          price: 0,
+          type: "Guide",
+          image: "/images/mythic-odysseys.jpg"
+        },
+        {
+          id: 26,
+          name: "No Silent Secret",
+          price: 24.99,
+          type: "Aventure",
+          image: "/images/no-silent-secret.jpg"
+        }
+      ],
+      image: "/images/theros.jpg",
+      type: 'free'
+    },
+    11: {
+      id: 11,
+      name: "Star Wars",
+      publisher: "Fantasy Flight Games",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Débutant"],
+      description: "La galaxie lointaine de Star Wars offre un univers riche pour des aventures d'exploration, d'espionnage et d'héroïsme. De Coruscant aux confins de l'espace, l'univers Star Wars propose des planètes variées, des espèces multiples et des conflits épiques entre la lumière et les ténèbres.",
+      included: [
+        "Galaxie explorable",
+        "Espèces multiples",
+        "Technologies avancées",
+        "Force et Jedi",
+        "Planètes iconiques",
+        "Vaisseaux spatiaux"
+      ],
+      features: [
+        "Galaxie vaste et diversifiée",
+        "Conflit Force vs Ténèbres",
+        "Technologies futuristes",
+        "Espèces et cultures variées",
+        "Vaisseaux et véhicules",
+        "Organisations politiques"
+      ],
+      extensions: [
+        {
+          id: 27,
+          name: "Edge of the Empire",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/edge-empire.jpg"
+        },
+        {
+          id: 28,
+          name: "Age of Rebellion",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/age-rebellion.jpg"
+        },
+        {
+          id: 29,
+          name: "Force and Destiny",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/force-destiny.jpg"
+        }
+      ],
+      image: "/images/star-wars.jpg",
+      type: 'owned'
+    },
+    12: {
+      id: 12,
+      name: "Star Trek",
+      publisher: "Modiphius Entertainment",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Intermédiaire"],
+      description: "L'univers de Star Trek présente la Fédération des Planètes Unies et son exploration spatiale. L'univers explore les thèmes de l'exploration, de la diplomatie et de la découverte dans un futur optimiste où l'humanité a surmonté ses conflits.",
+      included: [
+        "Fédération des Planètes",
+        "Vaisseaux spatiaux",
+        "Espèces multiples",
+        "Technologies avancées",
+        "Exploration spatiale",
+        "Diplomatie interstellaire"
+      ],
+      extensions: [
+        {
+          id: 30,
+          name: "Star Trek Adventures Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/star-trek-core.jpg"
+        },
+        {
+          id: 31,
+          name: "These Are the Voyages",
+          price: 34.99,
+          type: "Aventure",
+          image: "/images/these-are-voyages.jpg"
+        }
+      ],
+      image: "/images/star-trek.jpg",
+      type: 'free'
+    },
+    13: {
+      id: 13,
+      name: "Warhammer 40K",
+      publisher: "Games Workshop",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Expert"],
+      description: "Warhammer 40K présente un futur sombre et brutal où l'Imperium de l'Humanité lutte pour sa survie. L'univers explore les thèmes de la guerre, de la corruption et de la lutte contre les forces du Chaos dans un cadre grimdark unique.",
+      included: [
+        "Imperium de l'Humanité",
+        "Space Marines",
+        "Forces du Chaos",
+        "Technologies gothiques",
+        "Guerres interstellaires",
+        "Religions impériales"
       ],
       extensions: [
         {
           id: 32,
-          name: "The Jade Colossus",
-          price: 29.99,
-          type: "Campagne",
-          image: "/images/jade-colossus.jpg"
+          name: "Wrath & Glory Core Rulebook",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/wrath-glory.jpg"
         },
         {
           id: 33,
-          name: "Into the Deep",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/into-the-deep.jpg"
+          name: "Dark Tides",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/dark-tides.jpg"
         }
       ],
-      type: 'paid'
+      image: "/images/warhammer-40k.jpg",
+      type: 'owned'
     },
-    // Apocalypse World
-    15: {
-      id: 15,
-      name: "Apocalypse World",
-      publisher: "D. Vincent Baker",
-      price: 35,
-      tags: ["Science-fiction", "Libres", "Intermédiaire"],
-      description: "Apocalypse World 2e édition est le jeu qui a révolutionné le design de jeux de rôle avec son système Powered by the Apocalypse. Dans un monde post-apocalyptique, les joueurs incarnent des survivants qui tentent de reconstruire la civilisation. Un système narratif qui encourage l'improvisation et la collaboration pour créer des histoires intenses et personnelles.",
+    14: {
+      id: 14,
+      name: "Shadowrun",
+      publisher: "Catalyst Game Labs",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Expert"],
+      description: "Shadowrun combine cyberpunk et fantasy dans un monde où la magie a réapparu. Les runners, mercenaires cybernétiques, naviguent dans un monde de corporations puissantes, de magie et de technologie avancée.",
       included: [
-        "2e édition",
-        "Règles PbtA",
-        "Classes post-apocalyptiques"
+        "Monde cyberpunk-fantasy",
+        "Runners et mercenaires",
+        "Corporations puissantes",
+        "Magie et technologie",
+        "Cybernétique",
+        "Métahumains"
       ],
       extensions: [
         {
           id: 34,
-          name: "Burned Over",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/burned-over.jpg"
+          name: "Shadowrun: Sixth World Core Rulebook",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/shadowrun-core.jpg"
         },
         {
           id: 35,
-          name: "The Master of Ceremonies",
-          price: 14.99,
-          type: "Guide MJ",
-          image: "/images/master-ceremonies.jpg"
+          name: "Seattle Sprawl",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/seattle-sprawl.jpg"
         }
       ],
-      type: 'paid'
+      image: "/images/shadowrun.jpg",
+      type: 'owned'
     },
-    // Monsterhearts
-    16: {
-      id: 16,
-      name: "Monsterhearts",
-      publisher: "Avery Alder",
-      price: 25,
-      tags: ["Horreur & Mystère", "Libres", "Débutant"],
-      description: "Monsterhearts explore les drames adolescents à travers le prisme de l'horreur surnaturelle. Les joueurs incarnent des monstres adolescents qui naviguent entre leurs pulsions surnaturelles et leurs émotions humaines. Un jeu mature qui traite de l'identité, de la sexualité et de la transformation dans un cadre horrifique et émotionnel.",
+    15: {
+      id: 15,
+      name: "Numenera",
+      publisher: "Monte Cook Games",
+      price: 45,
+      tags: ["Science-fiction", "Payant", "Intermédiaire"],
+      description: "Numenera se déroule sur Terre dans le Neuvième Monde, un futur lointain où les civilisations précédentes ont laissé des technologies mystérieuses. Les explorateurs découvrent des artefacts anciens et des mystères cosmiques.",
       included: [
-        "Jeu de monstres adolescents",
-        "Classes monstrueuses",
-        "Règles de drame"
+        "Terre du Neuvième Monde",
+        "Technologies anciennes",
+        "Artefacts mystérieux",
+        "Créatures étranges",
+        "Exploration",
+        "Mystères cosmiques"
       ],
       extensions: [
         {
           id: 36,
-          name: "Monsterhearts 2",
-          price: 29.99,
-          type: "Édition",
-          image: "/images/monsterhearts-2.jpg"
+          name: "The Strange",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/strange.jpg"
         },
         {
           id: 37,
-          name: "The Shame",
-          price: 9.99,
-          type: "Supplément",
-          image: "/images/the-shame.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Masks: A New Generation
-    17: {
-      id: 17,
-      name: "Masks: A New Generation",
-      publisher: "Brendan Conway",
-      price: 30,
-      tags: ["Science-fiction", "Libres", "Débutant"],
-      description: "Masks: A New Generation plonge les joueurs dans l'univers des super-héros adolescents. Ils incarnent de jeunes héros qui découvrent leurs pouvoirs tout en naviguant les défis de l'adolescence. Un système Powered by the Apocalypse qui explore l'identité, la responsabilité et la croissance personnelle dans un monde de super-héros.",
-      included: [
-        "Super-héros adolescents",
-        "Règles d'identité",
-        "Classes de héros"
-      ],
-      extensions: [
+          name: "Numenera: Discovery",
+          price: 0,
+          type: "Guide",
+          image: "/images/numenera-discovery.jpg"
+        },
         {
           id: 38,
-          name: "Unbound",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/unbound.jpg"
-        },
+          name: "Numenera: Destiny",
+          price: 0,
+          type: "Guide",
+          image: "/images/numenera-destiny.jpg"
+        }
+      ],
+      image: "/images/numenera.jpg",
+      type: 'paid'
+    },
+    16: {
+      id: 16,
+      name: "Cyberpunk RED",
+      publisher: "R. Talsorian Games",
+      price: 60,
+      tags: ["Science-fiction", "Payant", "Expert"],
+      description: "Cyberpunk RED se déroule dans Nuit City en 2045, un monde dystopique où les corporations règnent et les netrunners naviguent dans le cyberspace. L'univers explore les thèmes de la technologie, de la rébellion et de la survie urbaine.",
+      included: [
+        "Nuit City 2045",
+        "Corporations",
+        "Netrunners",
+        "Cyberspace",
+        "Technologies cybernétiques",
+        "Survie urbaine"
+      ],
+      features: [
+        "Monde cyberpunk dystopique",
+        "Corporations omnipuissantes",
+        "Cybernétique et implants",
+        "Cyberspace et hacking",
+        "Survie urbaine",
+        "Rébellion et contre-culture"
+      ],
+      extensions: [
         {
           id: 39,
-          name: "The Unfixed",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/the-unfixed.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // The Sprawl
-    18: {
-      id: 18,
-      name: "The Sprawl",
-      publisher: "Hamish Cameron",
-      price: 40,
-      tags: ["Science-fiction", "Libres", "Intermédiaire"],
-      description: "The Sprawl est un jeu de rôle cyberpunk Powered by the Apocalypse qui capture l'essence des œuvres de William Gibson et Philip K. Dick. Les joueurs incarnent des cyberpunks qui naviguent dans un monde dystopique dominé par les mégacorporations. Un système qui met l'accent sur l'espionnage, la technologie et la survie dans un futur sombre.",
-      included: [
-        "Cyberpunk narratif",
-        "Règles de cybernétique",
-        "Classes de cyberpunks"
-      ],
-      extensions: [
+          name: "Cyberpunk RED Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/cyberpunk-red-core.jpg"
+        },
         {
           id: 40,
-          name: "The Sprawl: Mission Files",
-          price: 19.99,
+          name: "Black Chrome",
+          price: 39.99,
           type: "Supplément",
-          image: "/images/mission-files.jpg"
-        },
+          image: "/images/black-chrome.jpg"
+        }
+      ],
+      image: "/images/cyberpunk-red.jpg",
+      type: 'paid'
+    },
+    17: {
+      id: 17,
+      name: "Traveller",
+      publisher: "Mongoose Publishing",
+      price: 50,
+      tags: ["Science-fiction", "Payant", "Expert"],
+      description: "Traveller propose l'exploration spatiale et le commerce interstellaire dans un univers riche et détaillé. Les joueurs peuvent être marchands, explorateurs ou mercenaires dans une galaxie vaste et dangereuse.",
+      included: [
+        "Exploration spatiale",
+        "Commerce interstellaire",
+        "Vaisseaux spatiaux",
+        "Planètes variées",
+        "Système de carrière",
+        "Génération de mondes"
+      ],
+      extensions: [
         {
           id: 41,
-          name: "The Sprawl: Corporate Wars",
-          price: 24.99,
-          type: "Campagne",
-          image: "/images/corporate-wars.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Urban Shadows
-    19: {
-      id: 19,
-      name: "Urban Shadows",
-      publisher: "Andrew Medeiros",
-      price: 35,
-      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
-      description: "Urban Shadows plonge les joueurs dans l'horreur urbaine moderne où les créatures surnaturelles vivent cachées parmi nous. Vampires, loups-garous, fées et autres êtres mythiques naviguent dans les rues de la ville, chacun avec ses propres codes et alliances. Un système Powered by the Apocalypse qui explore la politique surnaturelle et les conflits urbains.",
-      included: [
-        "Horreur urbaine",
-        "Classes surnaturelles",
-        "Règles de corruption"
-      ],
-      extensions: [
+          name: "Traveller Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/traveller-core.jpg"
+        },
         {
           id: 42,
-          name: "Urban Shadows: Dark Streets",
-          price: 19.99,
+          name: "High Guard",
+          price: 34.99,
           type: "Supplément",
-          image: "/images/dark-streets.jpg"
-        },
+          image: "/images/high-guard.jpg"
+        }
+      ],
+      image: "/images/traveller.jpg",
+      type: 'paid'
+    },
+    18: {
+      id: 18,
+      name: "Alien",
+      publisher: "Free League Publishing",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
+      description: "L'univers d'Alien présente l'horreur spatiale avec les Xenomorphes et les corporations interstellaires. L'univers explore les thèmes de l'isolement, de la survie et de l'horreur cosmique dans l'espace.",
+      included: [
+        "Horreur spatiale",
+        "Xenomorphes",
+        "Corporations interstellaires",
+        "Vaisseaux spatiaux",
+        "Survie",
+        "Isolation"
+      ],
+      extensions: [
         {
           id: 43,
-          name: "Urban Shadows: Blood & Smoke",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/blood-smoke.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Fellowship
-    20: {
-      id: 20,
-      name: "Fellowship",
-      publisher: "Jacob Randolph",
-      price: 30,
-      tags: ["Fantasy", "Libres", "Débutant"],
-      description: "Fellowship est un jeu de rôle fantasy épique Powered by the Apocalypse qui met l'accent sur l'héroïsme et l'aventure. Les joueurs incarnent des héros qui s'unissent pour combattre un Overlord maléfique et sauver le monde. Un système qui encourage la collaboration et l'improvisation pour créer des histoires épiques de fantasy.",
-      included: [
-        "Fantasy épique",
-        "Classes de héros",
-        "Règles d'Overlord"
-      ],
-      extensions: [
+          name: "Alien RPG Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/alien-core.jpg"
+        },
         {
           id: 44,
-          name: "Fellowship: In Rebellion",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/in-rebellion.jpg"
-        },
-        {
-          id: 45,
-          name: "Fellowship: The Empire",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/the-empire.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // The Veil
-    21: {
-      id: 21,
-      name: "The Veil",
-      publisher: "Samjoko Publishing",
-      price: 25,
-      tags: ["Science-fiction", "Libres", "Expert"],
-      description: "The Veil explore le cyberpunk transhumaniste dans un monde où la technologie a fusionné avec l'humanité. Les joueurs incarnent des personnages qui naviguent entre réalité et virtuel, explorant les questions de l'identité, de la conscience et de l'humanité dans un futur dystopique. Un système Powered by the Apocalypse qui traite de thèmes philosophiques profonds.",
-      included: [
-        "Cyberpunk transhumaniste",
-        "Règles de réalité virtuelle",
-        "Classes transhumanes"
-      ],
-      extensions: [
-        {
-          id: 46,
-          name: "The Veil: Cascade",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/cascade.jpg"
-        },
-        {
-          id: 47,
-          name: "The Veil: Psionics",
-          price: 14.99,
-          type: "Supplément",
-          image: "/images/psionics.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Bluebeard's Bride
-    22: {
-      id: 22,
-      name: "Bluebeard's Bride",
-      publisher: "Marissa Kelly",
-      price: 45,
-      tags: ["Horreur & Mystère", "Libres", "Expert"],
-      description: "Bluebeard's Bride est un jeu d'horreur gothique qui explore les thèmes de la violence domestique et de la peur féminine. Basé sur le conte de fées de Barbe Bleue, les joueurs incarnent différents aspects de la mariée qui explore le château interdit de son mari. Un jeu mature et intense qui traite de thèmes difficiles dans un cadre horrifique.",
-      included: [
-        "Horreur gothique",
-        "Règles de peur",
-        "Scénarios de château"
-      ],
-      extensions: [
-        {
-          id: 48,
-          name: "Bluebeard's Bride: The Book of Rooms",
+          name: "Destroyer of Worlds",
           price: 29.99,
-          type: "Supplément",
-          image: "/images/book-of-rooms.jpg"
-        },
-        {
-          id: 49,
-          name: "Bluebeard's Bride: The Book of Mirrors",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/book-of-mirrors.jpg"
+          type: "Aventure",
+          image: "/images/destroyer-worlds.jpg"
         }
       ],
-      type: 'paid'
-    },
-    // Dream Askew
-    23: {
-      id: 23,
-      name: "Dream Askew",
-      publisher: "Avery Alder",
-      price: null,
-      tags: ["Science-fiction", "Libres", "Intermédiaire"],
-      description: "Dream Askew est un jeu post-apocalyptique queer qui explore la survie et la communauté dans un monde en ruine. Les joueurs incarnent des survivants qui tentent de reconstruire leur vie dans un paysage dévasté. Un système Belonging Outside Belonging qui encourage la narration collaborative et l'exploration de thèmes queer et post-apocalyptiques.",
-      included: [
-        "Post-apocalyptique queer",
-        "Règles de communauté",
-        "Classes de survivants"
-      ],
-      extensions: [
-        {
-          id: 50,
-          name: "Dream Askew: The Book of Dreams",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/book-of-dreams.jpg"
-        },
-        {
-          id: 51,
-          name: "Dream Askew: The Book of Ruins",
-          price: 14.99,
-          type: "Supplément",
-          image: "/images/book-of-ruins.jpg"
-        }
-      ],
+      image: "/images/alien.jpg",
       type: 'free'
     },
-    // Wanderhome
-    24: {
-      id: 24,
-      name: "Wanderhome",
-      publisher: "Jay Dragon",
-      price: 35,
-      tags: ["Fantasy", "Liées", "Débutant"],
-      description: "Wanderhome est un jeu de rôle pastoral fantasy qui explore la beauté et la mélancolie du voyage. Les joueurs incarnent des vagabonds qui parcourent un monde magique, découvrant des lieux merveilleux et aidant ceux qu'ils rencontrent. Un système Belonging Outside Belonging qui privilégie la narration collaborative et l'exploration émotionnelle.",
+    19: {
+      id: 19,
+      name: "Blade Runner",
+      publisher: "Free League Publishing",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Intermédiaire"],
+      description: "Blade Runner se déroule dans Los Angeles 2037, un monde cyberpunk où les réplicants et les détectives naviguent dans une société dystopique. L'univers explore les thèmes de l'humanité, de la technologie et de l'identité.",
       included: [
-        "Fantasy pastoral",
-        "Règles de voyage",
-        "Classes de vagabonds"
+        "Los Angeles 2037",
+        "Réplicants",
+        "Détectives",
+        "Société dystopique",
+        "Technologies avancées",
+        "Questions d'identité"
       ],
       extensions: [
         {
-          id: 52,
-          name: "Wanderhome: The Book of Seasons",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/book-of-seasons.jpg"
+          id: 45,
+          name: "Blade Runner RPG Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/blade-runner-core.jpg"
+        },
+        {
+          id: 46,
+          name: "Fiery Angels",
+          price: 24.99,
+          type: "Aventure",
+          image: "/images/fiery-angels.jpg"
         }
       ],
-      type: 'paid'
+      image: "/images/blade-runner.jpg",
+      type: 'free'
     },
-    // Thirsty Sword Lesbians
-    25: {
-      id: 25,
-      name: "Thirsty Sword Lesbians",
-      publisher: "April Kit Walsh",
-      price: 30,
-      tags: ["Fantasy", "Liées", "Débutant"],
-      description: "Thirsty Sword Lesbians est un jeu de rôle fantasy queer qui célèbre l'amour, l'aventure et l'identité LGBTQ+. Les joueurs incarnent des personnages queer dans un monde fantasy où ils peuvent être eux-mêmes tout en vivant des aventures épiques. Un système Powered by the Apocalypse qui explore les relations, l'identité et l'acceptation de soi.",
+    20: {
+      id: 20,
+      name: "The Expanse",
+      publisher: "Green Ronin Publishing",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Intermédiaire"],
+      description: "The Expanse se déroule dans un système solaire colonisé avec des tensions politiques entre la Terre, Mars et la Ceinture. L'univers explore les thèmes de la politique, de la survie et de l'exploration spatiale.",
       included: [
-        "Fantasy queer",
-        "Règles de relations",
-        "Classes queer"
+        "Système solaire colonisé",
+        "Tensions politiques",
+        "Terre, Mars, Ceinture",
+        "Technologies réalistes",
+        "Survie spatiale",
+        "Exploration"
+      ],
+      extensions: [
+        {
+          id: 47,
+          name: "The Expanse RPG Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/expanse-core.jpg"
+        },
+        {
+          id: 48,
+          name: "Abzu's Bounty",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/abzu-bounty.jpg"
+        }
+      ],
+      image: "/images/expanse.jpg",
+      type: 'free'
+    },
+    21: {
+      id: 21,
+      name: "Cthulhu Mythos",
+      publisher: "Chaosium",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Expert"],
+      description: "L'univers de Cthulhu explore l'horreur cosmique avec les Grands Anciens et les mystères indicibles. Les investigateurs découvrent des vérités terrifiantes sur la nature de la réalité et l'insignifiance de l'humanité face aux forces cosmiques.",
+      included: [
+        "Grands Anciens",
+        "Horreur cosmique",
+        "Investigation",
+        "Mystères indicibles",
+        "Culte et rituels",
+        "Sanité mentale"
+      ],
+      extensions: [
+        {
+          id: 49,
+          name: "Call of Cthulhu Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/call-cthulhu-core.jpg"
+        },
+        {
+          id: 50,
+          name: "Masks of Nyarlathotep",
+          price: 59.99,
+          type: "Aventure",
+          image: "/images/masks-nyarlathotep.jpg"
+        }
+      ],
+      image: "/images/cthulhu-mythos.jpg",
+      type: 'free'
+    },
+    22: {
+      id: 22,
+      name: "World of Darkness",
+      publisher: "White Wolf",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
+      description: "Le Monde des Ténèbres présente un monde moderne sombre où vampires, loups-garous et autres créatures surnaturelles vivent dans l'ombre. L'univers explore les thèmes de la corruption, de la survie et de la lutte contre la nature bestiale.",
+      included: [
+        "Monde moderne sombre",
+        "Créatures surnaturelles",
+        "Sociétés secrètes",
+        "Horreur urbaine",
+        "Pouvoirs surnaturels",
+        "Lutte intérieure"
+      ],
+      extensions: [
+        {
+          id: 51,
+          name: "World of Darkness Core Rulebook",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/world-darkness-core.jpg"
+        },
+        {
+          id: 52,
+          name: "Vampire: The Masquerade",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/vampire-masquerade.jpg"
+        }
+      ],
+      image: "/images/world-darkness.jpg",
+      type: 'owned'
+    },
+    23: {
+      id: 23,
+      name: "Delta Green",
+      publisher: "Arc Dream Publishing",
+      price: 60,
+      tags: ["Horreur & Mystère", "Payant", "Expert"],
+      description: "Delta Green présente des agents gouvernementaux qui luttent contre l'horreur cosmique dans le monde moderne. L'univers explore les thèmes de la conspiration, de l'horreur et de la lutte contre des forces indicibles.",
+      included: [
+        "Agents gouvernementaux",
+        "Horreur cosmique moderne",
+        "Conspirations",
+        "Organisations secrètes",
+        "Technologies avancées",
+        "Lutte contre l'indicible"
       ],
       extensions: [
         {
           id: 53,
-          name: "Thirsty Sword Lesbians: The Book of Hearts",
-          price: 24.99,
-          type: "Supplément",
-          image: "/images/book-of-hearts.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Neverland
-    26: {
-      id: 26,
-      name: "Neverland",
-      publisher: "Scott Malthouse",
-      price: 38,
-      tags: ["Fantasy", "Libres", "Débutant"],
-      description: "Neverland transporte les joueurs dans l'univers magique de Peter Pan, mais avec une approche plus sombre et mature. Les joueurs incarnent des enfants perdus qui naviguent entre l'innocence et la cruauté de Neverland. Un jeu qui explore les thèmes de l'enfance, de la croissance et de la perte de l'innocence dans un cadre fantastique.",
-      included: [
-        "Jeux narratifs",
-        "Règles de Neverland",
-        "Classes d'enfants perdus"
-      ],
-      extensions: [
+          name: "Delta Green Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/delta-green-core.jpg"
+        },
         {
           id: 54,
-          name: "Neverland: The Book of Shadows",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/book-of-shadows.jpg"
+          name: "Impossible Landscapes",
+          price: 49.99,
+          type: "Aventure",
+          image: "/images/impossible-landscapes.jpg"
         }
       ],
+      image: "/images/delta-green.jpg",
       type: 'paid'
     },
-    // Pax Ethica
-    27: {
-      id: 27,
-      name: "Pax Ethica",
-      publisher: "Scott Malthouse",
-      price: 24,
-      tags: ["Science-fiction", "Liées", "Expert"],
-      description: "Pax Ethica explore la science-fiction éthique dans un futur où l'humanité a colonisé l'espace. Les joueurs incarnent des diplomates, des scientifiques et des explorateurs qui doivent prendre des décisions morales difficiles dans un univers complexe. Un jeu qui traite de l'éthique, de la politique et de la responsabilité dans un cadre science-fiction.",
+    24: {
+      id: 24,
+      name: "Call of Cthulhu",
+      publisher: "Chaosium",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Expert"],
+      description: "Call of Cthulhu se déroule dans les années 1920 et explore l'horreur cosmique avec des investigateurs qui découvrent des mystères terrifiants. L'univers explore les thèmes de l'investigation, de la découverte et de la folie.",
       included: [
-        "Science-fiction",
-        "Règles d'éthique",
-        "Classes de diplomates"
+        "Années 1920",
+        "Investigation",
+        "Horreur cosmique",
+        "Mystères terrifiants",
+        "Folie et sanité",
+        "Culte et rituels"
       ],
       extensions: [
         {
           id: 55,
-          name: "Pax Ethica: The Book of Conflicts",
-          price: 14.99,
-          type: "Supplément",
-          image: "/images/book-of-conflicts.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Lady Blackbird
-    28: {
-      id: 28,
-      name: "Lady Blackbird",
-      publisher: "John Harper",
-      price: null,
-      tags: ["Science-fiction", "Libres", "Débutant"],
-      description: "Lady Blackbird est un jeu de rôle narratif court qui capture l'essence des aventures pulp et steampunk. Les joueurs incarnent des personnages à bord du vaisseau spatial Lady Blackbird, tentant d'échapper à leurs poursuivants. Un jeu parfait pour des sessions courtes et intenses avec des règles simples et une forte emphase narrative.",
-      included: [
-        "Jeu narratif",
-        "Règles pulp",
-        "Scénario prêt à jouer"
-      ],
-      extensions: [
+          name: "Call of Cthulhu Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/call-cthulhu-core.jpg"
+        },
         {
           id: 56,
-          name: "Lady Blackbird: The Book of Adventures",
-          price: 9.99,
-          type: "Supplément",
-          image: "/images/book-of-adventures.jpg"
+          name: "The Haunting",
+          price: 14.99,
+          type: "Aventure",
+          image: "/images/haunting.jpg"
         }
       ],
+      image: "/images/call-cthulhu.jpg",
       type: 'free'
     },
-    // Aria
-    29: {
-      id: 29,
-      name: "Aria",
-      publisher: "Last Unicorn / Elder Craft",
-      price: 60,
-      tags: ["Autres", "Liées", "Expert"],
-      description: "Aria est un système générique complexe qui permet de créer des mondes et des civilisations entières. Les joueurs peuvent jouer à différentes échelles, des individus aux nations, dans un système qui simule l'évolution des sociétés. Un jeu ambitieux pour les joueurs expérimentés qui veulent explorer la création de monde et la simulation sociale.",
+    25: {
+      id: 25,
+      name: "Vampire: The Masquerade",
+      publisher: "White Wolf",
+      price: 55,
+      tags: ["Horreur & Mystère", "Payant", "Intermédiaire"],
+      description: "Vampire: The Masquerade présente des vampires dans le monde moderne qui doivent maintenir le secret de leur existence. L'univers explore les thèmes de la survie, de la politique et de la lutte contre la nature vampirique.",
       included: [
-        "Système générique",
-        "Règles de civilisation",
-        "Guide de création de monde"
+        "Vampires modernes",
+        "Le Masquerade",
+        "Clans vampiriques",
+        "Politique nocturne",
+        "Pouvoirs vampiriques",
+        "Lutte contre la soif"
       ],
       extensions: [
         {
           id: 57,
-          name: "Aria: The Book of Worlds",
-          price: 39.99,
-          type: "Supplément",
-          image: "/images/book-of-worlds.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Microscope
-    30: {
-      id: 30,
-      name: "Microscope",
-      publisher: "Ben Robbins",
-      price: null,
-      tags: ["Autres", "Libres", "Intermédiaire"],
-      description: "Microscope est un jeu de création d'histoire collaborative qui permet aux joueurs de construire ensemble l'histoire d'une civilisation, d'un empire ou d'un monde. Les joueurs peuvent zoomer sur différents moments historiques, créant des événements, des périodes et des scènes. Un jeu unique qui encourage la créativité et la collaboration narrative.",
-      included: [
-        "Création d'histoire collaborative",
-        "Règles de zoom temporel",
-        "Guide de construction d'histoire"
-      ],
-      extensions: [
+          name: "Vampire: The Masquerade Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/vampire-masquerade-core.jpg"
+        },
         {
           id: 58,
-          name: "Microscope: The Book of Epochs",
-          price: 19.99,
+          name: "Camarilla",
+          price: 34.99,
           type: "Supplément",
-          image: "/images/book-of-epochs.jpg"
+          image: "/images/camarilla.jpg"
         }
       ],
-      type: 'free'
+      image: "/images/vampire-masquerade.jpg",
+      type: 'paid'
     },
-    // Forbidden Lands
-    31: {
-      id: 31,
-      name: "Forbidden Lands",
-      publisher: "Tomas Härenstam",
-      price: 42,
-      tags: ["Fantasy", "Liées", "Intermédiaire"],
-      description: "Forbidden Lands est un jeu de rôle fantasy d'exploration et de survie dans un monde dangereux et mystérieux. Les joueurs incarnent des aventuriers qui explorent des terres interdites, découvrant des ruines anciennes et affrontant des créatures terrifiantes. Un système qui met l'accent sur la survie, l'exploration et la gestion des ressources dans un monde hostile.",
+    26: {
+      id: 26,
+      name: "Werewolf: The Apocalypse",
+      publisher: "White Wolf",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
+      description: "Werewolf: The Apocalypse présente des loup-garous protecteurs de Gaïa dans un monde moderne corrompu. Les Garous luttent contre la corruption de la Wyrm et défendent les esprits de la nature. L'univers explore les thèmes de la nature, de la spiritualité et de la lutte contre la corruption.",
       included: [
-        "Exploration et survie",
-        "Règles de survie",
-        "Guide des terres interdites"
+        "Loup-garous protecteurs",
+        "Spiritualité animiste",
+        "Lutte contre la Wyrm",
+        "Tribus et auspices",
+        "Rites et cérémonies",
+        "Protection de Gaïa"
+      ],
+      features: [
+        "Spiritualité animiste",
+        "Protection de la nature",
+        "Lutte contre la corruption",
+        "Tribus variées",
+        "Rites et cérémonies",
+        "Connexion à Gaïa"
       ],
       extensions: [
         {
           id: 59,
-          name: "Forbidden Lands: The Book of Beasts",
-          price: 29.99,
-          type: "Bestiaire",
-          image: "/images/book-of-beasts.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Horror in Arkham
-    32: {
-      id: 32,
-      name: "Horror in Arkham",
-      publisher: "Chaosium",
-      price: 35,
-      tags: ["Horreur & Mystère", "Libres", "Expert"],
-      description: "Horror in Arkham plonge les joueurs dans l'horreur cosmique de la ville fictive d'Arkham, inspirée de l'univers de H.P. Lovecraft. Les joueurs incarnent des enquêteurs qui découvrent les mystères sombres qui se cachent derrière les façades respectables de la ville. Un jeu qui capture l'atmosphère oppressante et terrifiante de l'horreur lovecraftienne.",
-      included: [
-        "Horreur cosmique",
-        "Règles d'investigation",
-        "Guide d'Arkham"
-      ],
-      extensions: [
+          name: "Werewolf: The Apocalypse Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/werewolf-apocalypse-core.jpg"
+        },
         {
           id: 60,
-          name: "Horror in Arkham: The Book of Shadows",
-          price: 24.99,
+          name: "Tribes of the Moon",
+          price: 34.99,
           type: "Supplément",
-          image: "/images/arkham-shadows.jpg"
+          image: "/images/tribes-moon.jpg"
         }
       ],
-      type: 'paid'
+      image: "/images/werewolf-apocalypse.jpg",
+      type: 'free'
     },
-    // Warhammer Fantasy Roleplay
-    33: {
-      id: 33,
-      name: "Warhammer Fantasy Roleplay",
-      publisher: "Cubicle 7",
-      price: 45,
-      tags: ["Fantasy", "Liées", "Expert"],
-      description: "Warhammer Fantasy Roleplay 4e édition transporte les joueurs dans l'univers sombre et brutal de Warhammer Fantasy. Les joueurs incarnent des personnages ordinaires dans un monde où le chaos et la corruption menacent constamment. Un système complexe qui capture l'atmosphère sombre et désespérée de l'univers Warhammer.",
+    27: {
+      id: 27,
+      name: "Mage: The Ascension",
+      publisher: "White Wolf",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Expert"],
+      description: "Mage: The Ascension présente des mages dans la guerre de l'Ascension, où la réalité est façonnée par la volonté et la croyance. Les mages luttent pour définir la nature de la réalité elle-même. L'univers explore les thèmes de la magie, de la réalité et de la transcendance.",
       included: [
-        "4e édition",
-        "Règles de chaos",
-        "Guide de l'Empire"
+        "Mages et traditions",
+        "Guerre de l'Ascension",
+        "Réalité façonnable",
+        "Paradigmes magiques",
+        "Technocratie",
+        "Transcendance"
+      ],
+      features: [
+        "Réalité façonnable",
+        "Paradigmes magiques",
+        "Guerre de l'Ascension",
+        "Technocratie",
+        "Traditions mystiques",
+        "Transcendance"
       ],
       extensions: [
         {
           id: 61,
-          name: "Warhammer Fantasy: The Book of Corruption",
-          price: 34.99,
-          type: "Supplément",
-          image: "/images/book-of-corruption.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // Shadowrun
-    34: {
-      id: 34,
-      name: "Shadowrun",
-      publisher: "Catalyst Game Labs",
-      price: 50,
-      tags: ["Science-fiction", "Liées", "Expert"],
-      description: "Shadowrun 6e édition combine cyberpunk et fantasy dans un monde unique où la magie a refait surface. Les joueurs incarnent des shadowrunners, des mercenaires qui effectuent des missions illégales dans un monde dominé par les mégacorporations. Un système complexe qui mélange technologie, magie et action dans un univers dystopique.",
-      included: [
-        "6e édition",
-        "Règles de cybernétique et magie",
-        "Guide de Seattle"
-      ],
-      extensions: [
+          name: "Mage: The Ascension Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/mage-ascension-core.jpg"
+        },
         {
           id: 62,
-          name: "Shadowrun: The Book of Magic",
-          price: 39.99,
+          name: "Tradition Books",
+          price: 29.99,
           type: "Supplément",
-          image: "/images/book-of-magic.jpg"
+          image: "/images/tradition-books.jpg"
         }
       ],
-      type: 'paid'
+      image: "/images/mage-ascension.jpg",
+      type: 'free'
     },
-    // World of Darkness
-    35: {
-      id: 35,
-      name: "World of Darkness",
-      publisher: "White Wolf",
-      price: 35,
-      tags: ["Horreur & Mystère", "Liées", "Intermédiaire"],
-      description: "World of Darkness est le système de base pour l'univers sombre et gothique de White Wolf. Les joueurs incarnent des créatures surnaturelles qui vivent cachées dans le monde moderne, naviguant entre leur nature monstrueuse et leur humanité. Un système mature qui explore les thèmes de la corruption, du pouvoir et de la survie dans un monde sombre.",
+    28: {
+      id: 28,
+      name: "Unknown Armies",
+      publisher: "Atlas Games",
+      price: 40,
+      tags: ["Horreur & Mystère", "Payant", "Intermédiaire"],
+      description: "Unknown Armies présente l'horreur urbaine moderne avec magie occulte. Les personnages découvrent des cultes secrets, des rituels dangereux et des vérités terrifiantes sur le monde. L'univers explore les thèmes de l'occultisme, de la folie et de la découverte.",
       included: [
-        "Système de base",
-        "Règles de créatures surnaturelles",
-        "Guide du monde sombre"
+        "Horreur urbaine moderne",
+        "Magie occulte",
+        "Cultes secrets",
+        "Rituels dangereux",
+        "Vérités terrifiantes",
+        "Folie et découverte"
       ],
       extensions: [
         {
           id: 63,
-          name: "World of Darkness: The Book of Spirits",
-          price: 29.99,
-          type: "Supplément",
-          image: "/images/book-of-spirits.jpg"
-        }
-      ],
-      type: 'paid'
-    },
-    // GURPS
-    36: {
-      id: 36,
-      name: "GURPS",
-      publisher: "Steve Jackson Games",
-      price: 40,
-      tags: ["Autres", "Liées", "Expert"],
-      description: "GURPS (Generic Universal RolePlaying System) est un système générique ultra-flexible qui peut s'adapter à n'importe quel genre ou univers. Les joueurs peuvent créer des personnages dans n'importe quel cadre, de la fantasy médiévale à la science-fiction futuriste. Un système complexe mais puissant pour les joueurs expérimentés qui veulent une simulation détaillée.",
-      included: [
-        "Système générique",
-        "Règles universelles",
-        "Guide de création de personnage"
-      ],
-      extensions: [
+          name: "Unknown Armies Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/unknown-armies-core.jpg"
+        },
         {
           id: 64,
-          name: "GURPS: The Book of Powers",
+          name: "Postmodern Magick",
           price: 34.99,
           type: "Supplément",
-          image: "/images/book-of-powers.jpg"
+          image: "/images/postmodern-magick.jpg"
         }
       ],
+      image: "/images/unknown-armies.jpg",
       type: 'paid'
     },
-    // Honey Heist
-    37: {
-      id: 37,
-      name: "Honey Heist",
-      publisher: "Grant Howitt",
-      price: null,
-      tags: ["Comédie & Parodique", "Libres", "Débutant"],
-      description: "Honey Heist est un jeu de rôle narratif court et hilarant où les joueurs incarnent des ours qui tentent de voler du miel lors d'une convention. Un jeu simple et amusant parfait pour des sessions courtes et détendues. Avec seulement deux stats (Bear et Criminal), il se concentre sur l'improvisation et l'humour absurde.",
+    29: {
+      id: 29,
+      name: "Over the Edge",
+      publisher: "Atlas Games",
+      price: 35,
+      tags: ["Science-fiction", "Payant", "Intermédiaire"],
+      description: "Over the Edge se déroule sur l'île d'Al Amarja, un lieu de tous les possibles où la réalité est flexible et étrange. Les personnages découvrent des secrets bizarres et des vérités impossibles. L'univers explore les thèmes de la réalité, de l'étrangeté et de la découverte.",
       included: [
-        "Jeu narratif court",
-        "Règles simples",
-        "Scénario de convention"
+        "Île d'Al Amarja",
+        "Réalité flexible",
+        "Secrets bizarres",
+        "Vérités impossibles",
+        "Étrangeté",
+        "Découverte"
       ],
       extensions: [
         {
           id: 65,
-          name: "Honey Heist: The Book of Bears",
-          price: 9.99,
-          type: "Supplément",
-          image: "/images/book-of-bears.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // The Quiet Year
-    38: {
-      id: 38,
-      name: "The Quiet Year",
-      publisher: "Avery Alder",
-      price: null,
-      tags: ["Autres", "Libres", "Intermédiaire"],
-      description: "The Quiet Year est un jeu de construction de communauté qui permet aux joueurs de créer ensemble l'histoire d'une communauté qui survit pendant une année calme. Les joueurs dessinent une carte et créent des événements qui façonnent la communauté. Un jeu unique qui encourage la créativité et la collaboration narrative.",
-      included: [
-        "Construction de communauté",
-        "Règles de cartographie",
-        "Guide de création d'événements"
-      ],
-      extensions: [
+          name: "Over the Edge Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/over-edge-core.jpg"
+        },
         {
           id: 66,
-          name: "The Quiet Year: The Book of Seasons",
-          price: 14.99,
+          name: "Al Amarja Sourcebook",
+          price: 29.99,
           type: "Supplément",
-          image: "/images/quiet-year-seasons.jpg"
+          image: "/images/al-amarja-sourcebook.jpg"
         }
       ],
-      type: 'free'
+      image: "/images/over-edge.jpg",
+      type: 'paid'
     },
-    // Dread
-    39: {
-      id: 39,
-      name: "Dread",
-      publisher: "Rafael Chandler",
-      price: null,
-      tags: ["Horreur & Mystère", "Libres", "Débutant"],
-      description: "Dread est un jeu d'horreur unique qui utilise une tour de Jenga au lieu de dés pour résoudre les actions. Quand un joueur fait tomber la tour, son personnage meurt. Un système simple mais efficace qui crée une tension palpable et une horreur psychologique intense. Parfait pour des sessions d'horreur courtes et intenses.",
+    30: {
+      id: 30,
+      name: "Bluebeard's Bride",
+      publisher: "Magpie Games",
+      price: 45,
+      tags: ["Horreur & Mystère", "Payant", "Expert"],
+      description: "Bluebeard's Bride présente l'horreur gothique et psychologique basée sur le conte de Barbe Bleue. Les personnages explorent un manoir mystérieux et découvrent des secrets terrifiants. L'univers explore les thèmes de l'horreur, de la psychologie et de la découverte.",
       included: [
-        "Horreur avec Jenga",
-        "Règles de tension",
-        "Scénarios d'horreur"
+        "Horreur gothique",
+        "Psychologie",
+        "Conte de Barbe Bleue",
+        "Manoir mystérieux",
+        "Secrets terrifiants",
+        "Découverte"
       ],
       extensions: [
         {
           id: 67,
-          name: "Dread: The Book of Nightmares",
-          price: 19.99,
-          type: "Supplément",
-          image: "/images/book-of-nightmares.jpg"
-        }
-      ],
-      type: 'free'
-    },
-    // Mutant: Year Zero
-    40: {
-      id: 40,
-      name: "Mutant: Year Zero",
-      publisher: "Free League Publishing",
-      price: 45,
-      tags: ["Science-fiction", "Liées", "Intermédiaire"],
-      description: "Mutant: Year Zero plonge les joueurs dans un monde post-apocalyptique où ils incarnent des mutants qui tentent de survivre et de reconstruire la civilisation. Un système qui combine exploration, survie et gestion de ressources dans un monde dévasté. Les joueurs doivent gérer leur base, explorer les ruines et faire face aux dangers du monde mutant.",
-      included: [
-        "Post-apocalyptique",
-        "Règles de survie",
-        "Guide de la Zone"
-      ],
-      extensions: [
+          name: "Bluebeard's Bride Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/bluebeard-bride-core.jpg"
+        },
         {
           id: 68,
-          name: "Mutant: Year Zero: The Book of Mutations",
-          price: 29.99,
+          name: "The Book of Rooms",
+          price: 24.99,
           type: "Supplément",
-          image: "/images/book-of-mutations.jpg"
+          image: "/images/book-rooms.jpg"
         }
       ],
+      image: "/images/bluebeard-bride.jpg",
       type: 'paid'
     },
-    // Pathfinder 2e (Version de base)
-    44: {
-      id: 44,
-      name: "Pathfinder 2e (Version de base)",
-      publisher: "Paizo Publishing",
-      price: null,
-      tags: ["Fantasy", "Liées", "Intermédiaire"],
-      description: "Pathfinder 2e Version de base offre les règles essentielles du système Pathfinder 2e en version gratuite. Les joueurs peuvent créer des personnages et jouer des aventures de base, avec la possibilité d'acheter des suppléments pour étendre l'expérience. Un excellent moyen de découvrir le système Pathfinder 2e sans investissement initial.",
+    31: {
+      id: 31,
+      name: "Legend of the Five Rings",
+      publisher: "Edge Studio",
+      price: 49,
+      tags: ["Historique & Réaliste", "Payant", "Expert"],
+      description: "Legend of the Five Rings présente le Japon fantastique avec samouraïs et clans. L'univers explore l'honneur, la loyauté et les conflits entre clans dans un cadre inspiré du Japon féodal. Les personnages naviguent dans un monde de politique complexe et de traditions strictes.",
       included: [
-        "Règles de base gratuites",
-        "Classes de base",
-        "Système de combat"
+        "Japon fantastique",
+        "Samouraïs et clans",
+        "Honneur et loyauté",
+        "Conflits entre clans",
+        "Politique complexe",
+        "Traditions strictes"
       ],
       extensions: [
         {
           id: 69,
-          name: "Pathfinder 2e: Core Rulebook",
-          price: 59.99,
-          type: "Livre complet",
-          image: "/images/pathfinder-core.jpg"
+          name: "Legend of the Five Rings Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/l5r-core.jpg"
+        },
+        {
+          id: 70,
+          name: "Emerald Empire",
+          price: 39.99,
+          type: "Supplément",
+          image: "/images/emerald-empire.jpg"
         }
       ],
-      type: 'freemium'
+      image: "/images/l5r.jpg",
+      type: 'paid'
     },
-    // Starfinder (Règles de base)
-    45: {
-      id: 45,
-      name: "Starfinder (Règles de base)",
-      publisher: "Paizo Publishing",
-      price: null,
-      tags: ["Science-fiction", "Liées", "Intermédiaire"],
-      description: "Starfinder Règles de base offre les règles essentielles du système Starfinder en version gratuite. Les joueurs peuvent explorer l'univers de science-fiction de Starfinder, créer des personnages et vivre des aventures spatiales. Un système qui combine science-fiction et fantasy dans un univers riche et détaillé.",
+    32: {
+      id: 32,
+      name: "Pendragon",
+      publisher: "Chaosium",
+      price: 50,
+      tags: ["Historique & Réaliste", "Payant", "Expert"],
+      description: "Pendragon présente la légende arthurienne et la chevalerie. Les personnages vivent des générations de chevaliers dans le monde d'Arthur et de Camelot. L'univers explore les thèmes de l'honneur, de la chevalerie et de la légende arthurienne.",
       included: [
-        "Règles de base gratuites",
-        "Classes spatiales",
-        "Système de vaisseaux"
+        "Légende arthurienne",
+        "Chevalerie",
+        "Générations de chevaliers",
+        "Monde d'Arthur",
+        "Camelot",
+        "Honneur et chevalerie"
       ],
       extensions: [
         {
-          id: 70,
-          name: "Starfinder: Core Rulebook",
-          price: 59.99,
-          type: "Livre complet",
-          image: "/images/starfinder-core.jpg"
+          id: 71,
+          name: "Pendragon Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/pendragon-core.jpg"
+        },
+        {
+          id: 72,
+          name: "The Great Pendragon Campaign",
+          price: 49.99,
+          type: "Aventure",
+          image: "/images/great-pendragon-campaign.jpg"
         }
       ],
-      type: 'freemium'
+      image: "/images/pendragon.jpg",
+      type: 'paid'
+    },
+    33: {
+      id: 33,
+      name: "Ars Magica",
+      publisher: "Atlas Games",
+      price: 55,
+      tags: ["Fantasy", "Payant", "Expert"],
+      description: "Ars Magica présente l'Europe médiévale avec magie hermétique. Les personnages sont des mages dans un monde où la magie est réelle mais secrète. L'univers explore les thèmes de la magie, de l'hermétisme et du Moyen Âge.",
+      included: [
+        "Europe médiévale",
+        "Magie hermétique",
+        "Mages",
+        "Magie réelle",
+        "Secrets",
+        "Moyen Âge"
+      ],
+      extensions: [
+        {
+          id: 73,
+          name: "Ars Magica Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/ars-magica-core.jpg"
+        },
+        {
+          id: 74,
+          name: "Houses of Hermes",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/houses-hermes.jpg"
+        }
+      ],
+      image: "/images/ars-magica.jpg",
+      type: 'paid'
+    },
+    34: {
+      id: 34,
+      name: "RuneQuest",
+      publisher: "Chaosium",
+      price: 45,
+      tags: ["Fantasy", "Payant", "Expert"],
+      description: "RuneQuest présente Glorantha avec dieux et magie runique. L'univers explore un monde riche avec des dieux actifs et une magie basée sur les runes. Les personnages naviguent dans un monde de mythologie et de magie.",
+      included: [
+        "Glorantha",
+        "Dieux actifs",
+        "Magie runique",
+        "Monde riche",
+        "Mythologie",
+        "Magie"
+      ],
+      extensions: [
+        {
+          id: 75,
+          name: "RuneQuest Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/runequest-core.jpg"
+        },
+        {
+          id: 76,
+          name: "Glorantha Sourcebook",
+          price: 39.99,
+          type: "Supplément",
+          image: "/images/glorantha-sourcebook.jpg"
+        }
+      ],
+      image: "/images/runequest.jpg",
+      type: 'paid'
+    },
+    35: {
+      id: 35,
+      name: "GURPS",
+      publisher: "Steve Jackson Games",
+      price: 0,
+      tags: ["Générique", "Libres", "Expert"],
+      description: "GURPS est un système générique pour tous les univers. Le système peut être adapté à n'importe quel genre et univers. L'univers explore la flexibilité et l'adaptabilité du système de jeu.",
+      included: [
+        "Système générique",
+        "Tous les univers",
+        "Adaptabilité",
+        "Flexibilité",
+        "Système de jeu",
+        "Genres variés"
+      ],
+      extensions: [
+        {
+          id: 77,
+          name: "GURPS Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/gurps-core.jpg"
+        },
+        {
+          id: 78,
+          name: "GURPS Fantasy",
+          price: 29.99,
+          type: "Supplément",
+          image: "/images/gurps-fantasy.jpg"
+        }
+      ],
+      image: "/images/gurps.jpg",
+      type: 'free'
+    },
+    36: {
+      id: 36,
+      name: "Savage Worlds",
+      publisher: "Pinnacle Entertainment",
+      price: 30,
+      tags: ["Générique", "Payant", "Intermédiaire"],
+      description: "Savage Worlds est un système rapide pour tous les genres. Le système privilégie la rapidité et l'action. L'univers explore la simplicité et l'efficacité du système de jeu.",
+      included: [
+        "Système rapide",
+        "Tous les genres",
+        "Rapidité",
+        "Action",
+        "Simplicité",
+        "Efficacité"
+      ],
+      extensions: [
+        {
+          id: 79,
+          name: "Savage Worlds Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/savage-worlds-core.jpg"
+        },
+        {
+          id: 80,
+          name: "Savage Worlds Fantasy",
+          price: 24.99,
+          type: "Supplément",
+          image: "/images/savage-worlds-fantasy.jpg"
+        }
+      ],
+      image: "/images/savage-worlds.jpg",
+      type: 'paid'
+    },
+    37: {
+      id: 37,
+      name: "Fate Core",
+      publisher: "Evil Hat Productions",
+      price: 0,
+      tags: ["Générique", "Libres", "Intermédiaire"],
+      description: "Fate Core est un système narratif flexible. Le système privilégie la narration et la flexibilité. L'univers explore la créativité et l'adaptabilité du système de jeu.",
+      included: [
+        "Système narratif",
+        "Flexibilité",
+        "Narration",
+        "Créativité",
+        "Adaptabilité",
+        "Système de jeu"
+      ],
+      extensions: [
+        {
+          id: 81,
+          name: "Fate Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/fate-core-rulebook.jpg"
+        },
+        {
+          id: 82,
+          name: "Fate System Toolkit",
+          price: 24.99,
+          type: "Supplément",
+          image: "/images/fate-system-toolkit.jpg"
+        }
+      ],
+      image: "/images/fate-core.jpg",
+      type: 'free'
+    },
+    38: {
+      id: 38,
+      name: "Paranoia",
+      publisher: "Mongoose Publishing",
+      price: 0,
+      tags: ["Comédie & Parodique", "Libres", "Débutant"],
+      description: "Paranoia présente Alpha Complex dystopique et paranoïaque. L'univers explore l'absurdité et la paranoïa dans un monde dystopique. Les personnages naviguent dans un monde de bureaucratie et de paranoïa.",
+      included: [
+        "Alpha Complex",
+        "Dystopique",
+        "Paranoïaque",
+        "Absurdité",
+        "Paranoïa",
+        "Bureaucratie"
+      ],
+      extensions: [
+        {
+          id: 83,
+          name: "Paranoia Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/paranoia-core.jpg"
+        },
+        {
+          id: 84,
+          name: "Paranoia: Red Clearance",
+          price: 29.99,
+          type: "Supplément",
+          image: "/images/paranoia-red-clearance.jpg"
+        }
+      ],
+      image: "/images/paranoia.jpg",
+      type: 'free'
+    },
+    39: {
+      id: 39,
+      name: "Toon",
+      publisher: "Steve Jackson Games",
+      price: 25,
+      tags: ["Comédie & Parodique", "Payant", "Débutant"],
+      description: "Toon présente un univers cartoon et comique. L'univers explore l'humour et la comédie dans un monde cartoon. Les personnages naviguent dans un monde de gags et de comédie.",
+      included: [
+        "Univers cartoon",
+        "Comique",
+        "Humour",
+        "Comédie",
+        "Monde cartoon",
+        "Gags"
+      ],
+      extensions: [
+        {
+          id: 85,
+          name: "Toon Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/toon-core.jpg"
+        },
+        {
+          id: 86,
+          name: "Tooniversal Tour Guide",
+          price: 24.99,
+          type: "Supplément",
+          image: "/images/tooniversal-tour-guide.jpg"
+        }
+      ],
+      image: "/images/toon.jpg",
+      type: 'paid'
+    },
+    40: {
+      id: 40,
+      name: "Mythras",
+      publisher: "The Design Mechanism",
+      price: 40,
+      tags: ["Fantasy", "Payant", "Expert"],
+      description: "Mythras présente un fantasy réaliste et détaillé. L'univers explore le réalisme et le détail dans un monde fantasy. Les personnages naviguent dans un monde de réalisme et de détail.",
+      included: [
+        "Fantasy réaliste",
+        "Détaillé",
+        "Réalisme",
+        "Détail",
+        "Monde fantasy",
+        "Réalisme"
+      ],
+      extensions: [
+        {
+          id: 87,
+          name: "Mythras Core Rulebook",
+          price: 0,
+          type: "Guide",
+          image: "/images/mythras-core.jpg"
+        },
+        {
+          id: 88,
+          name: "Mythras Companion",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/mythras-companion.jpg"
+        }
+      ],
+      image: "/images/mythras.jpg",
+      type: 'paid'
+    },
+    
+    // Univers connus
+    'known-1': {
+      id: 'known-1',
+      name: "Forgotten Realms",
+      publisher: "Wizards of the Coast",
+      price: 0,
+      tags: ["Fantasy", "Libres", "Débutant"],
+      description: "Forgotten Realms est l'univers fantasy le plus célèbre et le plus développé de Dungeons & Dragons. Centré sur le continent de Faerûn, il offre un monde riche et détaillé avec des centaines de lieux, personnages et histoires. Des villes légendaires comme Waterdeep et Baldur's Gate aux régions sauvages comme la Forêt de Cormyr, Forgotten Realms propose un cadre épique pour toutes sortes d'aventures fantasy.",
+      included: [
+        "Carte de Faerûn",
+        "Guide des royaumes",
+        "Personnages légendaires",
+        "Organisations et guildes"
+      ],
+      extensions: [
+        {
+          id: 101,
+          name: "Waterdeep: Dragon Heist",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/waterdeep-dragon-heist.jpg"
+        },
+        {
+          id: 102,
+          name: "Sword Coast Adventurer's Guide",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/sword-coast-guide.jpg"
+        },
+        {
+          id: 103,
+          name: "Tasha's Cauldron of Everything",
+          price: 49.99,
+          type: "Supplément",
+          image: "/images/tashas-cauldron.jpg"
+        }
+      ],
+      image: "/images/forgotten-realms.jpg",
+      type: 'owned'
+    },
+    'known-2': {
+      id: 'known-2',
+      name: "Star Wars",
+      publisher: "Fantasy Flight Games",
+      price: 0,
+      tags: ["Science-fiction", "Libres", "Débutant"],
+      description: "La galaxie lointaine de Star Wars offre un univers riche pour des aventures d'exploration, d'espionnage et d'héroïsme. De Coruscant aux confins de l'espace, l'univers Star Wars propose des planètes variées, des espèces multiples et des conflits épiques entre la lumière et les ténèbres.",
+      included: [
+        "Galaxie explorable",
+        "Espèces multiples",
+        "Technologies avancées",
+        "Force et Jedi"
+      ],
+      extensions: [
+        {
+          id: 104,
+          name: "Edge of the Empire",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/edge-empire.jpg"
+        },
+        {
+          id: 105,
+          name: "Age of Rebellion",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/age-rebellion.jpg"
+        },
+        {
+          id: 106,
+          name: "Force and Destiny",
+          price: 29.99,
+          type: "Aventure",
+          image: "/images/force-destiny.jpg"
+        }
+      ],
+      image: "/images/star-wars.jpg",
+      type: 'owned'
+    },
+    'known-3': {
+      id: 'known-3',
+      name: "World of Darkness",
+      publisher: "White Wolf",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Intermédiaire"],
+      description: "Le Monde des Ténèbres présente un monde moderne sombre où vampires, loups-garous et autres créatures surnaturelles vivent dans l'ombre. L'univers explore les thèmes de la corruption, de la survie et de la lutte contre la nature bestiale.",
+      included: [
+        "Monde moderne sombre",
+        "Créatures surnaturelles",
+        "Sociétés secrètes",
+        "Horreur urbaine"
+      ],
+      extensions: [
+        {
+          id: 107,
+          name: "World of Darkness Core Rulebook",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/world-darkness-core.jpg"
+        },
+        {
+          id: 108,
+          name: "Vampire: The Masquerade",
+          price: 34.99,
+          type: "Supplément",
+          image: "/images/vampire-masquerade.jpg"
+        }
+      ],
+      image: "/images/world-darkness.jpg",
+      type: 'owned'
+    },
+    'known-4': {
+      id: 'known-4',
+      name: "Cthulhu Mythos",
+      publisher: "Chaosium",
+      price: 0,
+      tags: ["Horreur & Mystère", "Libres", "Expert"],
+      description: "L'univers de Cthulhu explore l'horreur cosmique avec les Grands Anciens et les mystères indicibles. Les investigateurs découvrent des vérités terrifiantes sur la nature de la réalité et l'insignifiance de l'humanité face aux forces cosmiques.",
+      included: [
+        "Grands Anciens",
+        "Horreur cosmique",
+        "Investigation",
+        "Mystères indicibles"
+      ],
+      extensions: [
+        {
+          id: 109,
+          name: "Call of Cthulhu Core Rulebook",
+          price: 49.99,
+          type: "Guide",
+          image: "/images/call-cthulhu-core.jpg"
+        },
+        {
+          id: 110,
+          name: "Masks of Nyarlathotep",
+          price: 59.99,
+          type: "Aventure",
+          image: "/images/masks-nyarlathotep.jpg"
+        }
+      ],
+      image: "/images/cthulhu-mythos.jpg",
+      type: 'owned'
     }
-  };
-
-  useEffect(() => {
-    const data = universeData[id];
-    if (data) {
-      setUniverse(data);
-    }
-  }, [id]);
-
-  const handleExtensionClick = (extension) => {
-    // Toggle de la sélection de l'extension
-    handleExtensionToggle(extension.id);
   };
 
   const handleExtensionToggle = (extensionId) => {
@@ -1434,6 +1628,10 @@ const UniverseDetails = () => {
     );
   };
 
+  const handleExtensionClick = (extension) => {
+    handleExtensionToggle(extension.id);
+  };
+
   const calculateTotal = () => {
     if (!universe) return 0;
     // Pour les éléments possédés, le prix de base est 0
@@ -1442,14 +1640,19 @@ const UniverseDetails = () => {
       const extension = universe.extensions.find(ext => ext.id === extId);
       return total + (extension ? extension.price : 0);
     }, 0);
-    return Math.round((basePrice + extensionsPrice) * 100) / 100; // Arrondir à 2 décimales
+    return Math.round((basePrice + extensionsPrice) * 100) / 100; // ✅ Arrondi à 2 décimales
   };
 
   const handleUseUniverse = () => {
     // Stocker l'univers sélectionné et retourner à la création de campagne
-    const total = calculateTotal();
     const selectedData = {
-      universe: universe,
+      id: universe.id,
+      name: universe.name,
+      publisher: universe.publisher,
+      price: universe.price,
+      type: universe.type,
+      image: universe.image,
+      description: universe.description,
       totalPrice: total,
       extensions: selectedExtensions.map(extId => 
         universe.extensions.find(ext => ext.id === extId)
@@ -1459,10 +1662,20 @@ const UniverseDetails = () => {
     navigate('/campaigns/create');
   };
 
+  useEffect(() => {
+    const data = universeData[id];
+    if (data) {
+      setUniverse(data);
+    }
+  }, [id]);
+
   if (!universe) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Chargement...</div>
+      <div className="min-h-screen bg-primary-blue">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-light text-xl">Univers non trouvé</div>
+        </div>
       </div>
     );
   }
@@ -1472,36 +1685,36 @@ const UniverseDetails = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      {/* Header unifié */}
-      <Header 
-        showBackButton={true}
-        onBackClick={() => navigate('/campaigns/create/universe')}
-        className="bg-primary-blue/90"
-      />
-
+      <Header />
+      
+      <div className="max-w-7xl mx-auto px-6 pb-8 pt-12">
       {/* Breadcrumb */}
-      <div className="px-6 py-4">
-        <nav className="flex items-center space-x-2 text-light/70">
-          <button onClick={() => navigate('/campaigns')} className="hover:text-light transition-colors">
+        <div className="flex items-center space-x-2 text-light/80 mb-6">
+          <button 
+            onClick={() => navigate('/campaigns')}
+            className="hover:text-light transition-colors"
+          >
             Mes campagnes
           </button>
           <span>›</span>
-          <button onClick={() => navigate('/campaigns/create')} className="hover:text-light transition-colors">
+          <button 
+            onClick={() => navigate('/campaigns/create')}
+            className="hover:text-light transition-colors"
+          >
             Créer une campagne
           </button>
           <span>›</span>
-          <button onClick={() => navigate('/campaigns/create/universe')} className="hover:text-light transition-colors">
+          <button 
+            onClick={() => navigate('/campaigns/create/universe')}
+            className="hover:text-light transition-colors"
+          >
             Choix d'univers
           </button>
           <span>›</span>
           <span className="text-light">Détails</span>
-        </nav>
       </div>
 
-        {/* Layout principal selon wireframe */}
-        <div className="max-w-7xl mx-auto px-6 pb-8 pt-12">
-        
-        {/* Titre et éditeur au-dessus de l'image */}
+        {/* Titre et éditeur */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-light mb-2 eagle-lake-font">
             {universe.name}
@@ -1510,29 +1723,24 @@ const UniverseDetails = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          
           {/* Colonne gauche - Image */}
           <div>
             <div className="aspect-[3/4] bg-light/10 rounded-lg flex items-center justify-center border border-light/20 p-4">
-              <div className="w-full h-full bg-light/20 rounded-lg border border-white flex items-center justify-center">
-                <div className="text-light/40 text-8xl font-bold opacity-50">IMG</div>
+              <div className="border border-white w-full h-full bg-cover bg-center rounded" 
+                   style={{ backgroundImage: `url(${universe.image})` }}>
               </div>
             </div>
           </div>
 
           {/* Colonne droite - Contenu */}
           <div className="flex flex-col justify-start">
-
             {/* Section Présentation avec tags */}
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-4">
                 <h3 className="text-2xl font-bold text-light eagle-lake-font">Présentation</h3>
                 <div className="flex flex-wrap gap-2">
                   {universe.tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="bg-golden text-dark px-3 py-1 rounded-full text-sm font-medium"
-                    >
+                    <span key={index} className="bg-golden text-dark px-3 py-1 rounded-full text-sm font-medium">
                       {tag}
                     </span>
                   ))}
@@ -1541,7 +1749,7 @@ const UniverseDetails = () => {
               <p className="text-light/90 leading-relaxed text-sm">{universe.description}</p>
             </div>
 
-            {/* Section Compris */}
+            {/* Section Contenu inclus */}
             <div className="mb-8">
               <h4 className="text-xl font-bold text-light eagle-lake-font mb-4">Compris</h4>
               <ul className="space-y-2">
@@ -1554,19 +1762,30 @@ const UniverseDetails = () => {
               </ul>
             </div>
 
-            {/* Section Achats facultatifs */}
+            {/* Section Caractéristiques de l'univers */}
+            {universe.features && (
+              <div className="mb-8">
+                <h4 className="text-xl font-bold text-light eagle-lake-font mb-4">Caractéristiques de l'univers</h4>
+                <ul className="space-y-2">
+                  {universe.features.map((feature, index) => (
+                    <li key={index} className="text-light/80 flex items-start text-sm">
+                      <span className="text-golden mr-2">•</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Section Suppléments facultatifs */}
+            {universe.extensions && universe.extensions.length > 0 && (
             <div className="mb-8">
               <h4 className="text-xl font-bold text-light eagle-lake-font mb-4">Achats facultatifs</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {universe.extensions.map(extension => {
                   const isSelected = selectedExtensions.includes(extension.id);
                   return (
-                    <div 
-                      key={extension.id}
-                      onClick={() => handleExtensionClick(extension)}
-                      className={`cursor-pointer rounded-lg overflow-hidden transition-all duration-300 relative ${isSelected ? 'ring-2 ring-golden bg-golden/10' : 'hover:ring-1 hover:ring-light/30'}`}
-                      style={{ backgroundColor: isSelected ? 'rgba(233, 189, 114, 0.1)' : 'rgba(13, 21, 26, 0.7)' }}
-                    >
+                      <div key={extension.id} onClick={() => handleExtensionClick(extension)} className={`cursor-pointer rounded-lg overflow-hidden transition-all duration-300 relative ${isSelected ? 'ring-2 ring-golden bg-golden/10' : 'hover:ring-1 hover:ring-light/30'}`} style={{ backgroundColor: isSelected ? 'rgba(233, 189, 114, 0.1)' : 'rgba(13, 21, 26, 0.7)' }}>
                       {/* Indicateur de sélection */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 z-10">
@@ -1577,8 +1796,8 @@ const UniverseDetails = () => {
                       )}
                       
                       <div className="aspect-[4/3] bg-light/20 flex items-center justify-center p-3">
-                        <div className="w-full h-full bg-light/30 rounded-lg border border-white flex items-center justify-center">
-                          <div className="text-light/40 text-4xl font-bold opacity-50">IMG</div>
+                          <div className="border border-white w-full h-full bg-cover bg-center rounded" 
+                               style={{ backgroundImage: `url(${extension.image})` }}>
                         </div>
                       </div>
                       <div className="p-4">
@@ -1597,38 +1816,20 @@ const UniverseDetails = () => {
                 })}
               </div>
             </div>
+            )}
 
-            {/* Prix et bouton - CALCUL DYNAMIQUE */}
+            {/* Prix et bouton */}
             <div className="flex items-center justify-between">
               <div className="text-4xl font-bold text-light">
                 {universe.type === 'owned' ? (
                    selectedExtensions.length > 0 ? `${total} €` : "Déjà possédé"
-                 ) :
-                 universe.type === 'freemium' ? (
-                   selectedExtensions.length > 0 ? `${total} €` : "Gratuit avec achats facultatifs"
-                 ) : 
-                 universe.type === 'free' ? (
-                   selectedExtensions.length > 0 ? `${total} €` : "Gratuit"
-                 ) : (
-                   selectedExtensions.length > 0 ? `${total} €` : `${Math.round(universe.price * 100) / 100} €`
-                 )}
-                {selectedExtensions.length > 0 && (
-                  <div className="text-lg text-light/70 mt-1">
-                    {universe.type === 'owned' ? 
-                      `${total}€ achats` :
-                      universe.type === 'freemium' ? 
-                        `Gratuit + ${total}€ achats` : 
-                        universe.type === 'free' ? 
-                          `${total}€ achats` : 
-                          `${Math.round(universe.price * 100) / 100}€ base + ${Math.round((total - universe.price) * 100) / 100}€ achats`
-                    }
-                  </div>
+                ) : (
+                  total > 0 ? `${total} €` : "Gratuit"
                 )}
-              </div>
-              
+                  </div>
               <button
                 onClick={handleUseUniverse}
-                className="bg-golden text-dark px-6 py-3 rounded-lg font-bold text-lg hover:bg-golden/80 transition-colors"
+                className="bg-golden hover:bg-golden/80 text-dark-blue px-8 py-3 rounded-lg font-bold transition-colors"
               >
                 Utiliser cet univers
               </button>
