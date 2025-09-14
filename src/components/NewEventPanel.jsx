@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TemplateTab from './TemplateTab';
 import { 
   ChevronDown, 
@@ -7,7 +7,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const NewEventPanel = ({ onBack, categories }) => {
+const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = null }) => {
   const [activeTab, setActiveTab] = useState('templates');
   const [isOpen, setIsOpen] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -16,6 +16,22 @@ const NewEventPanel = ({ onBack, categories }) => {
   const [eventLocation, setEventLocation] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [newTag, setNewTag] = useState('');
+  const [eventImage, setEventImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  // Initialiser les champs si on est en mode modification
+  useEffect(() => {
+    if (templateToEdit) {
+      setSelectedCategory(templateToEdit.category || '');
+      setEventTitle(templateToEdit.name || '');
+      setEventDescription(templateToEdit.description || '');
+      setEventLocation(templateToEdit.location || '');
+      setSelectedTags(templateToEdit.tags || []);
+      if (templateToEdit.imagePreview) {
+        setImagePreview(templateToEdit.imagePreview);
+      }
+    }
+  }, [templateToEdit]);
 
   // Tags prédéfinis
   const predefinedTags = [
@@ -48,19 +64,45 @@ const NewEventPanel = ({ onBack, categories }) => {
     }
   };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setEventImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setEventImage(null);
+    setImagePreview(null);
+  };
+
   const handleCreateEvent = () => {
     const eventData = {
-      id: `event-${Date.now()}`,
+      id: templateToEdit ? templateToEdit.id : `event-${Date.now()}`,
       title: eventTitle,
       description: eventDescription,
       category: selectedCategory,
       location: eventLocation,
       tags: selectedTags,
-      createdAt: new Date().toISOString()
+      image: eventImage,
+      imagePreview: imagePreview,
+      createdAt: templateToEdit ? templateToEdit.createdAt : new Date().toISOString(),
+      isEdit: !!templateToEdit
     };
     
-    console.log('Nouvel évènement créé:', eventData);
-    // TODO: Sauvegarder l'évènement et rediriger
+    console.log(templateToEdit ? 'Évènement modifié:' : 'Nouvel évènement créé:', eventData);
+    
+    // Appeler la fonction pour ajouter l'évènement à la page templates
+    if (onEventCreated) {
+      onEventCreated(eventData);
+    }
+    
+    // Retourner à la page templates
     onBack();
   };
 
@@ -115,143 +157,195 @@ const NewEventPanel = ({ onBack, categories }) => {
   ];
 
   const newEventContent = (
-        <div className="h-full flex flex-col pl-20 pt-6 pr-6">
+        <div className="h-full flex flex-col pt-6 pr-6">
           {/* Titre avec bouton retour */}
-          <div className="flex items-center gap-3 mb-6 pl-16">
+          <div className="flex items-center gap-3 mb-6">
             <button
               onClick={onBack}
               className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
             >
               <ArrowLeft size={16} className="text-[#552E1A]" />
             </button>
-            <h1 className="text-black text-2xl font-bold eagle-lake-font">Nouvel évènement</h1>
+            <h1 className="text-black text-2xl font-bold eagle-lake-font">
+              {templateToEdit ? 'Modifier l\'évènement' : 'Nouvel évènement'}
+            </h1>
           </div>
 
           {/* Formulaire */}
-          <div className="flex-1 overflow-y-auto pl-16 pb-12 max-h-[calc(100vh-300px)]">
-            <div className="max-w-2xl space-y-6">
-              
-              {/* Champ catégorie */}
-              <div>
-                <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                  Catégorie
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
-                  >
-                    <option value="">Sélectionner une catégorie...</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <ChevronDown size={20} className="text-[#552E1A]" />
+          <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)]">
+            <div className="max-w-5xl">
+              {/* Section principale avec image à droite */}
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                {/* Colonne gauche - Champs de saisie */}
+                <div className="space-y-6">
+                  {/* Champ catégorie */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Catégorie
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">Sélectionner une catégorie...</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <ChevronDown size={20} className="text-[#552E1A]" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Champ titre */}
-              <div>
-                <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                  Titre de l'évènement
-                </label>
-                <input
-                  type="text"
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  placeholder="Titre de l'évènement"
-                  className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
-                />
-              </div>
+                  {/* Champ titre */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Titre de l'évènement
+                    </label>
+                    <input
+                      type="text"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      placeholder="Titre de l'évènement"
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
 
-              {/* Section Tags */}
-              <div>
-                <label className="block text-[#552E1A] font-medium mb-3 eagle-lake-font">
-                  Tags
-                </label>
-                
-                {/* Tags existants */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {predefinedTags.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => handleTagSelect(tag)}
-                      className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1`}
-                    >
-                      <Tag size={12} />
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Tags sélectionnés */}
-                {selectedTags.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-[#552E1A]/70 text-sm mb-2">Tags sélectionnés :</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTags.map(tag => (
-                        <div
+                  {/* Section Tags */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-3 eagle-lake-font">
+                      Tags
+                    </label>
+                    
+                    {/* Tags existants */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {predefinedTags.map(tag => (
+                        <button
                           key={tag.id}
-                          className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2`}
+                          onClick={() => handleTagSelect(tag)}
+                          className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1`}
                         >
                           <Tag size={12} />
                           {tag.name}
-                          <button
-                            onClick={() => handleTagRemove(tag.id)}
-                            className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
+                        </button>
                       ))}
                     </div>
-                  </div>
-                )}
 
-                {/* Ajouter un tag personnalisé */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Ajouter un tag personnalisé..."
-                    className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddCustomTag();
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={handleAddCustomTag}
-                    className="bg-[#552E1A] text-white px-4 py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
-                  >
-                    Ajouter
-                  </button>
+                    {/* Tags sélectionnés */}
+                    {selectedTags.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-[#552E1A]/70 text-sm mb-2">Tags sélectionnés :</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedTags.map(tag => (
+                            <div
+                              key={tag.id}
+                              className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2`}
+                            >
+                              <Tag size={12} />
+                              {tag.name}
+                              <button
+                                onClick={() => handleTagRemove(tag.id)}
+                                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ajouter un tag personnalisé */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Ajouter un tag personnalisé..."
+                        className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddCustomTag();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleAddCustomTag}
+                        className="bg-[#552E1A] text-white px-4 py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Champ lieu */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Lieu
+                    </label>
+                    <input
+                      type="text"
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      placeholder="Lieu..."
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+                </div>
+
+                {/* Colonne droite - Upload d'image */}
+                <div>
+                  <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                    Image de l'évènement
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer block w-full h-48 bg-[#F5F1E8] border-2 border-dashed border-[#552E1A]/30 rounded-lg flex items-center justify-center hover:border-[#552E1A]/50 transition-colors"
+                    >
+                      {imagePreview ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage();
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <div className="text-[#552E1A]/60 text-sm mb-1">Cliquez pour ajouter une image</div>
+                          <div className="text-[#552E1A]/40 text-xs">PNG, JPG, GIF jusqu'à 10MB</div>
+                        </div>
+                      )}
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* Champ lieu */}
-              <div>
-                <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                  Lieu
-                </label>
-                <input
-                  type="text"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                  placeholder="Lieu..."
-                  className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
-                />
-              </div>
-
               {/* Champ description */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
                   Description
                 </label>
@@ -265,7 +359,7 @@ const NewEventPanel = ({ onBack, categories }) => {
               </div>
 
               {/* Boutons d'action */}
-              <div className="flex justify-end gap-4 pt-4">
+              <div className="flex justify-end gap-4">
                 <button
                   onClick={handleCancel}
                   className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
@@ -277,7 +371,7 @@ const NewEventPanel = ({ onBack, categories }) => {
                   disabled={!eventTitle.trim() || !selectedCategory}
                   className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed eagle-lake-font"
                 >
-                  Créer l'évènement
+                  {templateToEdit ? 'Modifier l\'évènement' : 'Créer l\'évènement'}
                 </button>
               </div>
             </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import TemplateTab from './TemplateTab';
 import NewEventPanel from './NewEventPanel';
+import ConsultationTemplatePanel from './ConsultationTemplatePanel';
 import { 
   ChevronDown, 
   ChevronUp, 
+  ChevronRight,
   Search, 
   Filter, 
   ArrowUpDown, 
@@ -17,7 +19,8 @@ import {
 const TemplatePanel = () => {
   const [activeTab, setActiveTab] = useState('templates');
   const [isOpen, setIsOpen] = useState(true);
-  const [currentView, setCurrentView] = useState('templates'); // 'templates' ou 'new-event'
+  const [currentView, setCurrentView] = useState('templates'); // 'templates', 'new-event', ou 'consultation'
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   
   // États pour les sections collapsibles
   const [expandedSections, setExpandedSections] = useState(() => {
@@ -225,13 +228,66 @@ const TemplatePanel = () => {
   };
 
   const editTemplate = (templateId) => {
-    // Redirection vers la page "Consultation"
-    console.log(`Éditer le template: ${templateId}`);
-    // TODO: Implémenter la navigation vers la page de consultation
+    // Trouver le template et naviguer vers la consultation
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      handleConsultTemplate(template);
+    }
   };
 
   const handleBackToTemplates = () => {
     setCurrentView('templates');
+    setSelectedTemplate(null);
+  };
+
+  const handleConsultTemplate = (template) => {
+    setSelectedTemplate(template);
+    setCurrentView('consultation');
+  };
+
+  const handleEditTemplate = (template) => {
+    // Envoyer vers la page "Nouvel évènement" en mode modification
+    console.log('Modification du template:', template);
+    setSelectedTemplate(template);
+    setCurrentView('new-event');
+  };
+
+  const handleEventCreated = (eventData) => {
+    if (eventData.isEdit) {
+      // Modifier le template existant
+      setTemplates(prev => prev.map(template => 
+        template.id === eventData.id 
+          ? {
+              ...template,
+              name: eventData.title,
+              category: eventData.category,
+              description: eventData.description,
+              location: eventData.location,
+              tags: eventData.tags,
+              image: eventData.image,
+              imagePreview: eventData.imagePreview
+            }
+          : template
+      ));
+    } else {
+      // Ajouter le nouvel évènement à la liste des templates
+      const newTemplate = {
+        id: eventData.id,
+        name: eventData.title,
+        category: eventData.category,
+        description: eventData.description,
+        location: eventData.location,
+        tags: eventData.tags,
+        image: eventData.image,
+        imagePreview: eventData.imagePreview,
+        isEditable: true,
+        isFavorite: false,
+        isArchived: false,
+        createdAt: eventData.createdAt
+      };
+      
+      setTemplates(prev => [...prev, newTemplate]);
+    }
   };
 
   // Fonction pour réinitialiser les données (utile pour le développement)
@@ -281,9 +337,9 @@ const TemplatePanel = () => {
       openImage: '/images/templates/template-tab-open.svg',
       color: 'from-golden to-golden/70',
       content: (
-        <div className="h-full flex flex-col pl-20 pt-8 pr-6">
+        <div className="h-full flex flex-col pt-8 pr-6">
           {/* Barre d'outils - Fixe */}
-          <div className="flex items-center gap-3 mb-6 flex-shrink-0 pl-16">
+          <div className="flex items-center gap-3 mb-6 flex-shrink-0">
             {/* Filtre dropdown */}
             <div className="relative">
               <select 
@@ -360,7 +416,7 @@ const TemplatePanel = () => {
           </div>
 
           {/* Contenu scrollable - Seulement les sections */}
-          <div className="flex-1 space-y-4 overflow-y-auto min-h-0 pl-16 pb-4">
+          <div className="flex-1 space-y-4 overflow-y-auto min-h-0 pb-4">
             {/* Sections dynamiques basées sur les catégories */}
             {categories.map(category => {
               const categoryTemplates = templates.filter(template => 
@@ -419,7 +475,7 @@ const TemplatePanel = () => {
                             e.stopPropagation();
                             createTemplate(category.id);
                           }}
-                          className="bg-golden text-[#552E1A] px-3 py-1 rounded text-sm font-medium hover:bg-golden/80 transition-colors"
+                          className="bg-golden text-[#552E1A] px-4 py-2 rounded text-sm font-medium hover:bg-golden/80 transition-colors"
                         >
                           Créer un template
                         </button>
@@ -478,7 +534,7 @@ const TemplatePanel = () => {
                                 )}
                                 <button 
                                   onClick={() => createTemplate(category.id)}
-                                  className="bg-golden text-[#552E1A] px-3 py-1 rounded text-sm font-medium hover:bg-golden/80 transition-colors"
+                                  className="bg-golden text-[#552E1A] px-4 py-2 rounded text-sm font-medium hover:bg-golden/80 transition-colors"
                                 >
                                   Créer un template
                                 </button>
@@ -499,7 +555,7 @@ const TemplatePanel = () => {
                                             <Star size={14} fill={template.isFavorite ? '#D4AF37' : 'none'} stroke={template.isFavorite ? '#D4AF37' : 'currentColor'} />
                                           </button>
                                           <span 
-                                            className={`text-[#552E1A] break-words whitespace-pre-line max-w-[200px] ${template.isEditable ? 'cursor-pointer hover:text-black transition-colors' : ''}`}
+                                            className={`text-[#552E1A] break-words whitespace-pre-line max-w-[300px] ${template.isEditable ? 'cursor-pointer hover:text-black transition-colors' : ''}`}
                                             onClick={() => template.isEditable && editTemplate(template.id)}
                                           >
                                             {template.name}
@@ -547,7 +603,7 @@ const TemplatePanel = () => {
                                       <Star size={14} fill={template.isFavorite ? '#D4AF37' : 'none'} stroke={template.isFavorite ? '#D4AF37' : 'currentColor'} />
                                     </button>
                                     <span 
-                                      className={`text-[#552E1A] break-words whitespace-pre-line max-w-[200px] ${template.isEditable ? 'cursor-pointer hover:text-black transition-colors' : ''}`}
+                                      className={`text-[#552E1A] break-words whitespace-pre-line max-w-[300px] ${template.isEditable ? 'cursor-pointer hover:text-black transition-colors' : ''}`}
                                       onClick={() => template.isEditable && editTemplate(template.id)}
                                     >
                                       {template.name}
@@ -616,7 +672,448 @@ const TemplatePanel = () => {
       closedImage: '/images/templates/quest-tab-closed.svg',
       openImage: '/images/templates/quest-tab-open.svg',
       color: 'from-blue-500 to-blue-600',
-      content: <div className="text-center text-blue-400/60">Contenu à définir</div>
+      content: (() => {
+        // États locaux pour la page Quêtes
+        const [questShowSearchInput, setQuestShowSearchInput] = React.useState(false);
+        const [questSearchTerm, setQuestSearchTerm] = React.useState('');
+        const [questSelectedFilter, setQuestSelectedFilter] = React.useState('aucun');
+        const [questSelectedSort, setQuestSelectedSort] = React.useState('aucun');
+        
+        // États pour l'édition des quêtes
+        const [editingQuestTitle, setEditingQuestTitle] = React.useState(null);
+        const [editingQuestCount, setEditingQuestCount] = React.useState(null);
+        const [questTitles, setQuestTitles] = React.useState({
+          'histoire-principale': 'Histoire principale',
+          'liberer-otages': 'Libérer les otages alliés'
+        });
+        const [questCounts, setQuestCounts] = React.useState({
+          'chasseurs': { current: 4, total: 4 },
+          'mages': { current: 6, total: 6 }
+        });
+        
+        // États pour les dropdowns
+        const [expandedQuests, setExpandedQuests] = React.useState({
+          'histoire-principale': true,
+          'liberer-otages': true
+        });
+        
+        // Calcul du pourcentage de la quête principale basé sur les sous-quêtes
+        const calculateMainQuestProgress = () => {
+          const totalSubQuests = Object.keys(questCounts).length;
+          const completedSubQuests = Object.values(questCounts).filter(count => count.current >= count.total).length;
+          return Math.round((completedSubQuests / totalSubQuests) * 100);
+        };
+        
+        // Fonction pour obtenir la couleur basée sur le statut
+        const getQuestStatusColor = (current, total) => {
+          if (current >= total) return 'green';
+          if (current > 0) return 'yellow';
+          return 'red';
+        };
+        
+        // Fonction pour obtenir la couleur de la barre de progression
+        const getProgressBarColor = (current, total) => {
+          const status = getQuestStatusColor(current, total);
+          switch (status) {
+            case 'green': return 'bg-green-500';
+            case 'yellow': return 'bg-yellow-500';
+            case 'red': return 'bg-red-500';
+            default: return 'bg-golden';
+          }
+        };
+        
+        // Fonction pour toggle les dropdowns
+        const toggleQuestDropdown = (questId) => {
+          setExpandedQuests(prev => ({
+            ...prev,
+            [questId]: !prev[questId]
+          }));
+        };
+        
+        return (
+          <div className="h-full flex flex-col">
+            {/* Barre d'outils */}
+            <div className="flex items-center gap-3 p-4 border-b border-[#552E1A]/20">
+              {/* Filtre dropdown */}
+              <div className="relative">
+                <select 
+                  value={questSelectedFilter}
+                  onChange={(e) => setQuestSelectedFilter(e.target.value)}
+                  className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+                >
+                  <option value="aucun">Filtrer par Aucun</option>
+                  <option value="en-cours">En cours</option>
+                  <option value="terminees">Terminées</option>
+                  <option value="non-commencees">Non commencées</option>
+                  <option value="principales">Principales</option>
+                  <option value="secondaires">Secondaires</option>
+                  <option value="urgentes">Urgentes</option>
+                  <option value="favoris">Favoris</option>
+                </select>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown size={16} className="text-white" />
+                </div>
+              </div>
+              
+              {/* Tri dropdown */}
+              <div className="relative">
+                <select 
+                  value={questSelectedSort}
+                  onChange={(e) => setQuestSelectedSort(e.target.value)}
+                  className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+                >
+                  <option value="aucun">Tri Aucun</option>
+                  <option value="nom-asc">Nom (A-Z)</option>
+                  <option value="nom-desc">Nom (Z-A)</option>
+                  <option value="progression-asc">Progression ↑</option>
+                  <option value="progression-desc">Progression ↓</option>
+                  <option value="recompense-asc">Récompense ↑</option>
+                  <option value="recompense-desc">Récompense ↓</option>
+                  <option value="date-creation">Date création</option>
+                  <option value="priorite">Priorité</option>
+                </select>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown size={16} className="text-white" />
+                </div>
+              </div>
+              
+              {/* Bouton de recherche avec dropdown */}
+              <div className="relative z-10">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setQuestShowSearchInput(!questShowSearchInput);
+                  }}
+                  className="bg-[#552E1A] text-white p-2 rounded-lg border-none hover:bg-[#6B3A2A] transition-colors"
+                >
+                  <Search size={16} />
+                </button>
+                
+                {questShowSearchInput && (
+                  <div className="absolute top-full left-0 mt-2 bg-[#552E1A] rounded-lg p-2 shadow-lg z-20">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={questSearchTerm}
+                        onChange={(e) => setQuestSearchTerm(e.target.value)}
+                        placeholder="Rechercher..."
+                        className="bg-transparent text-white px-2 py-1 text-sm border-none focus:outline-none placeholder-white/70 w-32"
+                        autoFocus
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestShowSearchInput(false);
+                          setQuestSearchTerm('');
+                        }}
+                        className="text-white hover:text-black transition-colors p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          {/* Contenu scrollable */}
+          <div className="flex-1 space-y-4 overflow-y-auto p-4">
+            {/* Quête 1: Histoire principale */}
+            <div className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
+              <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
+                <div className="flex items-center gap-3">
+                  {editingQuestTitle === 'histoire-principale' ? (
+                    <input
+                      type="text"
+                      defaultValue={questTitles['histoire-principale']}
+                      onBlur={(e) => {
+                        setQuestTitles(prev => ({ ...prev, 'histoire-principale': e.target.value }));
+                        setEditingQuestTitle(null);
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          setQuestTitles(prev => ({ ...prev, 'histoire-principale': e.target.value }));
+                          setEditingQuestTitle(null);
+                        }
+                      }}
+                      className="bg-transparent text-[#552E1A] font-semibold eagle-lake-font border-none focus:outline-none text-xl"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3 
+                      className="text-xl font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
+                      onClick={() => setEditingQuestTitle('histoire-principale')}
+                    >
+                      {questTitles['histoire-principale']}
+                    </h3>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#552E1A] font-medium">{calculateMainQuestProgress()}%</span>
+                  <button 
+                    onClick={() => toggleQuestDropdown('histoire-principale')}
+                    className="text-[#552E1A] hover:text-black transition-colors"
+                  >
+                    <ChevronDown 
+                      size={16} 
+                      className={`transform transition-transform ${expandedQuests['histoire-principale'] ? 'rotate-180' : ''}`} 
+                    />
+                  </button>
+                </div>
+              </div>
+              {expandedQuests['histoire-principale'] && (
+                <div className="p-3">
+                  <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
+                    <div className={`h-2 rounded-full ${getProgressBarColor(calculateMainQuestProgress(), 100)}`} style={{width: `${calculateMainQuestProgress()}%`}}></div>
+                  </div>
+
+                  {/* Sous-quête: Libérer les otages alliés */}
+                <div className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5 mt-4">
+                  <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      {editingQuestTitle === 'liberer-otages' ? (
+                        <input
+                          type="text"
+                          defaultValue={questTitles['liberer-otages']}
+                          onBlur={(e) => {
+                            setQuestTitles(prev => ({ ...prev, 'liberer-otages': e.target.value }));
+                            setEditingQuestTitle(null);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              setQuestTitles(prev => ({ ...prev, 'liberer-otages': e.target.value }));
+                              setEditingQuestTitle(null);
+                            }
+                          }}
+                          className="bg-transparent text-[#552E1A] font-semibold eagle-lake-font border-none focus:outline-none text-lg"
+                          autoFocus
+                        />
+                      ) : (
+                        <h4 
+                          className="text-lg font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
+                          onClick={() => setEditingQuestTitle('liberer-otages')}
+                        >
+                          {questTitles['liberer-otages']}
+                        </h4>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#552E1A] font-medium">100%</span>
+                      <button 
+                        onClick={() => toggleQuestDropdown('liberer-otages')}
+                        className="text-[#552E1A] hover:text-black transition-colors"
+                      >
+                        <ChevronDown 
+                          size={16} 
+                          className={`transform transition-transform ${expandedQuests['liberer-otages'] ? 'rotate-180' : ''}`} 
+                        />
+                      </button>
+                      <button className="text-[#552E1A] hover:text-black transition-colors ml-2">
+                        <div className="flex flex-col gap-1">
+                          <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                          <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                          <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                  {expandedQuests['liberer-otages'] && (
+                    <div className="p-3">
+                      <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
+                        <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
+                      </div>
+
+                      {/* Détails développés */}
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="font-medium text-[#552E1A]">Commanditaire : </span>
+                        <span className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Nom du personnage</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-[#552E1A]">Récompense : </span>
+                        <span className="text-[#552E1A]/80">Corne d'abondance ; 1300 PO ; 4000 XP</span>
+                      </div>
+                      <div className="text-[#552E1A]/80 leading-relaxed">
+                        Les Bastions de M'ror sont attaqués par des Duergars à la solde d'Orcus. Pour déstabiliser l'armée naine, les Duergars ont pris en otage des alliés sur d'autres fronts. Il faut récupérer les otages pour permettre la défense de la cité sans craindre d'incident diplomatique en cas de dégât collatéral.
+                      </div>
+                    </div>
+
+                    {/* Sous-quêtes/Objectifs */}
+                    <div className="mt-6 space-y-3">
+                      {/* Libérer les chasseurs de la forêt écarlate */}
+                      <div className={`flex items-center justify-between rounded-lg p-3 border transition-colors ${
+                        getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
+                          ? 'bg-green-50 border-green-200 hover:bg-green-100' 
+                          : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
+                          ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+                          : 'bg-red-50 border-red-200 hover:bg-red-100'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
+                              ? 'bg-green-500' 
+                              : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                          }`}></div>
+                          <span className="text-[#552E1A] font-medium">Libérer les chasseurs de la forêt écarlate</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {editingQuestCount === 'chasseurs' ? (
+                            <input
+                              type="text"
+                              defaultValue={`${questCounts.chasseurs.current} / ${questCounts.chasseurs.total}`}
+                              onBlur={(e) => {
+                                const value = e.target.value;
+                                const match = value.match(/(\d+)\s*\/\s*(\d+)/);
+                                if (match) {
+                                  setQuestCounts(prev => ({ 
+                                    ...prev, 
+                                    chasseurs: { current: parseInt(match[1]), total: parseInt(match[2]) }
+                                  }));
+                                }
+                                setEditingQuestCount(null);
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const value = e.target.value;
+                                  const match = value.match(/(\d+)\s*\/\s*(\d+)/);
+                                  if (match) {
+                                    setQuestCounts(prev => ({ 
+                                      ...prev, 
+                                      chasseurs: { current: parseInt(match[1]), total: parseInt(match[2]) }
+                                    }));
+                                  }
+                                  setEditingQuestCount(null);
+                                }
+                              }}
+                              className="bg-transparent text-center border border-[#552E1A]/30 rounded px-2 py-1 text-sm font-medium min-w-[60px]"
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className={`font-medium whitespace-nowrap cursor-pointer hover:opacity-70 transition-opacity ${
+                                getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
+                                  ? 'text-green-600' 
+                                  : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
+                                  ? 'text-yellow-600'
+                                  : 'text-red-600'
+                              }`}
+                              onClick={() => setEditingQuestCount('chasseurs')}
+                            >
+                              {questCounts.chasseurs.current} / {questCounts.chasseurs.total}
+                            </span>
+                          )}
+                          <button className={`hover:opacity-70 transition-opacity ${
+                            getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
+                              ? 'text-green-600' 
+                              : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
+                              ? 'text-yellow-600'
+                              : 'text-red-600'
+                          }`}>
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sauver les mages d'Arkanix */}
+                      <div className={`flex items-center justify-between rounded-lg p-3 border transition-colors ${
+                        getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
+                          ? 'bg-green-50 border-green-200 hover:bg-green-100' 
+                          : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
+                          ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+                          : 'bg-red-50 border-red-200 hover:bg-red-100'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
+                              ? 'bg-green-500' 
+                              : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                          }`}></div>
+                          <span className="text-[#552E1A] font-medium">Sauver les mages d'Arkanix</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {editingQuestCount === 'mages' ? (
+                            <input
+                              type="text"
+                              defaultValue={`${questCounts.mages.current} / ${questCounts.mages.total}`}
+                              onBlur={(e) => {
+                                const value = e.target.value;
+                                const match = value.match(/(\d+)\s*\/\s*(\d+)/);
+                                if (match) {
+                                  setQuestCounts(prev => ({ 
+                                    ...prev, 
+                                    mages: { current: parseInt(match[1]), total: parseInt(match[2]) }
+                                  }));
+                                }
+                                setEditingQuestCount(null);
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const value = e.target.value;
+                                  const match = value.match(/(\d+)\s*\/\s*(\d+)/);
+                                  if (match) {
+                                    setQuestCounts(prev => ({ 
+                                      ...prev, 
+                                      mages: { current: parseInt(match[1]), total: parseInt(match[2]) }
+                                    }));
+                                  }
+                                  setEditingQuestCount(null);
+                                }
+                              }}
+                              className="bg-transparent text-center border border-[#552E1A]/30 rounded px-2 py-1 text-sm font-medium min-w-[60px]"
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className={`font-medium whitespace-nowrap cursor-pointer hover:opacity-70 transition-opacity ${
+                                getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
+                                  ? 'text-green-600' 
+                                  : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
+                                  ? 'text-yellow-600'
+                                  : 'text-red-600'
+                              }`}
+                              onClick={() => setEditingQuestCount('mages')}
+                            >
+                              {questCounts.mages.current} / {questCounts.mages.total}
+                            </span>
+                          )}
+                          <button className={`hover:opacity-70 transition-opacity ${
+                            getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
+                              ? 'text-green-600' 
+                              : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
+                              ? 'text-yellow-600'
+                              : 'text-red-600'
+                          }`}>
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bouton fixe Nouvelle catégorie - Position fixe en bas à droite */}
+          <div className="fixed bottom-12 right-6 z-50">
+            <button 
+              onClick={() => console.log('Ajouter nouvelle catégorie de quête')}
+              className="bg-golden text-[#552E1A] py-3 px-4 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 eagle-lake-font shadow-lg"
+            >
+              <Plus size={16} />
+              Nouvelle catégorie
+            </button>
+          </div>
+        </div>
+        );
+      })()
     },
     {
       id: 'characters',
@@ -646,6 +1143,21 @@ const TemplatePanel = () => {
       <NewEventPanel 
         onBack={handleBackToTemplates}
         categories={categories}
+        onEventCreated={handleEventCreated}
+        templateToEdit={selectedTemplate}
+      />
+    );
+  }
+
+  // Si on est en vue "consultation", afficher le composant ConsultationTemplatePanel
+  if (currentView === 'consultation' && selectedTemplate) {
+    return (
+      <ConsultationTemplatePanel 
+        template={selectedTemplate}
+        onBack={handleBackToTemplates}
+        onEdit={handleEditTemplate}
+        onCopyLink={() => copyTemplateLink(selectedTemplate.id)}
+        tabs={tabs}
       />
     );
   }

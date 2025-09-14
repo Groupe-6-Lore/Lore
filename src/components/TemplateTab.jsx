@@ -163,10 +163,21 @@ const TemplateTab = ({
               )}
               {/* Contenu du livre - Templates */}
               <div className="absolute inset-0 z-10 p-6 pt-14 pb-6 overflow-hidden flex flex-col">
+                {/* Bouton fermer aligné avec le titre */}
+                <button
+                  onClick={onToggle}
+                  className="absolute top-16 right-6 w-6 h-6 text-[#552E1A] hover:text-[#6B3A2A] transition-colors z-20 flex items-center justify-center"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+                
                 <div className="text-black text-2xl font-bold mb-8 eagle-lake-font pl-16 flex-shrink-0">
                   {tabs.find(tab => tab.id === activeTab)?.title || 'Templates'}
                 </div>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden pl-16">
                   {children}
                 </div>
               </div>
