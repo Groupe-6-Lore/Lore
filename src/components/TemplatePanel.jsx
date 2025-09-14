@@ -691,11 +691,99 @@ const TemplatePanel = () => {
           'mages': { current: 6, total: 6 }
         });
         
+        // États pour les quêtes dynamiques
+        const [quests, setQuests] = React.useState([
+          {
+            id: 'histoire-principale',
+            title: 'Histoire principale',
+            type: 'main',
+            progress: 50,
+            isExpanded: true,
+            subQuests: [
+              {
+                id: 'liberer-otages',
+                title: 'Libérer les otages alliés',
+                progress: 100,
+                isExpanded: true,
+                sponsor: 'Nom du personnage',
+                reward: 'Corne d\'abondance ; 1300 PO ; 4000 XP',
+                description: 'Les Bastions de M\'ror sont attaqués par des Duergars à la solde d\'Orcus. Pour déstabiliser l\'armée naine, les Duergars ont pris en otage des alliés sur d\'autres fronts. Il faut récupérer les otages pour permettre la défense de la cité sans craindre d\'incident diplomatique en cas de dégât collatéral.',
+                objectives: [
+                  { id: 'chasseurs', name: 'Libérer les chasseurs de la forêt écarlate', current: 4, total: 4 },
+                  { id: 'mages', name: 'Sauver les mages d\'Arkanix', current: 6, total: 6 }
+                ]
+              }
+            ]
+          }
+        ]);
+        
         // États pour les dropdowns
         const [expandedQuests, setExpandedQuests] = React.useState({
           'histoire-principale': true,
           'liberer-otages': true
         });
+        
+        // États pour les menus contextuels
+        const [openContextMenu, setOpenContextMenu] = React.useState(null);
+        
+        // Fonction pour ouvrir la fiche du personnage
+        const openCharacterSheet = (characterName) => {
+          console.log(`Ouverture de la fiche du personnage: ${characterName}`);
+          // TODO: Navigation vers la page de fiche de personnage
+          // navigate(`/characters/${characterName}`);
+        };
+        
+        // Fonction pour créer une nouvelle quête
+        const createNewQuest = () => {
+          const newQuestId = `quest-${Date.now()}`;
+          const newQuest = {
+            id: newQuestId,
+            title: 'Nouvelle quête',
+            type: 'main',
+            progress: 0,
+            isExpanded: true,
+            subQuests: []
+          };
+          
+          setQuests(prev => [...prev, newQuest]);
+          setExpandedQuests(prev => ({ ...prev, [newQuestId]: true }));
+          setQuestTitles(prev => ({ ...prev, [newQuestId]: 'Nouvelle quête' }));
+          
+          console.log('Nouvelle quête créée:', newQuest);
+        };
+        
+        // Fonctions pour le menu contextuel
+        const handleContextMenuAction = (questId, action) => {
+          setOpenContextMenu(null);
+          
+          switch (action) {
+            case 'modify':
+              setEditingQuestTitle(questId);
+              break;
+            case 'archive':
+              console.log(`Archivage de la quête: ${questId}`);
+              // TODO: Implémenter l'archivage
+              break;
+            case 'delete':
+              if (confirm('Êtes-vous sûr de vouloir supprimer cette quête ?')) {
+                setQuests(prev => prev.filter(quest => quest.id !== questId));
+                setExpandedQuests(prev => {
+                  const newState = { ...prev };
+                  delete newState[questId];
+                  return newState;
+                });
+                setQuestTitles(prev => {
+                  const newState = { ...prev };
+                  delete newState[questId];
+                  return newState;
+                });
+                console.log(`Quête supprimée: ${questId}`);
+              }
+              break;
+            default:
+              break;
+          }
+        };
         
         // Calcul du pourcentage de la quête principale basé sur les sous-quêtes
         const calculateMainQuestProgress = () => {
@@ -729,6 +817,18 @@ const TemplatePanel = () => {
             [questId]: !prev[questId]
           }));
         };
+        
+        // Effet pour fermer le menu contextuel en cliquant ailleurs
+        React.useEffect(() => {
+          const handleClickOutside = (event) => {
+            if (openContextMenu && !event.target.closest('.context-menu')) {
+              setOpenContextMenu(null);
+            }
+          };
+          
+          document.addEventListener('click', handleClickOutside);
+          return () => document.removeEventListener('click', handleClickOutside);
+        }, [openContextMenu]);
         
         return (
           <div className="h-full flex flex-col">
@@ -818,293 +918,132 @@ const TemplatePanel = () => {
 
           {/* Contenu scrollable */}
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {/* Quête 1: Histoire principale */}
-            <div className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
-              <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
-                <div className="flex items-center gap-3">
-                  {editingQuestTitle === 'histoire-principale' ? (
-                    <input
-                      type="text"
-                      defaultValue={questTitles['histoire-principale']}
-                      onBlur={(e) => {
-                        setQuestTitles(prev => ({ ...prev, 'histoire-principale': e.target.value }));
-                        setEditingQuestTitle(null);
-                      }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          setQuestTitles(prev => ({ ...prev, 'histoire-principale': e.target.value }));
+            {quests.map((quest) => (
+              <div key={quest.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
+                <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
+                  <div className="flex items-center gap-3">
+                    {editingQuestTitle === quest.id ? (
+                      <input
+                        type="text"
+                        defaultValue={questTitles[quest.id] || quest.title}
+                        onBlur={(e) => {
+                          setQuestTitles(prev => ({ ...prev, [quest.id]: e.target.value }));
                           setEditingQuestTitle(null);
-                        }
-                      }}
-                      className="bg-transparent text-[#552E1A] font-semibold eagle-lake-font border-none focus:outline-none text-xl"
-                      autoFocus
-                    />
-                  ) : (
-                    <h3 
-                      className="text-xl font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
-                      onClick={() => setEditingQuestTitle('histoire-principale')}
-                    >
-                      {questTitles['histoire-principale']}
-                    </h3>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#552E1A] font-medium">{calculateMainQuestProgress()}%</span>
-                  <button 
-                    onClick={() => toggleQuestDropdown('histoire-principale')}
-                    className="text-[#552E1A] hover:text-black transition-colors"
-                  >
-                    <ChevronDown 
-                      size={16} 
-                      className={`transform transition-transform ${expandedQuests['histoire-principale'] ? 'rotate-180' : ''}`} 
-                    />
-                  </button>
-                </div>
-              </div>
-              {expandedQuests['histoire-principale'] && (
-                <div className="p-3">
-                  <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
-                    <div className={`h-2 rounded-full ${getProgressBarColor(calculateMainQuestProgress(), 100)}`} style={{width: `${calculateMainQuestProgress()}%`}}></div>
-                  </div>
-
-                  {/* Sous-quête: Libérer les otages alliés */}
-                <div className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5 mt-4">
-                  <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      {editingQuestTitle === 'liberer-otages' ? (
-                        <input
-                          type="text"
-                          defaultValue={questTitles['liberer-otages']}
-                          onBlur={(e) => {
-                            setQuestTitles(prev => ({ ...prev, 'liberer-otages': e.target.value }));
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            setQuestTitles(prev => ({ ...prev, [quest.id]: e.target.value }));
                             setEditingQuestTitle(null);
-                          }}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              setQuestTitles(prev => ({ ...prev, 'liberer-otages': e.target.value }));
-                              setEditingQuestTitle(null);
-                            }
-                          }}
-                          className="bg-transparent text-[#552E1A] font-semibold eagle-lake-font border-none focus:outline-none text-lg"
-                          autoFocus
-                        />
-                      ) : (
-                        <h4 
-                          className="text-lg font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
-                          onClick={() => setEditingQuestTitle('liberer-otages')}
-                        >
-                          {questTitles['liberer-otages']}
-                        </h4>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#552E1A] font-medium">100%</span>
-                      <button 
-                        onClick={() => toggleQuestDropdown('liberer-otages')}
-                        className="text-[#552E1A] hover:text-black transition-colors"
+                          }
+                        }}
+                        className="bg-transparent text-black font-semibold eagle-lake-font border-none focus:outline-none text-xl"
+                        autoFocus
+                      />
+                    ) : (
+                      <h3 
+                        className="text-xl font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
+                        onClick={() => setEditingQuestTitle(quest.id)}
                       >
-                        <ChevronDown 
-                          size={16} 
-                          className={`transform transition-transform ${expandedQuests['liberer-otages'] ? 'rotate-180' : ''}`} 
-                        />
-                      </button>
-                      <button className="text-[#552E1A] hover:text-black transition-colors ml-2">
+                        {questTitles[quest.id] || quest.title}
+                      </h3>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#552E1A] font-medium">{quest.progress}%</span>
+                    <button 
+                      onClick={() => toggleQuestDropdown(quest.id)}
+                      className="text-[#552E1A] hover:text-black transition-colors"
+                    >
+                      <ChevronDown 
+                        size={16} 
+                        className={`transform transition-transform ${expandedQuests[quest.id] ? 'rotate-180' : ''}`} 
+                      />
+                    </button>
+                    <div className="relative">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenContextMenu(openContextMenu === quest.id ? null : quest.id);
+                        }}
+                        className="text-[#552E1A] hover:text-black transition-colors ml-2"
+                      >
                         <div className="flex flex-col gap-1">
                           <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
                           <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
                           <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
                         </div>
                       </button>
-                    </div>
-                  </div>
-                  {expandedQuests['liberer-otages'] && (
-                    <div className="p-3">
-                      <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
-                        <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
-                      </div>
-
-                      {/* Détails développés */}
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="font-medium text-[#552E1A]">Commanditaire : </span>
-                        <span className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Nom du personnage</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#552E1A]">Récompense : </span>
-                        <span className="text-[#552E1A]/80">Corne d'abondance ; 1300 PO ; 4000 XP</span>
-                      </div>
-                      <div className="text-[#552E1A]/80 leading-relaxed">
-                        Les Bastions de M'ror sont attaqués par des Duergars à la solde d'Orcus. Pour déstabiliser l'armée naine, les Duergars ont pris en otage des alliés sur d'autres fronts. Il faut récupérer les otages pour permettre la défense de la cité sans craindre d'incident diplomatique en cas de dégât collatéral.
-                      </div>
-                    </div>
-
-                    {/* Sous-quêtes/Objectifs */}
-                    <div className="mt-6 space-y-3">
-                      {/* Libérer les chasseurs de la forêt écarlate */}
-                      <div className={`flex items-center justify-between rounded-lg p-3 border transition-colors ${
-                        getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
-                          ? 'bg-green-50 border-green-200 hover:bg-green-100' 
-                          : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
-                          ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                          : 'bg-red-50 border-red-200 hover:bg-red-100'
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
-                              ? 'bg-green-500' 
-                              : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                          }`}></div>
-                          <span className="text-[#552E1A] font-medium">Libérer les chasseurs de la forêt écarlate</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {editingQuestCount === 'chasseurs' ? (
-                            <input
-                              type="text"
-                              defaultValue={`${questCounts.chasseurs.current} / ${questCounts.chasseurs.total}`}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                const match = value.match(/(\d+)\s*\/\s*(\d+)/);
-                                if (match) {
-                                  setQuestCounts(prev => ({ 
-                                    ...prev, 
-                                    chasseurs: { current: parseInt(match[1]), total: parseInt(match[2]) }
-                                  }));
-                                }
-                                setEditingQuestCount(null);
-                              }}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  const value = e.target.value;
-                                  const match = value.match(/(\d+)\s*\/\s*(\d+)/);
-                                  if (match) {
-                                    setQuestCounts(prev => ({ 
-                                      ...prev, 
-                                      chasseurs: { current: parseInt(match[1]), total: parseInt(match[2]) }
-                                    }));
-                                  }
-                                  setEditingQuestCount(null);
-                                }
-                              }}
-                              className="bg-transparent text-center border border-[#552E1A]/30 rounded px-2 py-1 text-sm font-medium min-w-[60px]"
-                              autoFocus
-                            />
-                          ) : (
-                            <span 
-                              className={`font-medium whitespace-nowrap cursor-pointer hover:opacity-70 transition-opacity ${
-                                getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
-                                  ? 'text-green-600' 
-                                  : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
-                                  ? 'text-yellow-600'
-                                  : 'text-red-600'
-                              }`}
-                              onClick={() => setEditingQuestCount('chasseurs')}
-                            >
-                              {questCounts.chasseurs.current} / {questCounts.chasseurs.total}
-                            </span>
-                          )}
-                          <button className={`hover:opacity-70 transition-opacity ${
-                            getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'green' 
-                              ? 'text-green-600' 
-                              : getQuestStatusColor(questCounts.chasseurs.current, questCounts.chasseurs.total) === 'yellow'
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
-                          }`}>
-                            <ChevronRight size={16} />
+                      
+                      {openContextMenu === quest.id && (
+                        <div className="context-menu absolute right-0 top-full mt-2 bg-white border border-[#552E1A]/30 rounded-lg shadow-lg z-50 min-w-[120px]">
+                          <button
+                            onClick={() => handleContextMenuAction(quest.id, 'modify')}
+                            className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors first:rounded-t-lg"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleContextMenuAction(quest.id, 'archive')}
+                            className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors"
+                          >
+                            Archiver
+                          </button>
+                          <button
+                            onClick={() => handleContextMenuAction(quest.id, 'delete')}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors last:rounded-b-lg"
+                          >
+                            Supprimer
                           </button>
                         </div>
-                      </div>
-
-                      {/* Sauver les mages d'Arkanix */}
-                      <div className={`flex items-center justify-between rounded-lg p-3 border transition-colors ${
-                        getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
-                          ? 'bg-green-50 border-green-200 hover:bg-green-100' 
-                          : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
-                          ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                          : 'bg-red-50 border-red-200 hover:bg-red-100'
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
-                              ? 'bg-green-500' 
-                              : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                          }`}></div>
-                          <span className="text-[#552E1A] font-medium">Sauver les mages d'Arkanix</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {editingQuestCount === 'mages' ? (
-                            <input
-                              type="text"
-                              defaultValue={`${questCounts.mages.current} / ${questCounts.mages.total}`}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                const match = value.match(/(\d+)\s*\/\s*(\d+)/);
-                                if (match) {
-                                  setQuestCounts(prev => ({ 
-                                    ...prev, 
-                                    mages: { current: parseInt(match[1]), total: parseInt(match[2]) }
-                                  }));
-                                }
-                                setEditingQuestCount(null);
-                              }}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  const value = e.target.value;
-                                  const match = value.match(/(\d+)\s*\/\s*(\d+)/);
-                                  if (match) {
-                                    setQuestCounts(prev => ({ 
-                                      ...prev, 
-                                      mages: { current: parseInt(match[1]), total: parseInt(match[2]) }
-                                    }));
-                                  }
-                                  setEditingQuestCount(null);
-                                }
-                              }}
-                              className="bg-transparent text-center border border-[#552E1A]/30 rounded px-2 py-1 text-sm font-medium min-w-[60px]"
-                              autoFocus
-                            />
-                          ) : (
-                            <span 
-                              className={`font-medium whitespace-nowrap cursor-pointer hover:opacity-70 transition-opacity ${
-                                getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
-                                  ? 'text-green-600' 
-                                  : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
-                                  ? 'text-yellow-600'
-                                  : 'text-red-600'
-                              }`}
-                              onClick={() => setEditingQuestCount('mages')}
-                            >
-                              {questCounts.mages.current} / {questCounts.mages.total}
-                            </span>
-                          )}
-                          <button className={`hover:opacity-70 transition-opacity ${
-                            getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'green' 
-                              ? 'text-green-600' 
-                              : getQuestStatusColor(questCounts.mages.current, questCounts.mages.total) === 'yellow'
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
-                          }`}>
-                            <ChevronRight size={16} />
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                  )}
-                </div>
-              )}
-            </div>
+                {expandedQuests[quest.id] && (
+                  <div className="p-3">
+                    <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
+                      <div className={`h-2 rounded-full ${getProgressBarColor(quest.progress, 100)}`} style={{width: `${quest.progress}%`}}></div>
+                    </div>
+                    
+                    {quest.subQuests && quest.subQuests.length > 0 && (
+                      <div className="space-y-4">
+                        {quest.subQuests.map((subQuest) => (
+                          <div key={subQuest.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
+                            <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <h4 className="text-lg font-semibold text-[#552E1A] eagle-lake-font">
+                                  {subQuest.title}
+                                </h4>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[#552E1A] font-medium">{subQuest.progress}%</span>
+                                <button className="text-[#552E1A] hover:text-black transition-colors">
+                                  <ChevronDown size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {quest.subQuests.length === 0 && (
+                      <div className="text-center py-8 text-[#552E1A]/60">
+                        <p className="text-sm">Aucune sous-quête pour le moment</p>
+                        <p className="text-xs mt-1">Cliquez sur le titre pour l'éditer</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Bouton fixe Nouvelle catégorie - Position fixe en bas à droite */}
           <div className="fixed bottom-12 right-6 z-50">
             <button 
-              onClick={() => console.log('Ajouter nouvelle catégorie de quête')}
+              onClick={createNewQuest}
               className="bg-golden text-[#552E1A] py-3 px-4 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 eagle-lake-font shadow-lg"
             >
               <Plus size={16} />
