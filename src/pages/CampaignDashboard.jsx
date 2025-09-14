@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ChatbotPanel from '../components/ChatbotPanel';
+import TemplatePanel from '../components/TemplatePanel';
 import { 
   ArrowLeft,
   Plus,
@@ -28,13 +30,10 @@ import {
   Link,
   Image,
   Upload,
-  FileText,
-  MessageCircle
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import ChatbotPanel from '../components/ChatbotPanel';
-import Header from '../components/Header';
 
 // Import des composants de drag & drop
 import {
@@ -57,7 +56,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Composant pour les lignes de texte draggables
-const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, isEditing, editingContent, onEdit, onSaveEdit, onCancelEdit, onDelete, renderTextWithMentions }) => {
+const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading }) => {
   const {
     attributes,
     listeners,
@@ -93,9 +92,9 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
       className="group relative"
       onPaste={onPaste}
     >
-      {/* Drag Handle - Aligné au milieu du texte */}
+      {/* Drag Handle - Visible pendant le drag */}
       <div 
-        className={`absolute left-[-30px] top-1/2 transform -translate-y-1/2 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
+        className={`absolute left-[-30px] top-1 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
           isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
         }`}
         {...attributes}
@@ -104,95 +103,58 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
         <GripVertical size={12} />
       </div>
 
-      {/* Bouton + - Aligné au milieu du texte */}
+      {/* Bouton + - Visible avec fond subtil */}
       <div 
-        className="absolute left-[-55px] top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        className="absolute left-[-55px] top-1 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
         onClick={handlePlusClick}
       >
         <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
       </div>
 
       {/* Contenu */}
-      {isEditing ? (
-        <div className="space-y-2 pl-8">
-          <textarea
-            value={editingContent}
-            onChange={(e) => onEdit && onEdit(id, e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-gray-800"
-            rows={3}
-            autoFocus
-            placeholder="Tapez votre contenu..."
-          />
-          <div className="flex space-x-2">
-            <button
-              onClick={onSaveEdit}
-              className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-            >
-              ✓ Sauvegarder
-            </button>
-            <button
-              onClick={onCancelEdit}
-              className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
-            >
-              ✕ Annuler
-            </button>
-            <button
-              onClick={() => onDelete && onDelete(id)}
-              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
-            >
-              🗑️ Supprimer
-            </button>
-          </div>
-        </div>
-      ) : type === 'separator' ? (
-        <div className="flex items-center justify-center py-4 pl-8">
-          <div className="flex-1 border-t border-gray-300"></div>
-          <div className="px-4 text-gray-500 text-sm">Séparateur</div>
-          <div className="flex-1 border-t border-gray-300"></div>
-        </div>
-      ) : isHeading ? (
+      {isHeading ? (
         type === 'heading1' ? (
           <h1 
-            className={`leading-relaxed pl-8 text-3xl font-bold text-light cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200 ${isLink ? 'text-golden hover:text-golden/80 underline' : ''}`}
-            onClick={isLink ? handleClick : () => onEdit && onEdit(id)}
+            className={`leading-relaxed pl-8 text-3xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
-            {renderTextWithMentions ? renderTextWithMentions(content) : content}
+            {content}
           </h1>
         ) : type === 'heading2' ? (
           <h2 
-            className={`leading-relaxed pl-8 text-2xl font-bold text-light cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200 ${isLink ? 'text-golden hover:text-golden/80 underline' : ''}`}
-            onClick={isLink ? handleClick : () => onEdit && onEdit(id)}
+            className={`leading-relaxed pl-8 text-2xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
-            {renderTextWithMentions ? renderTextWithMentions(content) : content}
+            {content}
           </h2>
         ) : type === 'heading3' ? (
           <h3 
-            className={`leading-relaxed pl-8 text-xl font-bold text-light cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200 ${isLink ? 'text-golden hover:text-golden/80 underline' : ''}`}
-            onClick={isLink ? handleClick : () => onEdit && onEdit(id)}
+            className={`leading-relaxed pl-8 text-xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
-            {renderTextWithMentions ? renderTextWithMentions(content) : content}
+            {content}
           </h3>
         ) : (
           <p 
-            className={`leading-relaxed pl-8 text-light cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200 ${isLink ? 'text-golden hover:text-golden/80 underline' : ''}`}
-            onClick={isLink ? handleClick : () => onEdit && onEdit(id)}
+            className={`leading-relaxed pl-8 text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
-            {renderTextWithMentions ? renderTextWithMentions(content) : content}
+            {content}
           </p>
         )
-        ) : (
-          <p 
-            className={`leading-relaxed pl-8 cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200 ${isLink ? 'text-golden hover:text-golden/80 underline' : 'text-light'}`}
-            onClick={isLink ? handleClick : () => onEdit && onEdit(id)}
-          >
-            {isLink && <Link size={14} className="inline mr-2" />}
-            {renderTextWithMentions ? renderTextWithMentions(content) : content}
-          </p>
-        )}
+      ) : (
+        <p 
+          className={`leading-relaxed pl-8 ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'text-light'}`}
+          onClick={handleClick}
+        >
+          {isLink && <Link size={14} className="inline mr-2" />}
+          {content}
+        </p>
+      )}
     </div>
   );
 };
@@ -362,21 +324,7 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id }) => {
 };
 
 // Composant pour la card marchand draggable
-const DraggableMerchantCard = ({ 
-  campaign, 
-  merchantInventory, 
-  onShowContextMenu, 
-  onPaste, 
-  id, 
-  editingMerchantContent,
-  editingMerchantText,
-  setEditingMerchantText,
-  handleEditMerchantContent,
-  handleSaveMerchantContent,
-  handleCancelMerchantContentEdit,
-  renderTextWithMentions,
-  ...inventoryProps 
-}) => {
+const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu, onPaste, id, ...inventoryProps }) => {
   const {
     attributes,
     listeners,
@@ -420,56 +368,7 @@ const DraggableMerchantCard = ({
       <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
       
       <div className="space-y-4" onPaste={onPaste}>
-        {editingMerchantContent ? (
-          <div className="space-y-2">
-            <textarea
-              value={editingMerchantText}
-              onChange={(e) => setEditingMerchantText(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-gray-800"
-              rows={3}
-              autoFocus
-              placeholder="Décrivez la rencontre avec le marchand..."
-            />
-            <div className="flex space-x-2">
-              <button
-                onClick={handleSaveMerchantContent}
-                className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-              >
-                ✓ Sauvegarder
-              </button>
-              <button
-                onClick={handleCancelMerchantContentEdit}
-                className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
-              >
-                ✕ Annuler
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="group relative">
-            <p 
-              className="text-light leading-relaxed cursor-pointer hover:bg-light/5 p-2 rounded transition-colors duration-200"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleEditMerchantContent();
-              }}
-            >
-              {renderTextWithMentions ? renderTextWithMentions(campaign?.rencontre.content) : campaign?.rencontre.content}
-            </p>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleEditMerchantContent();
-              }}
-              className="absolute left-[-30px] top-2 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
-              title="Éditer le contenu"
-            >
-              <Edit2 size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
-            </button>
-          </div>
-        )}
+        <p className="text-light leading-relaxed">{campaign?.rencontre.content}</p>
         <div className="text-sm text-light/80 font-semibold">
           PNJ: {campaign?.rencontre.npc}
         </div>
@@ -733,7 +632,7 @@ const CampaignDashboard = () => {
   const [textLines, setTextLines] = useState([
     {
       id: 'line-1',
-      content: 'Dans les terres brûlées du **Royaume de Cendres**, où les volcans crachent leur colère depuis des siècles, une prophétie ancienne se réveille.',
+      content: 'Dans les terres brûlées du Royaume de Cendres, où les volcans crachent leur colère depuis des siècles, une prophétie ancienne se réveille.',
       section: 'situation'
     },
     {
@@ -743,7 +642,7 @@ const CampaignDashboard = () => {
     },
     {
       id: 'line-3',
-      content: 'La session commence dans la taverne "**Le Dragon de Bronze**", au cœur de **Pyros**. Un messager essoufflé fait irruption, portant une missive scellée du **Conseil des Flammes**.',
+      content: 'La session commence dans la taverne "Le Dragon de Bronze", au cœur de Pyros. Un messager essoufflé fait irruption, portant une missive scellée du Conseil des Flammes.',
       section: 'debut'
     }
   ]);
@@ -794,10 +693,7 @@ const CampaignDashboard = () => {
     // Événements
     { id: 'context-encounter', type: 'encounter', name: 'Rencontre', icon: '⚔️', description: 'Événement de combat', content: 'Rencontre : ', category: 'Événements' },
     { id: 'context-trap', type: 'trap', name: 'Piège', icon: '🕳️', description: 'Danger caché', content: 'Piège : ', category: 'Événements' },
-    { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' },
-    
-    // Séparateur
-    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '➖', description: 'Ligne de séparation visuelle', content: '', category: 'Mise en forme' }
+    { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' }
   ]);
 
   // États pour l'IA et l'automatisation
@@ -812,25 +708,6 @@ const CampaignDashboard = () => {
   const [contextMenuTarget, setContextMenuTarget] = useState(null);
   const [contextMenuSearch, setContextMenuSearch] = useState('');
   const [selectedContextMenuItem, setSelectedContextMenuItem] = useState(0);
-
-  // États pour l'édition des lignes de texte
-  const [editingLine, setEditingLine] = useState(null);
-  const [editingContent, setEditingContent] = useState('');
-
-  // États pour l'édition de la quête majeure
-  const [editingQuest, setEditingQuest] = useState(false);
-  const [editingQuestContent, setEditingQuestContent] = useState('');
-
-  // États pour l'édition du contenu du marchand
-  const [editingMerchantContent, setEditingMerchantContent] = useState(false);
-  const [editingMerchantText, setEditingMerchantText] = useState('');
-
-  // États pour le système de mentions et image dynamique
-  const [mentions, setMentions] = useState([]);
-  const [currentMentionImage, setCurrentMentionImage] = useState(null);
-  const [currentMentionName, setCurrentMentionName] = useState('');
-  const [currentMentionType, setCurrentMentionType] = useState('');
-
 
   // Données de campagne d'exemple
   useEffect(() => {
@@ -856,11 +733,6 @@ const CampaignDashboard = () => {
     setCampaign(mockCampaign);
     setLoading(false);
   }, [campaignId]);
-
-  // Mettre à jour les mentions quand le contenu change
-  useEffect(() => {
-    updateMentions();
-  }, [textLines, campaign?.queteMajeure, campaign?.rencontre?.content]);
 
   // Initialiser les sessions avec les données d'exemple
   useEffect(() => {
@@ -1230,11 +1102,6 @@ const CampaignDashboard = () => {
         return newItems;
       });
       
-      // Mettre à jour les mentions après ajout du lien
-      setTimeout(() => {
-        updateMentions();
-      }, 100);
-      
       toast.success(`Lien ${type} ajouté avec succès !`);
     }
   };
@@ -1322,263 +1189,6 @@ const CampaignDashboard = () => {
     }
   };
 
-  // Fonctions pour l'édition des lignes de texte
-  const handleEditLine = (lineId, newContent = null) => {
-    if (newContent !== null) {
-      // Mise à jour du contenu en cours d'édition
-      setEditingContent(newContent);
-    } else {
-      // Démarrage de l'édition
-      const line = textLines.find(l => l.id === lineId);
-      if (line) {
-        setEditingLine(lineId);
-        setEditingContent(line.content);
-      }
-    }
-  };
-
-  const handleSaveEdit = () => {
-    if (editingLine && editingContent.trim()) {
-      setTextLines(prev => prev.map(line => 
-        line.id === editingLine 
-          ? { ...line, content: editingContent.trim() }
-          : line
-      ));
-      
-      // Mettre à jour les mentions après modification
-      setTimeout(() => {
-        updateMentions();
-      }, 100);
-    }
-    setEditingLine(null);
-    setEditingContent('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingLine(null);
-    setEditingContent('');
-  };
-
-  const handleDeleteLine = (lineId) => {
-    setTextLines(prev => prev.filter(line => line.id !== lineId));
-  };
-
-  // Fonctions pour l'édition de la quête majeure
-  const handleEditQuest = () => {
-    setEditingQuest(true);
-    setEditingQuestContent(campaign?.queteMajeure || '');
-  };
-
-  const handleSaveQuest = () => {
-    if (editingQuestContent.trim()) {
-      setCampaign(prev => ({
-        ...prev,
-        queteMajeure: editingQuestContent.trim()
-      }));
-      
-      // Mettre à jour les mentions après modification
-      setTimeout(() => {
-        updateMentions();
-      }, 100);
-    }
-    setEditingQuest(false);
-    setEditingQuestContent('');
-  };
-
-  const handleCancelQuestEdit = () => {
-    setEditingQuest(false);
-    setEditingQuestContent('');
-  };
-
-  const handleDeleteQuest = () => {
-    setCampaign(prev => ({
-      ...prev,
-      queteMajeure: ''
-    }));
-  };
-
-  // Fonctions pour l'édition du contenu du marchand
-  const handleEditMerchantContent = () => {
-    setEditingMerchantContent(true);
-    setEditingMerchantText(campaign?.rencontre?.content || '');
-  };
-
-  const handleSaveMerchantContent = () => {
-    if (editingMerchantText.trim()) {
-      setCampaign(prev => ({
-        ...prev,
-        rencontre: {
-          ...prev.rencontre,
-          content: editingMerchantText.trim()
-        }
-      }));
-      
-      // Mettre à jour les mentions après modification
-      setTimeout(() => {
-        updateMentions();
-      }, 100);
-    }
-    setEditingMerchantContent(false);
-    setEditingMerchantText('');
-  };
-
-  const handleCancelMerchantContentEdit = () => {
-    setEditingMerchantContent(false);
-    setEditingMerchantText('');
-  };
-
-  // Fonctions pour le système de mentions
-  const detectMentions = (text) => {
-    if (!text) return [];
-    
-    const detectedMentions = [];
-    
-    // Détecter les liens copiés-collés (format: [Type: Nom])
-    const linkPattern = /\[(Personnage|Objet|Lieu|Quête|PNJ|Item|Location|Quest):\s*([^\]]+)\]/gi;
-    let match;
-    while ((match = linkPattern.exec(text)) !== null) {
-      const [, type, name] = match;
-      detectedMentions.push({
-        type: type.toLowerCase(),
-        name: name.trim(),
-        source: 'link',
-        position: match.index
-      });
-    }
-    
-    // Détecter les mentions soulignées (mots en gras ou soulignés)
-    const boldPattern = /\*\*([^*]+)\*\*/g;
-    while ((match = boldPattern.exec(text)) !== null) {
-      const name = match[1].trim();
-      // Vérifier si c'est une mention connue (vous pourrez ajouter une liste de personnages/objets connus)
-      if (isKnownMention(name)) {
-        detectedMentions.push({
-          type: getMentionType(name),
-          name: name,
-          source: 'bold',
-          position: match.index
-        });
-      }
-    }
-    
-    return detectedMentions;
-  };
-
-  const isKnownMention = (name) => {
-    // Liste des mentions connues - vous pourrez l'étendre avec vos templates
-    const knownMentions = [
-      'Marcus le Marchand', 'Pyros', 'Dragon de Bronze', 'Conseil des Flammes',
-      'Flamme Éternelle', 'Royaume de Cendres', 'Alice', 'Bob', 'Charlie', 'Diana'
-    ];
-    return knownMentions.some(mention => 
-      name.toLowerCase().includes(mention.toLowerCase()) || 
-      mention.toLowerCase().includes(name.toLowerCase())
-    );
-  };
-
-  const getMentionType = (name) => {
-    // Logique pour déterminer le type de mention
-    if (name.includes('Marchand') || name.includes('Marcus')) return 'personnage';
-    if (name.includes('Pyros') || name.includes('Royaume')) return 'lieu';
-    if (name.includes('Flamme') || name.includes('Dragon')) return 'objet';
-    if (name.includes('Conseil')) return 'organisation';
-    return 'personnage'; // Par défaut
-  };
-
-  const getMentionImage = (mention) => {
-    // Mapping des mentions vers leurs images - vous pourrez l'étendre avec vos templates
-    const imageMap = {
-      'Marcus le Marchand': '/images/npcs/marcus-merchant.jpg',
-      'Pyros': '/images/locations/pyros-city.jpg',
-      'Dragon de Bronze': '/images/locations/dragon-bronze-tavern.jpg',
-      'Conseil des Flammes': '/images/organizations/council-flames.jpg',
-      'Flamme Éternelle': '/images/artifacts/eternal-flame.jpg',
-      'Royaume de Cendres': '/images/locations/kingdom-ashes.jpg'
-    };
-    
-    return imageMap[mention.name] || null;
-  };
-
-  const updateMentions = () => {
-    const allText = [
-      ...textLines.map(line => line.content),
-      campaign?.queteMajeure || '',
-      campaign?.rencontre?.content || ''
-    ].join(' ');
-    
-    const detectedMentions = detectMentions(allText);
-    setMentions(detectedMentions);
-    
-    // Prendre la première mention trouvée pour l'image
-    if (detectedMentions.length > 0) {
-      const firstMention = detectedMentions[0];
-      const imageUrl = getMentionImage(firstMention);
-      
-      setCurrentMentionImage(imageUrl);
-      setCurrentMentionName(firstMention.name);
-      setCurrentMentionType(firstMention.type);
-    } else {
-      setCurrentMentionImage(null);
-      setCurrentMentionName('');
-      setCurrentMentionType('');
-    }
-  };
-
-  // Fonction pour transformer le texte avec les mentions en éléments cliquables
-  const renderTextWithMentions = (text) => {
-    if (!text) return text;
-    
-    // Détecter les mentions en gras **Nom**
-    const boldPattern = /\*\*([^*]+)\*\*/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-    
-    while ((match = boldPattern.exec(text)) !== null) {
-      const [fullMatch, mentionName] = match;
-      const mentionType = getMentionType(mentionName);
-      
-      // Ajouter le texte avant la mention
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
-      }
-      
-      // Ajouter la mention comme lien cliquable
-      parts.push(
-        <span
-          key={`mention-${match.index}`}
-          className="font-bold text-golden hover:text-golden/80 cursor-pointer underline decoration-golden/50 hover:decoration-golden transition-all duration-200"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleMentionClick(mentionName, mentionType);
-          }}
-          title={`Cliquer pour voir le template ${mentionType}: ${mentionName}`}
-        >
-          {mentionName}
-        </span>
-      );
-      
-      lastIndex = match.index + fullMatch.length;
-    }
-    
-    // Ajouter le texte restant
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
-    }
-    
-    return parts.length > 0 ? parts : text;
-  };
-
-  // Fonction pour gérer les clics sur les mentions
-  const handleMentionClick = (mentionName, mentionType) => {
-    // Pour le moment, afficher un toast - vous pourrez ajouter la navigation vers le template
-    toast.success(`Template ${mentionType}: ${mentionName} (à implémenter)`);
-    
-    // TODO: Navigation vers le template correspondant
-    // navigate(`/templates/${mentionType}/${mentionName.toLowerCase().replace(/\s+/g, '-')}`);
-  };
-
   // Fonction pour ajouter un élément via le menu contextuel
   const handleAddElement = (type) => {
     const template = contextTemplates.find(t => t.type === type);
@@ -1612,14 +1222,6 @@ const CampaignDashboard = () => {
           type: 'heading3',
           template: true,
           isHeading: true
-        };
-      } else if (type === 'separator') {
-        newLine = {
-          id: `context-${Date.now()}`,
-          content: '',
-          section: 'situation',
-          type: 'separator',
-          template: true
         };
       } else {
         newLine = {
@@ -1716,20 +1318,27 @@ const CampaignDashboard = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      {/* Header unifié */}
-      <Header 
-        showBackButton={true}
-        onBackClick={() => navigate('/campaigns')}
-        additionalButtons={[
-          <button 
-            key="dashboard-news" 
-            className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors"
-            title="Actualités"
-          >
+      {/* Header Lore fixe */}
+      <header className="flex items-center justify-between p-6 bg-primary-blue border-b border-light/10">
+        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
+        
+        <div className="flex items-center space-x-6">
+          {/* Bouton News hexagonal vert */}
+          <button className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
             <Newspaper size={20} />
           </button>
-        ]}
-      />
+          
+          {/* Bouton Notifications */}
+          <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
+            <Bell size={20} />
+          </button>
+          
+          {/* Bouton Paramètres */}
+          <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
+            <Settings size={20} />
+          </button>
+        </div>
+      </header>
 
       {/* Breadcrumb */}
       <div className="px-32 py-6">
@@ -1794,9 +1403,9 @@ const CampaignDashboard = () => {
 
       {/* Contenu principal */}
       <div className="px-32 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Zone centrale - 2 colonnes */}
-          <div className="lg:col-span-2 space-y-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Zone centrale - 3 colonnes */}
+          <div className="lg:col-span-3 space-y-12">
             {/* Notes de campagne - Style Notion avec Drag & Drop */}
             <DndContext
               sensors={sensors}
@@ -1830,13 +1439,6 @@ const CampaignDashboard = () => {
                                onShowContextMenu={handleShowContextMenu}
                                type={line.type}
                                isHeading={line.isHeading}
-                               isEditing={editingLine === line.id}
-                               editingContent={editingContent}
-                               onEdit={handleEditLine}
-                               onSaveEdit={handleSaveEdit}
-                               onCancelEdit={handleCancelEdit}
-                               onDelete={handleDeleteLine}
-                               renderTextWithMentions={renderTextWithMentions}
                              />
                              {index < array.length - 1 && (
                                <DropZone 
@@ -1883,13 +1485,6 @@ const CampaignDashboard = () => {
                                onShowContextMenu={handleShowContextMenu}
                                type={line.type}
                                isHeading={line.isHeading}
-                               isEditing={editingLine === line.id}
-                               editingContent={editingContent}
-                               onEdit={handleEditLine}
-                               onSaveEdit={handleSaveEdit}
-                               onCancelEdit={handleCancelEdit}
-                               onDelete={handleDeleteLine}
-                               renderTextWithMentions={renderTextWithMentions}
                              />
                              {index < array.length - 1 && (
                                <DropZone 
@@ -1924,57 +1519,15 @@ const CampaignDashboard = () => {
                  ) : null}
                </DragOverlay>
 
-               {/* Quête majeure - Lien simple avec édition */}
+               {/* Quête majeure - Lien simple */}
                <div className="pl-8">
-                 {editingQuest ? (
-                   <div className="space-y-2">
-                     <textarea
-                       value={editingQuestContent}
-                       onChange={(e) => setEditingQuestContent(e.target.value)}
-                       className="w-full p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-gray-800"
-                       rows={2}
-                       autoFocus
-                       placeholder="Tapez le nom de la quête..."
-                     />
-                     <div className="flex space-x-2">
-                       <button
-                         onClick={handleSaveQuest}
-                         className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-                       >
-                         ✓ Sauvegarder
-                       </button>
-                       <button
-                         onClick={handleCancelQuestEdit}
-                         className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
-                       >
-                         ✕ Annuler
-                       </button>
-                       <button
-                         onClick={handleDeleteQuest}
-                         className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
-                       >
-                         🗑️ Supprimer
-                       </button>
-                     </div>
-                   </div>
-                 ) : (
-                   <div className="group relative">
-                     <button
-                       onClick={() => navigate(`/campaigns/${campaignId}/quest/major`)}
-                       className="flex items-center space-x-2 text-golden hover:text-golden/80 transition-colors"
-                     >
-                       <Link size={16} />
-                       <span className="font-semibold">{renderTextWithMentions ? renderTextWithMentions(campaign?.queteMajeure) : campaign?.queteMajeure}</span>
-                     </button>
-                     <button
-                       onClick={handleEditQuest}
-                       className="absolute left-[-30px] top-0 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
-                       title="Éditer la quête"
-                     >
-                       <Edit2 size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
-                     </button>
-                   </div>
-                 )}
+                 <button
+                   onClick={() => navigate(`/campaigns/${campaignId}/quest/major`)}
+                   className="flex items-center space-x-2 text-golden hover:text-golden/80 transition-colors"
+                 >
+                   <Link size={16} />
+                   <span className="font-semibold">{campaign?.queteMajeure}</span>
+                 </button>
                </div>
 
                {/* Cartes et templates - Style Notion */}
@@ -2000,13 +1553,6 @@ const CampaignDashboard = () => {
                    handleEditTableField={handleEditTableField}
                    handleDeleteItem={handleDeleteItem}
                    handleAddItem={handleAddItem}
-                   editingMerchantContent={editingMerchantContent}
-                   editingMerchantText={editingMerchantText}
-                   setEditingMerchantText={setEditingMerchantText}
-                   handleEditMerchantContent={handleEditMerchantContent}
-                   handleSaveMerchantContent={handleSaveMerchantContent}
-                   handleCancelMerchantContentEdit={handleCancelMerchantContentEdit}
-                   renderTextWithMentions={renderTextWithMentions}
                  />
                </div>
 
@@ -2027,28 +1573,18 @@ const CampaignDashboard = () => {
               
             </div>
 
-            {/* Image dynamique basée sur les mentions */}
+            {/* Image atmosphérique */}
             <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
-              <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden transition-all duration-200">
-                {currentMentionImage ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <img 
-                      src={currentMentionImage} 
-                      alt={currentMentionName}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-2 left-2 right-2 bg-black/70 rounded px-2 py-1">
-                      <div className="text-xs text-light font-semibold truncate">{currentMentionName}</div>
-                      <div className="text-xs text-light/80 truncate">{currentMentionType}</div>
-                    </div>
+              <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg">
+                <Moon size={48} className="text-light/60 mb-2" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-blue/50 to-transparent"></div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="bg-black/50 rounded-lg p-3 text-center">
+                    <Upload size={24} className="text-light mx-auto mb-2" />
+                    <div className="text-sm text-light">Cliquez pour importer</div>
+                    <div className="text-xs text-light/80">JPG, PNG, GIF (max 5MB)</div>
                   </div>
-                ) : (
-                  <div className="text-center">
-                    <Moon size={48} className="text-light/60 mb-2" />
-                    <div className="text-sm text-light/80">Aucune mention détectée</div>
-                    <div className="text-xs text-light/60 mt-1">L'image apparaîtra automatiquement</div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
 
@@ -2060,7 +1596,6 @@ const CampaignDashboard = () => {
             />
 
           </div>
-
         </div>
       </div>
 
@@ -2188,32 +1723,6 @@ const CampaignDashboard = () => {
              </div>
            </div>
 
-           {/* Actions sur l'élément sélectionné */}
-           {contextMenuTarget && (
-             <div className="border-b border-gray-100">
-               <button
-                 onClick={() => {
-                   handleEditLine(contextMenuTarget);
-                   handleCloseContextMenu();
-                 }}
-                 className="w-full text-left px-3 py-2 text-sm flex items-center space-x-3 hover:bg-gray-50 text-gray-900"
-               >
-                 <Edit2 size={14} className="text-blue-500" />
-                 <span>Modifier</span>
-               </button>
-               <button
-                 onClick={() => {
-                   handleDeleteLine(contextMenuTarget);
-                   handleCloseContextMenu();
-                 }}
-                 className="w-full text-left px-3 py-2 text-sm flex items-center space-x-3 hover:bg-gray-50 text-red-600"
-               >
-                 <Trash2 size={14} />
-                 <span>Supprimer</span>
-               </button>
-             </div>
-           )}
-
            {/* Liste des templates */}
            <div className="max-h-64 overflow-y-auto py-1">
              {(() => {
@@ -2262,6 +1771,9 @@ const CampaignDashboard = () => {
          universe={campaign?.univers}
          rules={campaign?.regles}
        />
+
+       {/* Template Panel avec languettes */}
+       <TemplatePanel />
      </div>
    );
  };
