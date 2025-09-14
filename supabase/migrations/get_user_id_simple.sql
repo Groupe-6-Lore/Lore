@@ -11,3 +11,4 @@ WHERE email = 'votre_email@exemple.com';
 -- Copiez le user_id et utilisez-le dans les autres scripts
 
 
+

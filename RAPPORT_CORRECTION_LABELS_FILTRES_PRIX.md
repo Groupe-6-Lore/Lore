@@ -190,3 +190,4 @@ J'ai appliqué exactement la correction que vous avez fournie pour remplacer les
 Cette correction améliore significativement l'expérience utilisateur en remplaçant les labels techniques par des labels français clairs et compréhensibles, tout en conservant la fonctionnalité de filtrage intacte.
 
 
+

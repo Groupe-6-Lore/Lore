@@ -281,3 +281,4 @@ const unknownUniverses = paginatedUniverses.filter(u => u.type !== 'owned');
 5. **Explorez sur mobile** : Sidebar et grille adaptées
 
 
+

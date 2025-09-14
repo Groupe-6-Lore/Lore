@@ -104,3 +104,4 @@ Chaque carte a un **double padding** :
 La structure du grid avec padding était déjà parfaitement implémentée dans le code existant. Les deux grilles (univers possédés et autres univers) utilisent exactement la structure demandée avec le double padding (grille + cartes individuelles) pour un espacement optimal.
 
 
+

@@ -121,3 +121,4 @@ J'ai corrigé les labels dans les tags sélectionnés affichés en haut pour qu'
 Cette correction assure la cohérence de l'interface en utilisant le même label "Possédé" partout, au lieu d'avoir "Possédé" dans les filtres et "Déjà possédé" dans les tags sélectionnés. L'expérience utilisateur est maintenant plus fluide et cohérente.
 
 
+

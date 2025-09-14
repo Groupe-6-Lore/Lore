@@ -303,3 +303,4 @@ Le serveur démarre sur le port disponible (3000, 3001, ou 3002)
 **Projet Lore - Version 2 - Décembre 2024**
 *Toutes les fonctionnalités sont opérationnelles en mode démo*
 
+

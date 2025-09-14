@@ -278,3 +278,4 @@
 5. **Explorez sur mobile** : Sidebar et grille adaptées
 
 
+

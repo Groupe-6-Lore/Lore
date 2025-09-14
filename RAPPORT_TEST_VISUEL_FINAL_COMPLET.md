@@ -218,3 +218,4 @@ const UniverseCard = ({ universe, onSelect }) => {
 Le serveur de développement est actif et prêt pour les tests. Tous les éléments visuels demandés sont correctement implémentés selon les spécifications exactes du wireframe, avec la suppression de la bordure blanche, l'optimisation des tags sur une seule ligne, et l'application de la classe CSS personnalisée pour le responsive.
 
 
+

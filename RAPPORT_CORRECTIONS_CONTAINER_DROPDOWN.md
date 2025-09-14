@@ -122,3 +122,4 @@ className="appearance-none bg-golden text-dark border border-golden rounded-lg p
 **🎯 Toutes les corrections demandées ont été appliquées exactement comme demandé !**
 
 
+

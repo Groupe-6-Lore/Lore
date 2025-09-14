@@ -58,3 +58,4 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
 3. Vous devriez voir la campagne "Les Échos de Nerath" avec les 4 joueurs
 
 
+

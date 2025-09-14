@@ -164,3 +164,4 @@ Tous les univers dans `allUniverses` ont été vérifiés et possèdent les cham
 Le champ `image` est présent dans tous les univers mais n'est pas obligatoire selon les spécifications. Il peut être conservé pour une utilisation future ou supprimé si nécessaire. Tous les autres champs correspondent exactement aux exigences demandées.
 
 
+

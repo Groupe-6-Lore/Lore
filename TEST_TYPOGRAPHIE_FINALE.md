@@ -167,3 +167,4 @@ L'application **Lore** doit avoir :
 **🎨 L'application Lore a maintenant une typographie parfaitement cohérente !**
 
 
+

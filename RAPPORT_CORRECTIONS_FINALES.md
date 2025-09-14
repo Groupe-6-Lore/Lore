@@ -242,3 +242,4 @@ useEffect(() => {
 
 **Le projet Lore est maintenant entièrement fonctionnel avec toutes les corrections demandées !**
 
+
