@@ -14,46 +14,78 @@ const TemplateTab = ({
 }) => {
   return (
     <>
-      {/* Languettes fermées - Position fixe sur le bord droit */}
+      {/* Mode fermé - Tranche du livre (partie gauche du panel) */}
       {!isOpen && (
-        <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-50 flex flex-col gap-2">
-          {tabs.map((tab, index) => (
-            <motion.button
-              key={tab.id}
-              onClick={() => {
-                if (tab.id === activeTab) {
-                  onToggle(); // Ouvrir le panel
-                } else {
-                  onTabChange(tab.id); // Changer d'onglet et ouvrir
-                  onToggle();
-                }
-              }}
-              className="w-16 h-20 shadow-lg hover:shadow-xl transition-all duration-300"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <img 
-                src={tab.closedImage} 
-                alt={`${tab.title} tab closed`} 
-                className="w-full h-full object-contain"
+        <motion.div
+          className="fixed right-0 top-[100px] h-[800px] w-[60px] z-50"
+          initial={{ opacity: 0, x: 60 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 60 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {/* Arrière-plan de la tranche de livre */}
+          <div className="absolute inset-0">
+            <img 
+              src="/images/templates/notebook-spine.svg" 
+              alt="Notebook spine" 
+              className="w-full h-full object-contain"
+            />
+          </div>
+          
+          {/* Image du panel (juste la partie gauche visible) */}
+          <div className="absolute inset-0 overflow-hidden">
+            <img 
+              src="/images/templates/templates-background.svg" 
+              alt="Panel background" 
+              className="w-[700px] h-[800px] object-cover"
+              style={{ transform: 'translateX(-640px)' }}
+            />
+          </div>
+          
+          {/* Onglets colorés sur le côté gauche */}
+          <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
+            {tabs.map((tab, index) => (
+              <motion.img
+                key={tab.id}
+                src={tab.closedImage}
+                alt={`${tab.title} tab closed`}
+                className="w-16 h-20 object-contain cursor-pointer relative z-10"
+                onClick={() => {
+                  if (tab.id === activeTab) {
+                    onToggle(); // Ouvrir le panel
+                  } else {
+                    onTabChange(tab.id); // Changer d'onglet et ouvrir
+                    onToggle();
+                  }
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.1 }}
                 onError={(e) => {
                   console.error('Erreur chargement image fermée:', tab.closedImage);
                   // Fallback avec un div coloré
                   e.target.style.display = 'none';
                   const fallback = document.createElement('div');
-                  fallback.className = `w-full h-full bg-gradient-to-br ${tab.color} flex items-center justify-center text-white font-bold text-sm shadow-lg`;
-                  fallback.innerHTML = `<div class="text-center"><div class="text-lg">${tab.icon}</div><div class="text-xs">${tab.title.toUpperCase()}</div></div>`;
+                  fallback.className = `w-16 h-20 bg-gradient-to-br ${tab.color} flex items-center justify-center text-white text-xs font-bold cursor-pointer`;
+                  fallback.innerHTML = `<div class="text-center"><div class="text-sm">${tab.icon}</div><div class="text-xs">${tab.title.toUpperCase()}</div></div>`;
+                  fallback.onclick = () => {
+                    if (tab.id === activeTab) {
+                      onToggle();
+                    } else {
+                      onTabChange(tab.id);
+                      onToggle();
+                    }
+                  };
                   e.target.parentNode.appendChild(fallback);
                 }}
                 onLoad={() => console.log('Image fermée chargée:', tab.closedImage)}
               />
-            </motion.button>
-          ))}
-        </div>
+            ))}
+          </div>
+        </motion.div>
       )}
 
       {/* Panel ouvert - Style livre avec onglets */}
@@ -85,7 +117,7 @@ const TemplateTab = ({
                   key={tab.id}
                   src={tab.openImage}
                   alt={`${tab.title} tab open`}
-                  className={`w-16 h-20 object-contain cursor-pointer ${
+                  className={`w-36 h-40 object-contain cursor-pointer ${
                     tab.id === activeTab ? 'opacity-100' : 'opacity-70 hover:opacity-100'
                   }`}
                   onClick={() => {
