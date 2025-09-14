@@ -675,7 +675,7 @@
 
 /* Bouton d'insertion - Style Lore sans encadré */
 .notion-insert-button {
-  @apply absolute left-[-60px] top-1 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200;
+  @apply absolute left-[-70px] top-1 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200;
   @apply opacity-0 group-hover:opacity-100 hover:opacity-100;
   @apply z-10;
 }
@@ -741,6 +741,23 @@
 
 .context-menu-item {
   @apply w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors rounded-sm;
+  @apply text-gray-900;
+}
+
+.context-menu-item .font-medium {
+  @apply text-gray-900;
+}
+
+.context-menu-item .text-xs {
+  @apply text-gray-500;
+}
+
+.context-menu input {
+  @apply text-gray-900 placeholder-gray-500;
+}
+
+.context-menu .text-xs.font-semibold {
+  @apply text-gray-600;
 }
 
 /* Bouton d'insertion contextuel - Style Notion exact */

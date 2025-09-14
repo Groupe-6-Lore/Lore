@@ -85,15 +85,9 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
   };
 
   const handleAccessCampaign = (campaignId) => {
-    if (campaignId === 'default-campaign') {
-      toast.success('Redirection vers le dashboard de campagne...');
-      // Simule la navigation pour la demo
-      setTimeout(() => {
-        navigate('/campaigns/default-campaign/dashboard');
-      }, 1000);
-    } else {
-      navigate(`/campaigns/${campaignId}/dashboard`);
-    }
+    console.log('Navigating to campaign:', campaignId);
+    toast.success('Redirection vers le dashboard de campagne...');
+    navigate(`/campaigns/${campaignId}`);
   };
 
   const handleNavigateToSystem = (system) => {

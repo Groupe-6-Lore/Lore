@@ -6,7 +6,6 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import AuthPage from './components/auth/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CampaignSelection from './pages/CampaignSelection';
-import CampaignDashboard from './pages/CampaignDashboard';
 import SelectUniverse from './pages/SelectUniverse';
 import SelectRules from './pages/SelectRules';
 import UniverseDetails from './pages/UniverseDetails';
@@ -16,6 +15,7 @@ import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
 import CreateCampaign from './pages/CreateCampaign';
 import Payment from './pages/Payment';
+import CampaignDashboard from './pages/CampaignDashboard';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -86,7 +86,7 @@ function App() {
           } />
           
           {/* Route protégée - Campaign Dashboard */}
-          <Route path="/campaigns/:campaignId/dashboard" element={
+          <Route path="/campaigns/:campaignId" element={
             <ProtectedRoute>
               <CampaignDashboard />
             </ProtectedRoute>

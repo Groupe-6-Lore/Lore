@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
+
 // Import des composants de drag & drop
 import {
   DndContext,
@@ -52,10 +53,566 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Composant pour les lignes de texte draggables
+const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  const handleClick = () => {
+    if (isLink && linkUrl) {
+      window.open(linkUrl, '_blank');
+    }
+  };
+
+  const handlePlusClick = (e) => {
+    e.stopPropagation();
+    if (onShowContextMenu) {
+      onShowContextMenu(e, id);
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative"
+      onPaste={onPaste}
+    >
+      {/* Drag Handle - Visible pendant le drag */}
+      <div 
+        className={`absolute left-[-30px] top-1 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
+          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
+        }`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={12} />
+      </div>
+
+      {/* Bouton + - Visible avec fond subtil */}
+      <div 
+        className="absolute left-[-55px] top-1 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        onClick={handlePlusClick}
+      >
+        <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
+      </div>
+
+      {/* Contenu */}
+      {isHeading ? (
+        type === 'heading1' ? (
+          <h1 
+            className={`leading-relaxed pl-8 text-3xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
+          >
+            {isLink && <Link size={14} className="inline mr-2" />}
+            {content}
+          </h1>
+        ) : type === 'heading2' ? (
+          <h2 
+            className={`leading-relaxed pl-8 text-2xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
+          >
+            {isLink && <Link size={14} className="inline mr-2" />}
+            {content}
+          </h2>
+        ) : type === 'heading3' ? (
+          <h3 
+            className={`leading-relaxed pl-8 text-xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
+          >
+            {isLink && <Link size={14} className="inline mr-2" />}
+            {content}
+          </h3>
+        ) : (
+          <p 
+            className={`leading-relaxed pl-8 text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
+            onClick={handleClick}
+          >
+            {isLink && <Link size={14} className="inline mr-2" />}
+            {content}
+          </p>
+        )
+      ) : (
+        <p 
+          className={`leading-relaxed pl-8 ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'text-light'}`}
+          onClick={handleClick}
+        >
+          {isLink && <Link size={14} className="inline mr-2" />}
+          {content}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Composant pour les zones de drop entre les éléments
+const DropZone = ({ id, isActive, onTemplateDrop, targetIndex }) => {
+  return (
+    <motion.div
+      className={`h-2 transition-all duration-200 ${
+        isActive 
+          ? 'bg-blue-500/50 border-2 border-dashed border-blue-500' 
+          : 'bg-transparent hover:bg-gray-300/20'
+      }`}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => onTemplateDrop && onTemplateDrop(e, targetIndex)}
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ 
+        height: isActive ? 8 : 2, 
+        opacity: isActive ? 1 : 0.3 
+      }}
+      whileHover={{ 
+        height: 6, 
+        opacity: 0.8,
+        backgroundColor: 'rgba(59, 130, 246, 0.3)'
+      }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    />
+  );
+};
+
+// Composant pour les templates draggables
+const DraggableTemplate = ({ template }) => {
+  return (
+    <motion.div
+      className="bg-slate-800/40 backdrop-blur-md rounded-lg p-3 border border-slate-700/50 shadow-lg cursor-grab hover:shadow-xl transition-all duration-200"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/json', JSON.stringify(template));
+      }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ 
+        scale: 1.05, 
+        rotateY: 5,
+        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)"
+      }}
+      whileTap={{ scale: 0.95 }}
+      whileDrag={{ 
+        scale: 1.1, 
+        rotate: 5,
+        boxShadow: "0 25px 50px rgba(0, 0, 0, 0.4)"
+      }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
+      <motion.div 
+        className="flex items-center space-x-3"
+        whileHover={{ x: 5 }}
+      >
+        <motion.span 
+          className="text-2xl"
+          whileHover={{ scale: 1.2, rotate: 10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {template.icon}
+        </motion.span>
+        <div>
+          <div className="text-light font-semibold text-sm">{template.name}</div>
+          <div className="text-light/70 text-xs">{template.description}</div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Composant pour la card quêtes draggable
+const DraggableQuestCard = ({ campaign, onShowContextMenu, id }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className="group relative bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl max-w-sm"
+    >
+      {/* Drag Handle */}
+      <div 
+        className={`absolute left-[-30px] top-6 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
+          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
+        }`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={12} />
+      </div>
+
+      {/* Bouton + */}
+      <div 
+        className="absolute left-[-55px] top-6 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'quest-card')}
+      >
+        <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
+      </div>
+
+      <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
+      
+      <div className="space-y-4">
+        {/* Quête majeure */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span className="text-white font-medium">Major quest</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-white">50%</span>
+              <ChevronRight size={16} className="text-white" />
+            </div>
+          </div>
+          <div className="w-full bg-gray-600 rounded-full h-2">
+            <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '50%' }}></div>
+          </div>
+        </div>
+
+        {/* Quêtes mineures */}
+        {campaign?.quests?.map((quest, index) => (
+          <div key={index} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`w-3 h-3 rounded-full ${
+                  quest.status === 'completed' ? 'bg-green-500' :
+                  quest.status === 'in_progress' ? 'bg-yellow-500' : 'bg-red-500'
+                }`}></div>
+                <span className="text-white font-medium">{quest.name}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-white">{quest.completed}/{quest.total}</span>
+                <ChevronRight size={16} className="text-white" />
+              </div>
+            </div>
+            <div className="w-full bg-gray-600 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${
+                  quest.status === 'completed' ? 'bg-green-500' :
+                  quest.status === 'in_progress' ? 'bg-yellow-500' : 'bg-red-500'
+                }`} 
+                style={{ width: `${(quest.completed / quest.total) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Composant pour la card marchand draggable
+const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu, onPaste, id, ...inventoryProps }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className="group relative bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl"
+    >
+      {/* Drag Handle */}
+      <div 
+        className={`absolute left-[-30px] top-6 w-4 h-4 cursor-grab transition-all duration-200 text-gray-400 hover:text-gray-600 z-10 flex items-center justify-center ${
+          isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-80 hover:opacity-100'
+        }`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={12} />
+      </div>
+
+      {/* Bouton + */}
+      <div 
+        className="absolute left-[-55px] top-6 w-4 h-4 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-gray-100/80 hover:bg-gray-200/90 rounded-sm"
+        onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'merchant-card')}
+      >
+        <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
+      </div>
+
+      <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
+      
+      <div className="space-y-4" onPaste={onPaste}>
+        <p className="text-light leading-relaxed">{campaign?.rencontre.content}</p>
+        <div className="text-sm text-light/80 font-semibold">
+          PNJ: {campaign?.rencontre.npc}
+        </div>
+
+        {/* Tableau d'inventaire - Style Notion */}
+        <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold text-light flex items-center">
+              <Package size={16} className="mr-2" />
+              Inventaire du marchand
+            </h4>
+            <div className="text-sm text-light/80 font-semibold">
+              Total: {inventoryProps.editingTotal ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={inventoryProps.totalValue}
+                    onChange={(e) => inventoryProps.setTotalValue(parseInt(e.target.value) || 0)}
+                    className="w-20 px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                    autoFocus
+                  />
+                  <span>pièces d'or</span>
+                  <button
+                    onClick={inventoryProps.handleSaveTotal}
+                    className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                    title="Sauvegarder"
+                  >
+                    <CheckCircle size={14} />
+                  </button>
+                  <button
+                    onClick={inventoryProps.handleCancelTotalEdit}
+                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    title="Annuler"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={inventoryProps.handleEditTotal}
+                  className="hover:bg-light/10 p-1 rounded transition-colors"
+                >
+                  {inventoryProps.getTotalValue()} pièces d'or
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-light/20">
+            <div className="grid grid-cols-4 gap-4 p-3 bg-light/10 text-sm font-semibold text-light border-b border-light/20">
+              <div>Objet</div>
+              <div>Nom</div>
+              <div>Prix</div>
+              <div>Actions</div>
+            </div>
+            {merchantInventory.map((item, index) => (
+              <div key={item.id} className="grid grid-cols-4 gap-4 p-3 border-b border-light/10 last:border-b-0">
+                <div className="flex items-center">
+                  <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                    {index + 1}
+                  </div>
+                </div>
+                <div className="text-light font-medium">
+                  {inventoryProps.editingTableField === `${item.id}-name` ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={inventoryProps.editingTableValue}
+                        onChange={(e) => inventoryProps.setEditingTableValue(e.target.value)}
+                        className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => inventoryProps.handleSaveTableField(item.id, 'name')}
+                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        title="Sauvegarder"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={inventoryProps.handleCancelTableEdit}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                        title="Annuler"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => inventoryProps.handleEditTableField(item.id, 'name', item.name)}
+                      className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                    >
+                      {item.name}
+                    </button>
+                  )}
+                </div>
+                <div className="text-light/80">
+                  {inventoryProps.editingTableField === `${item.id}-price` ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={inventoryProps.editingTableValue}
+                        onChange={(e) => inventoryProps.setEditingTableValue(e.target.value)}
+                        className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => inventoryProps.handleSaveTableField(item.id, 'price')}
+                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        title="Sauvegarder"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={inventoryProps.handleCancelTableEdit}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                        title="Annuler"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => inventoryProps.handleEditTableField(item.id, 'price', item.price)}
+                      className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                    >
+                      {item.price} PO
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => inventoryProps.handleDeleteItem(item.id)}
+                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={inventoryProps.handleAddItem}
+            className="w-full mt-4 bg-golden hover:bg-golden/80 text-dark-blue py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold"
+          >
+            <Plus size={16} />
+            <span>Ajouter un objet</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Composant pour les suggestions IA
+const SuggestionsPanel = ({ suggestions, onClose, onApplySuggestion }) => {
+  if (!suggestions.length) return null;
+
+  return (
+    <motion.div 
+      className="fixed top-4 right-4 w-80 bg-slate-800/90 backdrop-blur-md rounded-lg border border-slate-700/50 shadow-2xl z-50 p-4"
+      initial={{ opacity: 0, x: 300, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 300, scale: 0.9 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <motion.h3 
+          className="text-light font-semibold text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          💡 Suggestions IA
+        </motion.h3>
+        <motion.button
+          onClick={onClose}
+          className="text-light/60 hover:text-light transition-colors"
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <X size={16} />
+        </motion.button>
+      </div>
+      
+      <div className="space-y-2">
+        <AnimatePresence>
+          {suggestions.map((suggestion, index) => (
+            <motion.div
+              key={suggestion.id}
+              className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-lg ${
+                suggestion.priority === 'high' 
+                  ? 'bg-red-500/20 border-red-500/50' 
+                  : suggestion.priority === 'medium'
+                  ? 'bg-yellow-500/20 border-yellow-500/50'
+                  : 'bg-blue-500/20 border-blue-500/50'
+              }`}
+              onClick={() => onApplySuggestion(suggestion)}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              transition={{ 
+                duration: 0.2, 
+                delay: index * 0.1,
+                ease: "easeOut" 
+              }}
+              whileHover={{ 
+                scale: 1.02, 
+                y: -2,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)"
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-light font-medium text-sm">{suggestion.title}</div>
+              <div className="text-light/70 text-xs mt-1">{suggestion.description}</div>
+              <motion.div 
+                className={`text-xs mt-2 px-2 py-1 rounded-full inline-block ${
+                  suggestion.priority === 'high' 
+                    ? 'bg-red-500/30 text-red-300' 
+                    : suggestion.priority === 'medium'
+                    ? 'bg-yellow-500/30 text-yellow-300'
+                    : 'bg-blue-500/30 text-blue-300'
+                }`}
+                whileHover={{ scale: 1.05 }}
+              >
+                {suggestion.priority === 'high' ? 'Priorité haute' : 
+                 suggestion.priority === 'medium' ? 'Priorité moyenne' : 'Priorité basse'}
+              </motion.div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+};
+
 const CampaignDashboard = () => {
   const { campaignId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Debug logs
+  console.log('CampaignDashboard - campaignId:', campaignId);
+  console.log('CampaignDashboard - user:', user);
 
   // États pour la gestion des données
   const [campaign, setCampaign] = useState(null);
@@ -65,20 +622,15 @@ const CampaignDashboard = () => {
   // États pour l'interface utilisateur
   const [showHistoryMenu, setShowHistoryMenu] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState([]);
-  const [showInsertMenu, setShowInsertMenu] = useState(false);
-  const [showContextMenu, setShowContextMenu] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+  const [sessions, setSessions] = useState([]);
 
   // États pour le drag & drop
   const [activeId, setActiveId] = useState(null);
-  const [editingLine, setEditingLine] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [textLines, setTextLines] = useState([
     {
       id: 'line-1',
-      content: 'Dans les terres brûles du Royaume de Cendres, où les volcans crachent leur colère depuis des siècles, une prophétie ancienne se réveille.',
+      content: 'Dans les terres brûlées du Royaume de Cendres, où les volcans crachent leur colère depuis des siècles, une prophétie ancienne se réveille.',
       section: 'situation'
     },
     {
@@ -90,104 +642,236 @@ const CampaignDashboard = () => {
       id: 'line-3',
       content: 'La session commence dans la taverne "Le Dragon de Bronze", au cœur de Pyros. Un messager essoufflé fait irruption, portant une missive scellée du Conseil des Flammes.',
       section: 'debut'
-    },
-    {
-      id: 'merchant-card',
-      content: 'merchant',
-      section: 'merchant',
-      type: 'card'
     }
   ]);
 
-  // Données par défaut pour la démo
-  const defaultCampaign = {
-    id: 'default-campaign',
-    title: 'Campagne du feu',
-    game_system: 'Donjons & Dragons 5e',
-    universe: 'Les Royaumes Fragmentés',
-    date: '01/04/2025',
-    queteMajeure: 'Récupérer la Flamme Éternelle',
-    rencontre: {
-      title: 'Rencontre avec un marchand',
-      content: 'Gurdil Le Briant, un marchand nain aux yeux perçants, propose des armes enchantées contre des informations sur les tunnels volcaniques.',
-      npc: 'Gurdil Le Briant'
-    },
-    quests: [
-      { type: 'major', name: 'Major quest', progress: 50 },
-      { type: 'minor', name: 'Minor quest', completed: 5, total: 5, status: 'completed' },
-      { type: 'minor', name: 'Minor quest', completed: 2, total: 4, status: 'in_progress' },
-      { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
-    ]
-  };
+  // Templates disponibles avec catégories (5 catégories principales)
+  const [templates] = useState([
+    // Templates généraux
+    { id: 'template-general', type: 'template', name: 'Template', icon: '📄', description: 'Modèle généraliste', content: 'Nouveau template...', category: 'Templates' },
+    
+    // Quêtes
+    { id: 'template-quest', type: 'quest', name: 'Quête', icon: '🎯', description: 'Nouvelle quête', content: 'Nouvelle quête à développer...', category: 'Quêtes' },
+    
+    // Objets
+    { id: 'template-object', type: 'object', name: 'Objet', icon: '⚔️', description: 'Objet magique ou équipement', content: 'Nouvel objet à décrire...', category: 'Objets' },
+    
+    // Personnages
+    { id: 'template-character', type: 'character', name: 'Personnage', icon: '👤', description: 'Personnage non-joueur', content: 'Nouveau personnage à créer...', category: 'Personnages' },
+    
+    // Événements
+    { id: 'template-event', type: 'event', name: 'Événement', icon: '⚔️', description: 'Événement de campagne', content: 'Nouvel événement à créer...', category: 'Événements' }
+  ]);
 
-  // Données d'exemple pour les sessions historiques
-  const historicalSessions = [
-    {
-      id: 'session-1',
-      title: 'Session 1 - L\'arrivée à Pyros',
-      date: '15/03/2025',
-      duration: '4h 30min',
-      players: ['Alice', 'Bob', 'Charlie', 'Diana'],
-      summary: 'Les héros arrivent à Pyros et découvrent les premiers signes de corruption. Rencontre avec le capitaine Marcus.',
-      status: 'completed'
-    },
-    {
-      id: 'session-2',
-      title: 'Session 2 - Les tunnels volcaniques',
-      date: '22/03/2025',
-      duration: '3h 45min',
-      players: ['Alice', 'Bob', 'Charlie', 'Diana'],
-      summary: 'Exploration des tunnels souterrains et découverte des créatures de magma. Combat épique contre un élémentaire de feu.',
-      status: 'completed'
-    },
-    {
-      id: 'session-3',
-      title: 'Session 3 - Le sanctuaire perdu',
-      date: '29/03/2025',
-      duration: '5h 15min',
-      players: ['Alice', 'Bob', 'Charlie', 'Diana'],
-      summary: 'Découverte du sanctuaire perdu des anciens gardiens. Révélations sur la prophétie et les clés de la Flamme Éternelle.',
-      status: 'in_progress'
-    }
-  ];
+  // Templates pour le menu contextuel (éléments d'édition)
+  const [contextTemplates] = useState([
+    // Blocs de base
+    { id: 'context-text', type: 'text', name: 'Texte', icon: '📝', description: 'Bloc de texte simple', content: 'Nouveau texte...', category: 'Blocs de base' },
+    { id: 'context-heading1', type: 'heading1', name: 'Titre 1', icon: 'H1', description: 'Titre principal', content: 'Titre principal', category: 'Blocs de base' },
+    { id: 'context-heading2', type: 'heading2', name: 'Titre 2', icon: 'H2', description: 'Sous-titre', content: 'Sous-titre', category: 'Blocs de base' },
+    { id: 'context-heading3', type: 'heading3', name: 'Titre 3', icon: 'H3', description: 'Titre de section', content: 'Titre de section', category: 'Blocs de base' },
+    { id: 'context-bullet', type: 'bullet', name: 'Liste à puces', icon: '•', description: 'Liste avec puces', content: '• Nouvel élément', category: 'Blocs de base' },
+    { id: 'context-number', type: 'number', name: 'Liste numérotée', icon: '1.', description: 'Liste avec numéros', content: '1. Nouvel élément', category: 'Blocs de base' },
+    
+    // Quêtes
+    { id: 'context-quest', type: 'quest', name: 'Quête', icon: '🎯', description: 'Nouvelle quête', content: 'Nouvelle quête à développer...', category: 'Quêtes' },
+    { id: 'context-major-quest', type: 'major-quest', name: 'Quête majeure', icon: '👑', description: 'Quête principale de campagne', content: 'Quête majeure : ', category: 'Quêtes' },
+    { id: 'context-side-quest', type: 'side-quest', name: 'Quête secondaire', icon: '⭐', description: 'Quête optionnelle', content: 'Quête secondaire : ', category: 'Quêtes' },
+    
+    // Personnages
+    { id: 'context-npc', type: 'npc', name: 'PNJ', icon: '👤', description: 'Personnage non-joueur', content: 'Nouveau PNJ à créer...', category: 'Personnages' },
+    { id: 'context-villain', type: 'villain', name: 'Antagoniste', icon: '😈', description: 'Méchant ou ennemi', content: 'Antagoniste : ', category: 'Personnages' },
+    { id: 'context-ally', type: 'ally', name: 'Allié', icon: '🤝', description: 'Personnage allié', content: 'Allié : ', category: 'Personnages' },
+    
+    // Objets
+    { id: 'context-item', type: 'item', name: 'Objet', icon: '⚔️', description: 'Objet magique ou équipement', content: 'Nouvel objet à décrire...', category: 'Objets' },
+    { id: 'context-weapon', type: 'weapon', name: 'Arme', icon: '🗡️', description: 'Arme de combat', content: 'Arme : ', category: 'Objets' },
+    { id: 'context-armor', type: 'armor', name: 'Armure', icon: '🛡️', description: 'Protection corporelle', content: 'Armure : ', category: 'Objets' },
+    
+    // Événements
+    { id: 'context-encounter', type: 'encounter', name: 'Rencontre', icon: '⚔️', description: 'Événement de combat', content: 'Rencontre : ', category: 'Événements' },
+    { id: 'context-trap', type: 'trap', name: 'Piège', icon: '🕳️', description: 'Danger caché', content: 'Piège : ', category: 'Événements' },
+    { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' }
+  ]);
+
+  // États pour l'IA et l'automatisation
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dependencies, setDependencies] = useState({});
+  const [selectedElement, setSelectedElement] = useState(null);
+
+  // États pour le menu contextuel
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuTarget, setContextMenuTarget] = useState(null);
+  const [contextMenuSearch, setContextMenuSearch] = useState('');
+  const [selectedContextMenuItem, setSelectedContextMenuItem] = useState(0);
+
+  // Données de campagne d'exemple
+  useEffect(() => {
+    const mockCampaign = {
+      id: campaignId,
+      title: 'Les Gardiens de la Flamme Éternelle',
+      universe: 'Royaume de Cendres',
+      game_system: 'D&D 5e',
+      queteMajeure: 'Récupérer la Flamme Éternelle',
+      rencontre: {
+        title: 'Rencontre avec un marchand',
+        content: 'Un marchand mystérieux propose des objets magiques aux héros dans les ruines anciennes.',
+        npc: 'Marcus le Marchand'
+      },
+      quests: [
+        { type: 'major', name: 'Major quest', completed: 1, total: 2, status: 'in_progress' },
+        { type: 'minor', name: 'Minor quest', completed: 5, total: 5, status: 'completed' },
+        { type: 'minor', name: 'Minor quest', completed: 4, total: 4, status: 'completed' },
+        { type: 'minor', name: 'Minor quest', completed: 2, total: 4, status: 'in_progress' },
+        { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
+      ]
+    };
+    setCampaign(mockCampaign);
+    setLoading(false);
+  }, [campaignId]);
+
+  // Initialiser les sessions avec les données d'exemple
+  useEffect(() => {
+    const initialSessions = [
+      {
+        id: 'session-1',
+        title: 'Session 1 - L\'arrivée à Pyros',
+        date: '15/03/2025',
+        duration: '4h 30min',
+        players: ['Alice', 'Bob', 'Charlie', 'Diana'],
+        summary: 'Les héros arrivent à Pyros et découvrent les premiers signes de corruption. Rencontre avec le capitaine Marcus.',
+        status: 'completed'
+      },
+      {
+        id: 'session-2',
+        title: 'Session 2 - Les tunnels volcaniques',
+        date: '22/03/2025',
+        duration: '3h 45min',
+        players: ['Alice', 'Bob', 'Charlie', 'Diana'],
+        summary: 'Exploration des tunnels souterrains et découverte des créatures de magma. Combat épique contre un élémentaire de feu.',
+        status: 'completed'
+      },
+      {
+        id: 'session-3',
+        title: 'Session 3 - Le sanctuaire perdu',
+        date: '29/03/2025',
+        duration: '5h 15min',
+        players: ['Alice', 'Bob', 'Charlie', 'Diana'],
+        summary: 'Découverte du sanctuaire perdu des anciens gardiens. Révélations sur la prophétie et les clés de la Flamme Éternelle.',
+        status: 'in_progress'
+      }
+    ];
+    setSessions(initialSessions);
+  }, []);
 
   // Inventaire du marchand
   const [merchantInventory, setMerchantInventory] = useState([
     { id: 1, name: 'Potion de soins', price: 50, description: 'Restaure 2d4+2 points de vie' },
     { id: 2, name: 'Épée enchantée', price: 150, description: 'Épée longue +1' },
-    { id: 3, name: 'Anneau de protection', price: 200, description: '+1 à la classe d\'armure' }
+    { id: 3, name: 'Bouclier magique', price: 200, description: 'Bouclier +1' }
   ]);
-  
-  // États pour l'édition du tableau
+
+  // États pour l'édition
   const [editingTableField, setEditingTableField] = useState(null);
   const [editingTableValue, setEditingTableValue] = useState('');
   const [editingTotal, setEditingTotal] = useState(false);
-  const [totalValue, setTotalValue] = useState(0);
+  const [totalValue, setTotalValue] = useState(400);
 
-  // Templates disponibles
-  const availableTemplates = [
-    { id: 'text', name: 'Texte', description: 'Bloc de texte simple', icon: <FileText size={16} />, type: 'block' },
-    { id: 'heading1', name: 'Titre 1', description: 'Titre principal', icon: <span className="text-lg font-bold">H1</span>, type: 'block' },
-    { id: 'heading2', name: 'Titre 2', description: 'Sous-titre', icon: <span className="text-base font-bold">H2</span>, type: 'block' },
-    { id: 'heading3', name: 'Titre 3', description: 'Titre de section', icon: <span className="text-sm font-bold">H3</span>, type: 'block' },
-    { id: 'bullet', name: 'Liste à puces', description: 'Liste avec des puces', icon: <span>•</span>, type: 'block' },
-    { id: 'number', name: 'Liste numérotée', description: 'Liste avec des numéros', icon: <span>1.</span>, type: 'block' },
-    { id: 'quote', name: 'Citation', description: 'Bloc de citation', icon: <span>"</span>, type: 'block' },
-    { id: 'code', name: 'Code', description: 'Bloc de code', icon: <span>&lt;/&gt;</span>, type: 'block' },
-    { id: 'divider', name: 'Séparateur', description: 'Ligne de séparation', icon: <span>---</span>, type: 'block' },
-    { id: 'quest', name: 'Quête', type: 'Quête', description: 'Nouvelle quête', icon: <Target size={16} /> },
-    { id: 'character', name: 'Personnage', type: 'Personnage', description: 'Nouveau personnage', icon: <Users size={16} /> },
-    { id: 'location', name: 'Lieu', type: 'Lieu', description: 'Description d\'un lieu', icon: <Package size={16} /> },
-    { id: 'item', name: 'Objet', type: 'Objet', description: 'Objet magique ou équipement', icon: <Package size={16} /> },
-    { id: 'encounter', name: 'Rencontre', type: 'Combat', description: 'Rencontre de combat', icon: <Newspaper size={16} /> }
-  ];
+  // Fonctions pour l'inventaire du marchand
+  const handleAddItem = () => {
+    const newId = Math.max(...merchantInventory.map(item => item.id)) + 1;
+    const newItem = {
+      id: newId,
+      name: 'Nouvel objet',
+      price: 0,
+      description: 'Description à ajouter'
+    };
+    setMerchantInventory([...merchantInventory, newItem]);
+    setEditingTableField(`${newId}-name`);
+    setEditingTableValue('Nouvel objet');
+  };
 
-  const filteredTemplates = availableTemplates.filter(template =>
-    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDeleteItem = (id) => {
+    setMerchantInventory(merchantInventory.filter(item => item.id !== id));
+  };
 
-  // Handlers pour le drag & drop des lignes de texte
+  const handleEditTableField = (id, field, value) => {
+    setEditingTableField(`${id}-${field}`);
+    setEditingTableValue(value);
+  };
+
+  const handleSaveTableField = (id, field) => {
+    setMerchantInventory(merchantInventory.map(item => 
+      item.id === id ? { ...item, [field]: editingTableValue } : item
+    ));
+    setEditingTableField(null);
+    setEditingTableValue('');
+  };
+
+  const handleCancelTableEdit = () => {
+    setEditingTableField(null);
+    setEditingTableValue('');
+  };
+
+  const getTotalValue = () => {
+    return merchantInventory.reduce((total, item) => total + item.price, 0);
+  };
+
+  const handleEditTotal = () => {
+    setEditingTotal(true);
+    setTotalValue(getTotalValue());
+  };
+
+  const handleSaveTotal = () => {
+    setEditingTotal(false);
+  };
+
+  const handleCancelTotalEdit = () => {
+    setEditingTotal(false);
+  };
+
+  // Fonctions pour les sessions
+  const handleSessionSelect = (sessionId) => {
+    setSelectedSessions(prev => 
+      prev.includes(sessionId) 
+        ? prev.filter(id => id !== sessionId)
+        : [...prev, sessionId]
+    );
+  };
+
+  const handleViewSelectedSessions = () => {
+    console.log('Sessions sélectionnées:', selectedSessions);
+    setShowHistoryMenu(false);
+  };
+
+  const handleCreateNewSession = () => {
+    const newSessionId = `session-${Date.now()}`;
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    const newSession = {
+      id: newSessionId,
+      title: `Session ${sessions.length + 1} - Nouvelle partie`,
+      date: currentDate,
+      duration: '0h 00min',
+      players: ['Alice', 'Bob', 'Charlie', 'Diana'],
+      summary: 'Nouvelle session créée. Prêt à commencer l\'aventure !',
+      status: 'planned'
+    };
+    
+    setSessions(prevSessions => [newSession, ...prevSessions]);
+    setSelectedSessions([newSessionId]);
+    setShowHistoryMenu(true);
+  };
+
+  // Fonction pour obtenir la couleur des quêtes
+  const getQuestColor = (quest) => {
+    if (quest.status === 'completed') return 'bg-green-500';
+    if (quest.status === 'in_progress') return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  // Configuration des capteurs pour le drag & drop
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -195,6 +879,7 @@ const CampaignDashboard = () => {
     })
   );
 
+  // Fonctions de drag & drop
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
     const item = textLines.find(line => line.id === event.active.id);
@@ -209,7 +894,18 @@ const CampaignDashboard = () => {
         const newIndex = items.findIndex(item => item.id === over.id);
         
         if (oldIndex !== -1 && newIndex !== -1) {
-          return arrayMove(items, oldIndex, newIndex);
+          // Logique pour drop entre les éléments
+          const newItems = [...items];
+          const [movedItem] = newItems.splice(oldIndex, 1);
+          
+          // Insérer à la nouvelle position
+          if (oldIndex < newIndex) {
+            newItems.splice(newIndex - 1, 0, movedItem);
+          } else {
+            newItems.splice(newIndex, 0, movedItem);
+          }
+          
+          return newItems;
         }
         return items;
       });
@@ -218,601 +914,394 @@ const CampaignDashboard = () => {
     setDraggedItem(null);
   };
 
-  // Handlers pour l'édition des lignes
-  const handleLineEdit = (id, isEditing) => {
-    setEditingLine(isEditing ? id : null);
-  };
-
-  const handleLineContentChange = (id, content) => {
-    setTextLines(lines => lines.map(line => 
-      line.id === id ? { ...line, content } : line
-    ));
-  };
-
-  const handleLineDelete = (id) => {
-    setTextLines(lines => lines.filter(line => line.id !== id));
-  };
-
-  const handleLineInsertAfter = (id, type) => {
-    const newLine = {
-      id: `line-${Date.now()}`,
-      content: '',
-      section: textLines.find(line => line.id === id)?.section || 'situation'
-    };
-    
-    const index = textLines.findIndex(line => line.id === id);
-    setTextLines(lines => [
-      ...lines.slice(0, index + 1),
-      newLine,
-      ...lines.slice(index + 1)
-    ]);
-    setEditingLine(newLine.id);
-  };
-
-  const handleAddLineToSection = (section) => {
-    const newLine = {
-      id: `line-${Date.now()}`,
-      content: '',
-      section
-    };
-    setTextLines(lines => [...lines, newLine]);
-    setEditingLine(newLine.id);
-  };
-
-  // Handlers pour les menus
-  const handleHistoryToggle = () => {
-    setShowHistoryMenu(!showHistoryMenu);
-  };
-
-  const handleSessionSelect = (sessionId) => {
-    setSelectedSessions(prev => 
-      prev.includes(sessionId) 
-        ? prev.filter(id => id !== sessionId)
-        : [...prev, sessionId]
-    );
-  };
-
-  const handleViewSelectedSessions = () => {
-    console.log('Sessions sélectionnées:', selectedSessions);
-    setShowHistoryMenu(false);
-  };
-
-  const handleInsertTemplate = (template) => {
-    setShowInsertMenu(false);
-    setShowContextMenu(false);
-    toast.success(`Template "${template.name}" inséré !`);
-  };
-
-  const handleContextMenu = (e) => {
+  // Fonction pour gérer le drop des templates
+  const handleTemplateDrop = (e, targetIndex) => {
     e.preventDefault();
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    try {
+      const templateData = JSON.parse(e.dataTransfer.getData('application/json'));
+      const newLine = {
+        id: `template-${Date.now()}`,
+        content: templateData.content,
+        section: 'situation', // Par défaut dans situation
+        type: templateData.type,
+        template: true
+      };
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        newItems.splice(targetIndex, 0, newLine);
+        return newItems;
+      });
+      
+      // Générer des suggestions après l'ajout
+      // generateSuggestions(newLine); // Temporairement désactivé
+      
+      toast.success(`${templateData.name} ajouté avec succès !`);
+    } catch (error) {
+      console.error('Erreur lors du drop du template:', error);
+    }
+  };
+
+  // Fonction pour générer des suggestions automatiques
+  const generateSuggestions = (newItem) => {
+    const newSuggestions = [];
+    
+    // Suggestions basées sur le type d'élément
+    if (newItem.type === 'quest') {
+      newSuggestions.push({
+        id: 'suggestion-1',
+        type: 'npc',
+        title: 'Ajouter un PNJ lié',
+        description: 'Cette quête pourrait bénéficier d\'un personnage clé',
+        priority: 'high'
+      });
+      newSuggestions.push({
+        id: 'suggestion-2',
+        type: 'location',
+        title: 'Définir un lieu',
+        description: 'Où se déroule cette quête ?',
+        priority: 'medium'
+      });
+    }
+    
+    if (newItem.type === 'npc') {
+      newSuggestions.push({
+        id: 'suggestion-3',
+        type: 'quest',
+        title: 'Créer une quête',
+        description: 'Ce personnage pourrait donner une quête',
+        priority: 'medium'
+      });
+    }
+    
+    // Suggestions basées sur le contenu
+    const content = newItem.content.toLowerCase();
+    if (content.includes('magique') || content.includes('enchanté')) {
+      newSuggestions.push({
+        id: 'suggestion-4',
+        type: 'item',
+        title: 'Objet magique',
+        description: 'Ajouter un objet magique lié',
+        priority: 'low'
+      });
+    }
+    
+    setSuggestions(newSuggestions);
+    setShowSuggestions(true);
+  };
+
+  // Fonction pour détecter les dépendances
+  const detectDependencies = () => {
+    const deps = {};
+    
+    textLines.forEach(line => {
+      if (line.type === 'quest') {
+        // Chercher des références à des PNJs dans le contenu
+        const npcMatches = line.content.match(/(?:personnage|PNJ|marchand|roi|mage|guerrier)/gi);
+        if (npcMatches) {
+          deps[line.id] = {
+            ...deps[line.id],
+            npcs: npcMatches.length
+          };
+        }
+        
+        // Chercher des références à des lieux
+        const locationMatches = line.content.match(/(?:taverne|château|forêt|montagne|ville)/gi);
+        if (locationMatches) {
+          deps[line.id] = {
+            ...deps[line.id],
+            locations: locationMatches.length
+          };
+        }
+      }
+    });
+    
+    setDependencies(deps);
+  };
+
+  // Auto-organisation basée sur le contenu
+  const autoOrganize = () => {
+    setTextLines((items) => {
+      return items.sort((a, b) => {
+        // Priorité : quêtes > PNJs > lieux > objets
+        const priority = { quest: 4, npc: 3, location: 2, item: 1 };
+        const aPriority = priority[a.type] || 0;
+        const bPriority = priority[b.type] || 0;
+        
+        if (aPriority !== bPriority) {
+          return bPriority - aPriority;
+        }
+        
+        // Si même priorité, trier par longueur de contenu
+        return b.content.length - a.content.length;
+      });
+    });
+    
+    toast.success('Contenu réorganisé automatiquement !');
+  };
+
+  // Fonction pour appliquer une suggestion
+  const applySuggestion = (suggestion) => {
+    const template = templates.find(t => t.type === suggestion.type);
+    if (template) {
+      const newLine = {
+        id: `suggestion-${Date.now()}`,
+        content: template.content,
+        section: 'situation',
+        type: template.type,
+        template: true,
+        fromSuggestion: true
+      };
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        newItems.push(newLine);
+        return newItems;
+      });
+      
+      toast.success(`Suggestion appliquée : ${suggestion.title}`);
+    }
+    
+    // Retirer la suggestion de la liste
+    setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+  };
+
+  // Fonction pour fermer les suggestions
+  const closeSuggestions = () => {
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  // Fonction pour traiter le collage de liens
+  const handlePaste = (e) => {
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Détecter si c'est un lien vers une page de template
+    const linkPattern = /\/campaigns\/[^\/]+\/(quest|npc|item|location)\/([^\/\s]+)/;
+    const match = pastedText.match(linkPattern);
+    
+    if (match) {
+      e.preventDefault();
+      const [, type, name] = match;
+      
+      // Créer un nouveau bloc avec le lien
+      const newLine = {
+        id: `link-${Date.now()}`,
+        content: `[${type === 'quest' ? 'Quête' : type === 'npc' ? 'Personnage' : type === 'item' ? 'Objet' : 'Lieu'}: ${name}]`,
+        section: 'situation',
+        type: type,
+        isLink: true,
+        linkUrl: pastedText
+      };
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        newItems.push(newLine);
+        return newItems;
+      });
+      
+      toast.success(`Lien ${type} ajouté avec succès !`);
+    }
+  };
+
+  // Fonction pour afficher le menu contextuel
+  const handleShowContextMenu = (e, targetId) => {
+    e.preventDefault();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuWidth = 320; // Largeur approximative du menu
+    const menuHeight = 400; // Hauteur approximative du menu
+    
+    let x = rect.right + 10; // Position par défaut à droite du bouton
+    let y = rect.top;
+    
+    // Vérifier si le menu sort à droite de l'écran
+    if (x + menuWidth > window.innerWidth) {
+      x = rect.left - menuWidth - 10; // Positionner à gauche du bouton
+    }
+    
+    // Vérifier si le menu sort en bas de l'écran
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - 10; // Ajuster vers le haut
+    }
+    
+    // Vérifier si le menu sort en haut de l'écran
+    if (y < 10) {
+      y = 10; // Position minimale
+    }
+    
+    setContextMenuPosition({ x, y });
+    setContextMenuTarget(targetId);
     setShowContextMenu(true);
   };
 
-  const handleTemplateSelect = (template) => {
-    if (template.type === 'block') {
-      const newLine = {
-        id: `line-${Date.now()}`,
-        content: getTemplateContent(template.id),
-        section: 'situation'
-      };
-      setTextLines(lines => [...lines, newLine]);
-      setEditingLine(newLine.id);
-    }
+  // Fonction pour fermer le menu contextuel
+  const handleCloseContextMenu = () => {
     setShowContextMenu(false);
+    setContextMenuTarget(null);
+    setContextMenuSearch('');
+    setSelectedContextMenuItem(0);
   };
 
-  const getTemplateContent = (templateId) => {
-    switch (templateId) {
-      case 'heading1': return '# ';
-      case 'heading2': return '## ';
-      case 'heading3': return '### ';
-      case 'bullet': return '• ';
-      case 'number': return '1. ';
-      case 'quote': return '> ';
-      case 'code': return '```\n\n```';
-      case 'divider': return '---';
-      default: return '';
+  // Fonction pour filtrer les templates selon la recherche
+  const getFilteredTemplates = () => {
+    if (!contextMenuSearch.trim()) {
+      return contextTemplates;
     }
-  };
-
-  // Handlers pour l'inventaire du marchand
-  const handleEditItem = (item) => {
-    // Logique d'édition d'item
-  };
-
-  const handleDeleteItem = (itemId) => {
-    setMerchantInventory(items => items.filter(item => item.id !== itemId));
-  };
-
-  const handleAddItem = () => {
-    const newItem = {
-      id: Date.now(),
-      name: 'Nouvel objet',
-      price: 0,
-      description: 'Description de l\'objet'
-    };
-    setMerchantInventory(items => [...items, newItem]);
-    // Mettre automatiquement en mode édition le nom du nouvel objet
-    setTimeout(() => {
-      setEditingTableField(`${newItem.id}-name`);
-      setEditingTableValue('Nouvel objet');
-    }, 100);
-  };
-
-  const getTotalValue = () => {
-    return merchantInventory.reduce((total, item) => total + item.price, 0);
-  };
-
-  // Fonctions pour l'édition du tableau
-  const handleEditTableField = (itemId, field, currentValue) => {
-    setEditingTableField(`${itemId}-${field}`);
-    setEditingTableValue(currentValue);
-  };
-
-  const handleSaveTableField = (itemId, field) => {
-    setMerchantInventory(items => 
-      items.map(item => 
-        item.id === itemId 
-          ? { ...item, [field]: field === 'price' ? parseInt(editingTableValue) || 0 : editingTableValue }
-          : item
-      )
-    );
-    setEditingTableField(null);
-    setEditingTableValue('');
-  };
-
-  const handleCancelTableEdit = () => {
-    setEditingTableField(null);
-    setEditingTableValue('');
-  };
-
-  // Fonctions pour l'édition du total
-  const handleEditTotal = () => {
-    setEditingTotal(true);
-    setTotalValue(getTotalValue());
-  };
-
-  const handleSaveTotal = () => {
-    // Le total est calculé automatiquement, donc on ne fait rien ici
-    setEditingTotal(false);
-  };
-
-  const handleCancelTotalEdit = () => {
-    setEditingTotal(false);
-  };
-
-  // Fonction pour rendre le texte avec les mentions
-  const renderTextWithMentions = (text) => {
-    if (!text) return '';
     
-    const parts = text.split(/(\s+)/);
-    return parts.map((part, index) => {
-      if (part.trim() === 'Quête majeure') {
-        return (
-          <button
-            key={index}
-            onClick={() => {
-              navigate(`/campaigns/${campaignId}/quest/major`);
-            }}
-            className="text-golden hover:text-golden/80 underline decoration-golden decoration-2 underline-offset-2 transition-colors cursor-pointer font-medium"
-          >
-            {part}
-          </button>
-        );
-      }
-      return part;
-    });
-  };
-
-  // Fonction pour obtenir la couleur des quêtes
-  const getQuestColor = (quest) => {
-    if (quest.status === 'completed') return 'bg-green-500';
-    if (quest.status === 'in_progress') return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  // Effet pour charger les données de la campagne
-  useEffect(() => {
-    const fetchCampaignData = async () => {
-      try {
-        setLoading(true);
-        // Simulation d'un appel API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setCampaign(defaultCampaign);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampaignData();
-  }, [campaignId]);
-
-  // Effet pour fermer les menus au clic extérieur
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showContextMenu) {
-        setShowContextMenu(false);
-      }
-      if (showHistoryMenu) {
-        setShowHistoryMenu(false);
-      }
-      if (showHistoryDropdown) {
-        setShowHistoryDropdown(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showContextMenu, showHistoryMenu, showHistoryDropdown]);
-
-  // Composant pour les cartes draggables
-  const DraggableCard = ({ id, type, onContextMenu, showContextMenu, contextMenuPosition, searchQuery, setSearchQuery, filteredTemplates, onTemplateSelect }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    if (type === 'merchant') {
-      return (
-        <div
-          ref={setNodeRef}
-          style={style}
-          className="notion-block group relative"
-        >
-          {/* Drag Handle */}
-          <div className="notion-drag-handle" {...attributes} {...listeners}>
-            <div className="grid grid-cols-2 gap-0.5 w-3 h-3">
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            </div>
-          </div>
-
-          {/* Bouton d'insertion */}
-          <div className="notion-insert-button">
-            <Plus size={16} className="text-gray-400 hover:text-gray-600 transition-colors duration-150" />
-          </div>
-
-          {/* Contenu de la carte */}
-          <div className="notion-content">
-            {/* Effet glassmorphisme pour les templates */}
-            <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
-              <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
-            
-            <div className="space-y-4">
-              <p className="text-light leading-relaxed">{renderTextWithMentions(campaign?.rencontre.content)}</p>
-              <div className="text-sm text-light/80 font-semibold">
-                PNJ: {campaign?.rencontre.npc}
-              </div>
-
-              {/* Tableau d'inventaire - Style Notion */}
-              <div className="bg-white/10 rounded-lg p-4 border border-light/20">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-light flex items-center">
-                    <Package size={16} className="mr-2" />
-                    Inventaire du marchand
-                  </h4>
-                  <div className="text-sm text-light/80 font-semibold">
-                    Total: {editingTotal ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={totalValue}
-                          onChange={(e) => setTotalValue(parseInt(e.target.value) || 0)}
-                          className="w-20 px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
-                          autoFocus
-                        />
-                        <span>pièces d'or</span>
-                        <button
-                          onClick={handleSaveTotal}
-                          className="p-1 text-green-400 hover:text-green-300 transition-colors"
-                          title="Sauvegarder"
-                        >
-                          <CheckCircle size={14} />
-                        </button>
-                        <button
-                          onClick={handleCancelTotalEdit}
-                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                          title="Annuler"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleEditTotal}
-                        className="hover:bg-light/10 p-1 rounded transition-colors"
-                      >
-                        {getTotalValue()} pièces d'or
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-lg border border-light/20">
-                  <div className="grid grid-cols-4 gap-4 p-3 bg-light/10 text-sm font-semibold text-light border-b border-light/20">
-                    <div>Objet</div>
-                    <div>Nom</div>
-                    <div>Prix</div>
-                    <div>Actions</div>
-                  </div>
-                  {merchantInventory.map((item, index) => (
-                    <div key={item.id} className="grid grid-cols-4 gap-4 p-3 border-b border-light/10 last:border-b-0">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
-                          {index + 1}
-                        </div>
-                      </div>
-                      <div className="text-light font-medium">
-                        {editingTableField === `${item.id}-name` ? (
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={editingTableValue}
-                              onChange={(e) => setEditingTableValue(e.target.value)}
-                              className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleSaveTableField(item.id, 'name')}
-                              className="p-1 text-green-400 hover:text-green-300 transition-colors"
-                              title="Sauvegarder"
-                            >
-                              <CheckCircle size={14} />
-                            </button>
-                            <button
-                              onClick={handleCancelTableEdit}
-                              className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                              title="Annuler"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleEditTableField(item.id, 'name', item.name)}
-                            className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
-                          >
-                            {item.name}
-                          </button>
-                        )}
-                      </div>
-                      <div className="text-light/80">
-                        {editingTableField === `${item.id}-price` ? (
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="number"
-                              value={editingTableValue}
-                              onChange={(e) => setEditingTableValue(e.target.value)}
-                              className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleSaveTableField(item.id, 'price')}
-                              className="p-1 text-green-400 hover:text-green-300 transition-colors"
-                              title="Sauvegarder"
-                            >
-                              <CheckCircle size={14} />
-                            </button>
-                            <button
-                              onClick={handleCancelTableEdit}
-                              className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                              title="Annuler"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleEditTableField(item.id, 'price', item.price)}
-                            className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
-                          >
-                            {item.price} PO
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleAddItem}
-                  className="w-full mt-4 bg-golden hover:bg-golden/80 text-dark-blue py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold"
-                >
-                  <Plus size={16} />
-                  <span>Ajouter un objet</span>
-                </button>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  // Composant pour une ligne de texte avec drag & drop
-  const DraggableTextLine = ({
-    id,
-    content,
-    isEditing,
-    onEdit,
-    onDelete,
-    onContentChange,
-    onInsertAfter,
-    onContextMenu,
-    showContextMenu,
-    contextMenuPosition,
-    searchQuery,
-    setSearchQuery,
-    filteredTemplates,
-    onTemplateSelect
-  }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-    };
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`notion-block group relative ${isDragging ? 'dragging' : ''}`}
-        onContextMenu={onContextMenu}
-      >
-        {/* Drag Handle */}
-        <div className="notion-drag-handle" {...attributes} {...listeners}>
-          <div className="grid grid-cols-2 gap-0.5 w-3 h-3">
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-sm"></div>
-          </div>
-        </div>
-
-        {/* Bouton d'insertion */}
-        <div className="notion-insert-button" onClick={(e) => {
-          e.stopPropagation();
-          onContextMenu(e);
-        }}>
-          <Plus size={16} className="text-gray-400 hover:text-gray-600 transition-colors duration-150" />
-        </div>
-
-        {/* Contenu du bloc */}
-        <div className="notion-content">
-          {isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                value={content}
-                onChange={(e) => onContentChange(id, e.target.value)}
-                className="w-full p-2 border-none resize-none focus:outline-none text-gray-900 text-base leading-relaxed bg-transparent"
-                rows={Math.max(1, content.split('\n').length)}
-                autoFocus
-                placeholder="Tapez votre contenu..."
-              />
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => onEdit(id, false)}
-                  className="px-3 py-2 bg-golden text-dark-blue rounded-lg text-sm font-semibold hover:bg-golden/80 transition-all duration-200 shadow-sm"
-                >
-                  <Save size={14} className="inline mr-1" />
-                  Sauvegarder
-                </button>
-                <button
-                  onClick={() => onDelete(id)}
-                  className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm font-semibold hover:bg-red-500/30 hover:text-red-300 transition-all duration-200"
-                >
-                  <Trash2 size={14} className="inline mr-1" />
-                  Supprimer
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div 
-              className="cursor-pointer hover:bg-gray-50/30 p-2 rounded transition-colors duration-200 min-h-[1.5rem]"
-              onClick={() => onEdit(id, true)}
-            >
-              <div className="text-gray-900 leading-relaxed text-base whitespace-pre-wrap">
-                {content || <span className="text-gray-400 italic">Cliquez pour éditer...</span>}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Menu contextuel */}
-        {showContextMenu && (
-          <div
-            className="context-menu"
-            style={{
-              left: contextMenuPosition.x,
-              top: contextMenuPosition.y,
-            }}
-          >
-            <div className="px-3 py-2 border-b border-gray-100">
-              <div className="flex items-center space-x-2">
-                <Search size={14} className="text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher un bloc ou template..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm border-none outline-none"
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              <div className="px-2 py-1">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Blocs de base</div>
-              </div>
-              {filteredTemplates.filter(t => t.type === 'block').map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => onTemplateSelect(template)}
-                  className="context-menu-item"
-                >
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    {template.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{template.name}</div>
-                    <div className="text-xs text-gray-400">{template.description}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+    const searchTerm = contextMenuSearch.toLowerCase();
+    return contextTemplates.filter(template => 
+      template.name.toLowerCase().includes(searchTerm) ||
+      template.description.toLowerCase().includes(searchTerm) ||
+      template.category.toLowerCase().includes(searchTerm)
     );
   };
 
-  // Gestion des états de chargement et d'erreur
+  // Fonction pour gérer la navigation au clavier dans le menu contextuel
+  const handleContextMenuKeyDown = (e) => {
+    const filteredTemplates = getFilteredTemplates();
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedContextMenuItem(prev => 
+          prev < filteredTemplates.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedContextMenuItem(prev => 
+          prev > 0 ? prev - 1 : filteredTemplates.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filteredTemplates[selectedContextMenuItem]) {
+          handleAddElement(filteredTemplates[selectedContextMenuItem].type);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        handleCloseContextMenu();
+        break;
+    }
+  };
+
+  // Fonction pour ajouter un élément via le menu contextuel
+  const handleAddElement = (type) => {
+    const template = contextTemplates.find(t => t.type === type);
+    if (template) {
+      let newLine;
+      
+      // Gestion spéciale pour les titres
+      if (type === 'heading1') {
+        newLine = {
+          id: `context-${Date.now()}`,
+          content: 'Titre principal',
+          section: 'situation',
+          type: 'heading1',
+          template: true,
+          isHeading: true
+        };
+      } else if (type === 'heading2') {
+        newLine = {
+          id: `context-${Date.now()}`,
+          content: 'Sous-titre',
+          section: 'situation',
+          type: 'heading2',
+          template: true,
+          isHeading: true
+        };
+      } else if (type === 'heading3') {
+        newLine = {
+          id: `context-${Date.now()}`,
+          content: 'Titre de section',
+          section: 'situation',
+          type: 'heading3',
+          template: true,
+          isHeading: true
+        };
+      } else {
+        newLine = {
+          id: `context-${Date.now()}`,
+          content: template.content,
+          section: 'situation',
+          type: template.type,
+          template: true
+        };
+      }
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        const targetIndex = items.findIndex(item => item.id === contextMenuTarget);
+        if (targetIndex !== -1) {
+          newItems.splice(targetIndex + 1, 0, newLine);
+        } else {
+          newItems.push(newLine);
+        }
+        return newItems;
+      });
+      
+      toast.success(`${template.name} ajouté avec succès !`);
+    }
+    handleCloseContextMenu();
+  };
+
+  // Fonction pour déplacer un élément sélectionné avec les flèches
+  const moveSelectedElement = (direction) => {
+    if (!selectedElement) {
+      toast.info('Aucun élément sélectionné');
+      return;
+    }
+
+    setTextLines((items) => {
+      const currentIndex = items.findIndex(item => item.id === selectedElement);
+      if (currentIndex === -1) return items;
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= items.length) {
+        toast.info('Impossible de déplacer l\'élément dans cette direction');
+        return items;
+      }
+
+      return arrayMove(items, currentIndex, newIndex);
+    });
+
+    toast.success(`Élément déplacé vers le ${direction === 'up' ? 'haut' : 'bas'}`);
+  };
+
+  // Fermer les suggestions avec Échap uniquement
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Échap : Fermer les suggestions et le menu contextuel
+      if (e.key === 'Escape') {
+        closeSuggestions();
+        handleCloseContextMenu();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Fermer le menu contextuel quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showContextMenu) {
+        handleCloseContextMenu();
+      }
+    };
+
+    if (showContextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showContextMenu]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-primary-blue flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden mx-auto mb-4"></div>
-          <p className="text-light text-xl">Chargement du dashboard...</p>
-        </div>
+        <div className="text-light text-xl">Chargement...</div>
       </div>
     );
   }
@@ -820,15 +1309,7 @@ const CampaignDashboard = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-primary-blue flex items-center justify-center">
-        <div className="text-center text-light">
-          <h1 className="text-2xl font-bold mb-4">Campagne non trouvée</h1>
-          <button
-            onClick={() => navigate('/campaigns')}
-            className="bg-golden hover:bg-golden/80 text-dark-blue px-6 py-3 rounded-lg font-bold transition-colors"
-          >
-            Retour aux campagnes
-          </button>
-        </div>
+        <div className="text-light text-xl">Erreur: {error}</div>
       </div>
     );
   }
@@ -858,7 +1339,7 @@ const CampaignDashboard = () => {
       </header>
 
       {/* Breadcrumb */}
-      <div className="px-6 py-4">
+      <div className="px-32 py-6">
         <nav className="flex items-center space-x-2 text-light/80">
           <button
             onClick={() => navigate('/campaigns')}
@@ -874,7 +1355,7 @@ const CampaignDashboard = () => {
       </div>
 
       {/* Titre principal */}
-      <div className="px-6 mb-8">
+      <div className="px-32 mb-12 mt-12">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-4xl lg:text-5xl font-bold text-light eagle-lake-font border-b-2 border-golden pb-2 inline-block">
             {campaign?.title}
@@ -882,304 +1363,214 @@ const CampaignDashboard = () => {
           
           {/* Boutons d'action */}
           <div className="flex items-center space-x-4">
-            {/* Bouton Historique avec menu déroulant */}
+            {/* Bouton Historique */}
             <div className="relative">
               <button
-                onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                onClick={() => setShowHistoryMenu(!showHistoryMenu)}
                 className="bg-light/20 hover:bg-light/30 text-light px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
               >
                 <Archive size={16} />
                 <span>Historique</span>
-                <ChevronRight size={14} className={`transform transition-transform ${showHistoryDropdown ? 'rotate-90' : ''}`} />
+                <ChevronRight size={14} className={`transform transition-transform ${showHistoryMenu ? 'rotate-90' : ''}`} />
               </button>
-              
-              {/* Menu déroulant */}
-              {showHistoryDropdown && (
-                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Sessions précédentes</h3>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {[
-                        { id: 1, date: '2024-01-15', title: 'Session 1 - Début de l\'aventure', status: 'completed' },
-                        { id: 2, date: '2024-01-22', title: 'Session 2 - Rencontre avec le marchand', status: 'completed' },
-                        { id: 3, date: '2024-01-29', title: 'Session 3 - Exploration des ruines', status: 'in_progress' },
-                        { id: 4, date: '2024-02-05', title: 'Session 4 - Combat contre les gobelins', status: 'planned' }
-                      ].map((session) => (
-                        <div key={session.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={selectedSessions.includes(session.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedSessions([...selectedSessions, session.id]);
-                              } else {
-                                setSelectedSessions(selectedSessions.filter(id => id !== session.id));
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">{session.title}</div>
-                            <div className="text-xs text-gray-500">{session.date}</div>
-                          </div>
-                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            session.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            session.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {session.status === 'completed' ? 'Terminée' :
-                             session.status === 'in_progress' ? 'En cours' : 'Planifiée'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 flex justify-between">
-                      <button
-                        onClick={() => setSelectedSessions([])}
-                        className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                      >
-                        Tout désélectionner
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('Sessions sélectionnées:', selectedSessions);
-                          setShowHistoryDropdown(false);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                      >
-                        Charger ({selectedSessions.length})
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Bouton Nouvelle partie */}
-            <button className="bg-golden hover:bg-golden/80 text-dark-blue px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 font-bold">
+            <button 
+              onClick={handleCreateNewSession}
+              className="bg-golden hover:bg-golden/80 text-dark-blue px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 font-bold"
+            >
               <Plus size={16} />
               <span>Nouvelle partie</span>
             </button>
           </div>
         </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-light/60 text-sm">{new Date().toLocaleDateString('fr-FR')}</p>
+          </div>
+        </div>
+
+        {/* Séparateur */}
+        <div className="border-t border-light/20 mt-4"></div>
       </div>
 
       {/* Contenu principal */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="px-32 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Zone centrale - 3 colonnes */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Informations de la campagne */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-light">{campaign?.date}</div>
-                </div>
-              </div>
-              
-              {/* Séparateur */}
-              <div className="border-t border-light/20"></div>
-            </div>
-
-
-            {/* Notes de campagne - Style Notion */}
-            <div className="space-y-8">
-              {/* Section Situation initiale */}
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-light calligraphy-font italic">Situation initiale</h3>
-                <div className="pl-8">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext items={textLines.filter(line => line.section === 'situation').map(line => line.id)} strategy={verticalListSortingStrategy}>
+          <div className="lg:col-span-3 space-y-12">
+            {/* Notes de campagne - Style Notion avec Drag & Drop */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+               <SortableContext items={[...textLines.map(line => line.id), 'merchant-card']} strategy={verticalListSortingStrategy}>
+                <div className="space-y-12">
+                  {/* Section Situation initiale */}
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-light calligraphy-font italic">Situation initiale</h3>
+                    <div className="pl-8">
                       <div className="space-y-1">
-                        <AnimatePresence>
-                          {textLines.filter(line => line.section === 'situation').map((line) => (
-                            <motion.div
-                              key={line.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <DraggableTextLine
-                                id={line.id}
-                                content={line.content}
-                                isEditing={editingLine === line.id}
-                                onEdit={handleLineEdit}
-                                onDelete={handleLineDelete}
-                                onContentChange={handleLineContentChange}
-                                onInsertAfter={handleLineInsertAfter}
-                                onContextMenu={handleContextMenu}
-                                showContextMenu={showContextMenu}
-                                contextMenuPosition={contextMenuPosition}
-                                searchQuery={searchQuery}
-                                setSearchQuery={setSearchQuery}
-                                filteredTemplates={filteredTemplates}
-                                onTemplateSelect={handleTemplateSelect}
-                              />
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-                      </div>
-                    </SortableContext>
-                    <DragOverlay>
-                      {draggedItem ? (
-                        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
-                          <div className="text-gray-900 text-sm">
-                            {draggedItem.content || 'Élément en cours de déplacement...'}
-                          </div>
-                        </div>
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </div>
-              </div>
-
-              {/* Section Début de la partie */}
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-light calligraphy-font italic">Début de la partie</h3>
-                <div className="pl-8">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext items={textLines.filter(line => line.section === 'debut').map(line => line.id)} strategy={verticalListSortingStrategy}>
-                      <div className="space-y-1">
-                        <AnimatePresence>
-                          {textLines.filter(line => line.section === 'debut').map((line) => (
-                            <motion.div
-                              key={line.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <DraggableTextLine
-                                id={line.id}
-                                content={line.content}
-                                isEditing={editingLine === line.id}
-                                onEdit={handleLineEdit}
-                                onDelete={handleLineDelete}
-                                onContentChange={handleLineContentChange}
-                                onInsertAfter={handleLineInsertAfter}
-                                onContextMenu={handleContextMenu}
-                                showContextMenu={showContextMenu}
-                                contextMenuPosition={contextMenuPosition}
-                                searchQuery={searchQuery}
-                                setSearchQuery={setSearchQuery}
-                                filteredTemplates={filteredTemplates}
-                                onTemplateSelect={handleTemplateSelect}
-                              />
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-                      </div>
-                    </SortableContext>
-                    <DragOverlay>
-                      {draggedItem ? (
-                        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
-                          <div className="text-gray-900 text-sm">
-                            {draggedItem.content || 'Élément en cours de déplacement...'}
-                          </div>
-                        </div>
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </div>
-              </div>
-            </div>
-
-            {/* Quête majeure - Lien simple */}
-            <div className="pl-8">
-              <button 
-                onClick={() => {
-                  navigate(`/campaigns/${campaignId}/quest/major`);
-                }}
-                className="text-golden hover:text-golden/80 transition-colors flex items-center space-x-2 text-lg font-medium"
-              >
-                <Link size={18} />
-                <span>{campaign?.queteMajeure}</span>
-              </button>
-            </div>
-
-            {/* Cartes et templates - Style Notion */}
-            <div className="pl-8 space-y-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={textLines.filter(line => line.section === 'merchant').map(line => line.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-1">
-                    <AnimatePresence>
-                      {textLines.filter(line => line.section === 'merchant').map((line) => (
-                        <motion.div
-                          key={line.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {line.type === 'card' ? (
-                            <DraggableCard
-                              id={line.id}
-                              type={line.content}
-                              onContextMenu={handleContextMenu}
-                              showContextMenu={showContextMenu}
-                              contextMenuPosition={contextMenuPosition}
-                              searchQuery={searchQuery}
-                              setSearchQuery={setSearchQuery}
-                              filteredTemplates={filteredTemplates}
-                              onTemplateSelect={handleTemplateSelect}
-                            />
-                          ) : (
-                            <DraggableTextLine
-                              id={line.id}
-                              content={line.content}
-                              isEditing={editingLine === line.id}
-                              onEdit={handleLineEdit}
-                              onDelete={handleLineDelete}
-                              onContentChange={handleLineContentChange}
-                              onInsertAfter={handleLineInsertAfter}
-                              onContextMenu={handleContextMenu}
-                              showContextMenu={showContextMenu}
-                              contextMenuPosition={contextMenuPosition}
-                              searchQuery={searchQuery}
-                              setSearchQuery={setSearchQuery}
-                              filteredTemplates={filteredTemplates}
-                              onTemplateSelect={handleTemplateSelect}
-                            />
-                          )}
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </SortableContext>
-                <DragOverlay>
-                  {draggedItem ? (
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-2xl border border-golden/30">
-                      <div className="text-gray-900 text-sm">
-                        {draggedItem.type === 'card' ? 'Carte en cours de déplacement...' : (draggedItem.content || 'Élément en cours de déplacement...')}
+                        {/* Zone de drop au début */}
+                        <DropZone 
+                          id="drop-start-situation" 
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={0}
+                        />
+                         {textLines.filter(line => line.section === 'situation').map((line, index, array) => (
+                           <React.Fragment key={line.id}>
+                             <SortableTextLine
+                               id={line.id}
+                               content={line.content}
+                               section={line.section}
+                               isLink={line.isLink}
+                               linkUrl={line.linkUrl}
+                               onPaste={handlePaste}
+                               onShowContextMenu={handleShowContextMenu}
+                               type={line.type}
+                               isHeading={line.isHeading}
+                             />
+                             {index < array.length - 1 && (
+                               <DropZone 
+                                 id={`drop-${line.id}`} 
+                                 isActive={activeId === line.id}
+                                 onTemplateDrop={handleTemplateDrop}
+                                 targetIndex={textLines.findIndex(l => l.id === line.id) + 1}
+                               />
+                             )}
+                           </React.Fragment>
+                         ))}
+                        {/* Zone de drop à la fin */}
+                        <DropZone 
+                          id="drop-end-situation" 
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={textLines.length}
+                        />
                       </div>
                     </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </div>
+                  </div>
+
+                  {/* Section Début de la partie */}
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-light calligraphy-font italic">Début de la partie</h3>
+                    <div className="pl-8">
+                      <div className="space-y-1">
+                        {/* Zone de drop au début */}
+                        <DropZone 
+                          id="drop-start-debut" 
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={textLines.filter(line => line.section === 'situation').length}
+                        />
+                         {textLines.filter(line => line.section === 'debut').map((line, index, array) => (
+                           <React.Fragment key={line.id}>
+                             <SortableTextLine
+                               id={line.id}
+                               content={line.content}
+                               section={line.section}
+                               isLink={line.isLink}
+                               linkUrl={line.linkUrl}
+                               onPaste={handlePaste}
+                               onShowContextMenu={handleShowContextMenu}
+                               type={line.type}
+                               isHeading={line.isHeading}
+                             />
+                             {index < array.length - 1 && (
+                               <DropZone 
+                                 id={`drop-${line.id}`} 
+                                 isActive={activeId === line.id}
+                                 onTemplateDrop={handleTemplateDrop}
+                                 targetIndex={textLines.findIndex(l => l.id === line.id) + 1}
+                               />
+                             )}
+                           </React.Fragment>
+                         ))}
+                        {/* Zone de drop à la fin */}
+                        <DropZone 
+                          id="drop-end-debut" 
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={textLines.length}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SortableContext>
+              
+               <DragOverlay>
+                 {draggedItem ? (
+                   <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-300">
+                     <p className="text-gray-800 text-sm">
+                       {draggedItem.content}
+                     </p>
+                   </div>
+                 ) : null}
+               </DragOverlay>
+
+               {/* Quête majeure - Lien simple */}
+               <div className="pl-8">
+                 <button
+                   onClick={() => navigate(`/campaigns/${campaignId}/quest/major`)}
+                   className="flex items-center space-x-2 text-golden hover:text-golden/80 transition-colors"
+                 >
+                   <Link size={16} />
+                   <span className="font-semibold">{campaign?.queteMajeure}</span>
+                 </button>
+               </div>
+
+               {/* Cartes et templates - Style Notion */}
+               <div className="pl-8 space-y-4">
+                 <DraggableMerchantCard
+                   id="merchant-card"
+                   campaign={campaign}
+                   merchantInventory={merchantInventory}
+                   onShowContextMenu={handleShowContextMenu}
+                   onPaste={handlePaste}
+                   editingTotal={editingTotal}
+                   totalValue={totalValue}
+                   setTotalValue={setTotalValue}
+                   handleSaveTotal={handleSaveTotal}
+                   handleCancelTotalEdit={handleCancelTotalEdit}
+                   handleEditTotal={handleEditTotal}
+                   getTotalValue={getTotalValue}
+                   editingTableField={editingTableField}
+                   editingTableValue={editingTableValue}
+                   setEditingTableValue={setEditingTableValue}
+                   handleSaveTableField={handleSaveTableField}
+                   handleCancelTableEdit={handleCancelTableEdit}
+                   handleEditTableField={handleEditTableField}
+                   handleDeleteItem={handleDeleteItem}
+                   handleAddItem={handleAddItem}
+                 />
+               </div>
+
+            </DndContext>
+
           </div>
 
           {/* Sidebar droite - 1 colonne */}
-          <div className="lg:col-span-1 space-y-4 lg:space-y-6">
+          <div className="lg:col-span-1 space-y-6 lg:space-y-8">
+            {/* Palette de templates */}
+            <div className="bg-slate-800/40 backdrop-blur-md rounded-lg border border-slate-700/50 shadow-lg p-4">
+              <h3 className="text-light font-semibold mb-3 text-sm">Templates</h3>
+              <div className="space-y-2">
+                {templates.map((template) => (
+                  <DraggableTemplate key={template.id} template={template} />
+                ))}
+              </div>
+              
+            </div>
+
             {/* Image atmosphérique */}
             <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
               <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg">
@@ -1195,64 +1586,21 @@ const CampaignDashboard = () => {
               </div>
             </div>
 
-            {/* Tracker de quêtes */}
-            <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
-              <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
-              
-              <div className="space-y-4">
-                {/* Quête majeure */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-white font-medium">Major quest</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white">50%</span>
-                      <ChevronRight size={16} className="text-white" />
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-600 rounded-full h-2">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-                  </div>
-                </div>
+            {/* Card Quêtes */}
+            <DraggableQuestCard
+              id="quest-card"
+              campaign={campaign}
+              onShowContextMenu={handleShowContextMenu}
+            />
 
-                {/* Quêtes mineures */}
-                {campaign?.quests.filter(q => q.type === 'minor').map((quest, index) => (
-                  <div key={index} className="space-y-2 ml-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${getQuestColor(quest)}`}></div>
-                        <span className="text-white font-medium">Minor quest</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={quest.completed.toString().padStart(3, '0')}
-                          className="w-12 h-6 bg-gray-700 text-white text-center text-xs rounded border-none"
-                          readOnly
-                        />
-                        <span className="text-white">/{quest.total}</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-600 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${getQuestColor(quest)}`} 
-                        style={{ width: `${(quest.completed / quest.total) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Modal Historique */}
       {showHistoryMenu && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" onClick={() => setShowHistoryMenu(false)}>
+          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-semibold text-gray-800">Sessions historiques</h3>
@@ -1265,7 +1613,7 @@ const CampaignDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                {historicalSessions.map((session) => (
+                {sessions.map((session) => (
                   <div
                     key={session.id}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
@@ -1297,9 +1645,12 @@ const CampaignDashboard = () => {
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         session.status === 'completed'
                           ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          : session.status === 'in_progress'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {session.status === 'completed' ? 'Terminée' : 'En cours'}
+                        {session.status === 'completed' ? 'Terminée' : 
+                         session.status === 'in_progress' ? 'En cours' : 'Planifiée'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-700 line-clamp-3">{session.summary}</p>
@@ -1331,75 +1682,88 @@ const CampaignDashboard = () => {
         </div>
       )}
 
-      {/* Menu contextuel d'insertion */}
-      {showInsertMenu && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-96 max-h-96 overflow-hidden">
-            {/* Header avec barre de recherche */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center space-x-2 mb-3">
-                <Search size={16} className="text-blue-600" />
-                <input
-                  type="text"
-                  placeholder="Rechercher un template..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm border-none outline-none text-gray-900 bg-white"
-                  autoFocus
-                />
-                <button
-                  onClick={() => setShowInsertMenu(false)}
-                  className="text-blue-600 hover:text-yellow-500 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="text-xs text-blue-600 font-medium">
-                Tapez @ dans le texte ou utilisez ce menu pour insérer des templates
-              </div>
-            </div>
+       {/* Panneau de suggestions IA */}
+       {showSuggestions && (
+         <SuggestionsPanel
+           suggestions={suggestions}
+           onClose={closeSuggestions}
+           onApplySuggestion={applySuggestion}
+         />
+       )}
 
-            {/* Liste des templates */}
-            <div className="max-h-64 overflow-y-auto">
-              {filteredTemplates.length > 0 ? (
-                filteredTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleInsertTemplate(template)}
-                    className="w-full text-left p-3 hover:bg-yellow-500/10 border-b border-gray-100 last:border-b-0 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-gray-900 text-sm">{template.name}</div>
-                        <div className="text-xs text-blue-600/70">{template.description}</div>
-                      </div>
-                      <div className="text-xs bg-yellow-500/20 text-blue-600 px-2 py-1 rounded font-medium">
-                        {template.type}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-center text-blue-600 text-sm font-medium">
-                  Aucun template trouvé
-                </div>
-              )}
-            </div>
+       {/* Menu contextuel style Notion avec recherche */}
+       {showContextMenu && (
+         <div 
+           className="fixed bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[280px] max-w-[320px]"
+           style={{ 
+             left: contextMenuPosition.x, 
+             top: contextMenuPosition.y
+           }}
+           onClick={(e) => e.stopPropagation()}
+           onKeyDown={handleContextMenuKeyDown}
+           tabIndex={-1}
+         >
+           {/* Barre de recherche */}
+           <div className="px-3 py-2 border-b border-gray-100">
+             <div className="flex items-center space-x-2">
+               <Search size={14} className="text-gray-400" />
+               <input
+                 type="text"
+                 placeholder="Rechercher un template..."
+                 value={contextMenuSearch}
+                 onChange={(e) => {
+                   setContextMenuSearch(e.target.value);
+                   setSelectedContextMenuItem(0);
+                 }}
+                 className="flex-1 text-sm border-none outline-none bg-transparent text-gray-900 placeholder-gray-500"
+                 autoFocus
+               />
+             </div>
+           </div>
 
-            {/* Footer avec bouton de fermeture */}
-            <div className="p-3 border-t border-gray-200 bg-yellow-500/5">
-              <button
-                onClick={() => setShowInsertMenu(false)}
-                className="w-full py-2 px-4 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded text-sm transition-colors font-semibold"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+           {/* Liste des templates */}
+           <div className="max-h-64 overflow-y-auto py-1">
+             {(() => {
+               const filteredTemplates = getFilteredTemplates();
+               return filteredTemplates.length > 0 ? (
+                 filteredTemplates.map((template, index) => (
+                 <button
+                   key={template.id}
+                   onClick={() => handleAddElement(template.type)}
+                   className={`w-full text-left px-3 py-2 text-sm flex items-center space-x-3 transition-colors ${
+                     index === selectedContextMenuItem 
+                       ? 'bg-blue-50 text-blue-700' 
+                       : 'hover:bg-gray-50 text-gray-900'
+                   }`}
+                 >
+                   <span className="text-lg flex-shrink-0">{template.icon}</span>
+                   <div className="flex-1 min-w-0">
+                     <div className="font-medium truncate">{template.name}</div>
+                     <div className="text-xs text-gray-600 truncate">{template.description}</div>
+                     <div className="text-xs text-gray-500 truncate">{template.category}</div>
+                   </div>
+                 </button>
+                 ))
+               ) : (
+                 <div className="px-3 py-4 text-sm text-gray-700 text-center">
+                   Aucun template trouvé
+                 </div>
+               );
+             })()}
+           </div>
+
+           {/* Footer avec raccourcis */}
+           <div className="px-3 py-2 border-t border-gray-100 bg-gray-50 rounded-b-lg">
+             <div className="flex items-center justify-between text-xs text-gray-700">
+               <span>↑↓ Naviguer</span>
+               <span>↵ Sélectionner</span>
+               <span>Esc Fermer</span>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   );
+ };
 
 export default CampaignDashboard;
