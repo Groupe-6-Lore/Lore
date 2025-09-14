@@ -4,6 +4,7 @@ import { Settings, Bell, ChevronRight, ChevronLeft, Check, CreditCard } from 'lu
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import Header from '../components/Header';
 
 const CreateCampaign = () => {
   const { user } = useAuth();
@@ -229,28 +230,11 @@ const CreateCampaign = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      {/* Header Lore */}
-      <header className="flex items-center justify-between p-6 bg-primary-blue border-b border-light/10">
-        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
-        
-        <div className="flex items-center space-x-6">
-          <div className="relative">
-            <div className="w-12 h-12 bg-green-500 transform rotate-45 rounded-sm flex items-center justify-center">
-              <span className="text-white font-bold text-sm transform -rotate-45">NEWS</span>
-            </div>
-          </div>
-          
-          <button className="text-light hover:text-golden transition-colors">
-            <Settings size={24} />
-          </button>
-          <button className="text-light hover:text-golden transition-colors">
-            <Bell size={24} />
-          </button>
-          <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
-            {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-        </div>
-      </header>
+      {/* Header unifié */}
+      <Header 
+        showBackButton={true}
+        onBackClick={() => navigate('/campaigns')}
+      />
 
       {/* Breadcrumb */}
       <div className="px-6 py-4">

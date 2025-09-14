@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight, Search, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import Header from '../components/Header';
 
 const SelectRules = () => {
   const { user } = useAuth();
@@ -232,30 +233,28 @@ const SelectRules = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <header className="flex items-center justify-between p-4 sm:p-6 bg-primary-blue/90">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button className="text-light hover:text-golden transition-colors">
-            <Settings size={20} className="sm:w-6 sm:h-6" />
-          </button>
-          <button className="text-light hover:text-golden transition-colors">
-            <Bell size={20} className="sm:w-6 sm:h-6" />
-          </button>
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold text-sm sm:text-base">
-            {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-        </div>
-      </header>
+      {/* Header unifié */}
+      <Header 
+        showBackButton={true}
+        onBackClick={() => navigate('/campaigns/create')}
+        className="bg-primary-blue/90"
+      />
 
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <nav className="flex items-center space-x-2 text-light/80 text-sm sm:text-base">
+      {/* Breadcrumb */}
+      <div className="px-6 py-4">
+        <nav className="flex items-center space-x-2 text-light/70">
           <button onClick={() => navigate('/campaigns')} className="hover:text-light transition-colors">
             Mes campagnes
           </button>
-          <ChevronRight size={16} className="text-light/60" />
-          <span className="text-golden border-b border-golden pb-1">Créer une campagne</span>
+          <span>›</span>
+          <button onClick={() => navigate('/campaigns/create')} className="hover:text-light transition-colors">
+            Créer une campagne
+          </button>
+          <span>›</span>
+          <span className="text-light">Choix des règles</span>
         </nav>
       </div>
+
 
       <div className="px-4 sm:px-6 pb-8">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ArrowLeft, CreditCard, Check } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import Header from '../components/Header';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -88,21 +89,12 @@ const Payment = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      {/* Header Lore */}
-      <header className="flex items-center justify-between p-6 bg-primary-blue/90">
-        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
-        <div className="flex items-center space-x-4">
-          <button className="text-light hover:text-golden transition-colors">
-            <Settings size={24} />
-          </button>
-          <button className="text-light hover:text-golden transition-colors">
-            <Bell size={24} />
-          </button>
-          <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
-            {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-        </div>
-      </header>
+      {/* Header unifié */}
+      <Header 
+        showBackButton={true}
+        onBackClick={() => navigate('/campaigns/create')}
+        className="bg-primary-blue/90"
+      />
 
       {/* Breadcrumb */}
       <div className="px-6 py-4">
