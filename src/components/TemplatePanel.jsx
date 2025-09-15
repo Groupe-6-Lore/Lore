@@ -51,23 +51,64 @@ const TemplatePanel = () => {
 
   // États pour les fonctionnalités avancées
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('lore-templates-categories');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    // Forcer la réinitialisation pour restaurer toutes les catégories
+    localStorage.removeItem('lore-templates-categories');
+    
     return [
-      { id: 'modeles-simples', name: 'Modèles simples', isEditable: false },
-      { id: 'quete-principale', name: 'Quête principale', isEditable: true },
-      { id: 'zilargo', name: 'Zilargo', isEditable: true },
-      { id: 'rencontres-aleatoires', name: 'Rencontres aléatoires', isEditable: true }
+      { id: 'modeles-simples', name: 'Modèles simples', isEditable: false, isArchived: false },
+      { id: 'quete-principale', name: 'Quête principale', isEditable: true, isArchived: false },
+      { id: 'zilargo', name: 'Zilargo', isEditable: true, isArchived: false },
+      { id: 'rencontres-aleatoires', name: 'Rencontres aléatoires', isEditable: true, isArchived: false }
     ];
   });
   
+  // Effet pour s'assurer que "Quête principale" est toujours présente
+  useEffect(() => {
+    setCategories(prev => {
+      const hasQuetePrincipale = prev.some(cat => cat.id === 'quete-principale');
+      if (!hasQuetePrincipale) {
+        // Ajouter "Quête principale" si elle n'existe pas
+        console.log('Restoration de "Quête principale"');
+        return [...prev, { id: 'quete-principale', name: 'Quête principale', isEditable: true, isArchived: false }];
+      }
+      return prev;
+    });
+  }, []);
+
+  // Effet pour forcer la restauration de "Quête principale" (temporaire)
+  useEffect(() => {
+    setCategories(prev => {
+      const quetePrincipale = prev.find(cat => cat.id === 'quete-principale');
+      if (!quetePrincipale) {
+        console.log('Force restoration de "Quête principale"');
+        return [...prev, { id: 'quete-principale', name: 'Quête principale', isEditable: true, isArchived: false }];
+      }
+      return prev;
+    });
+  }, []);
+
+  // Effet pour nettoyer les doublons de templates
+  useEffect(() => {
+    setTemplates(prev => {
+      // Supprimer les doublons basés sur l'ID
+      const uniqueTemplates = prev.filter((template, index, self) => 
+        index === self.findIndex(t => t.id === template.id)
+      );
+      
+      // Si on a supprimé des doublons, retourner la liste nettoyée
+      if (uniqueTemplates.length !== prev.length) {
+        console.log('Doublons de templates supprimés');
+        return uniqueTemplates;
+      }
+      
+      return prev;
+    });
+  }, []);
+  
   const [templates, setTemplates] = useState(() => {
-    const saved = localStorage.getItem('lore-templates-data');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    // Forcer la réinitialisation pour restaurer tous les templates
+    localStorage.removeItem('lore-templates-data');
+    
     return [
       { id: 'combat-simple', name: 'Combat simple', category: 'modeles-simples', isEditable: false, isFavorite: false, isArchived: false },
       { id: 'marchand', name: 'Rencontre avec un\nmarchand', category: 'modeles-simples', isEditable: false, isFavorite: false, isArchived: false },
@@ -101,11 +142,28 @@ const TemplatePanel = () => {
     return saved ? JSON.parse(saved) : null;
   });
   const [copyNotification, setCopyNotification] = useState(null);
+  
+  // État pour les menus contextuels des catégories de templates
+  const [openTemplateContextMenu, setOpenTemplateContextMenu] = useState(null);
 
   // Sauvegarde automatique dans localStorage
   useEffect(() => {
     localStorage.setItem('lore-templates-categories', JSON.stringify(categories));
   }, [categories]);
+
+  // Effet pour fermer le menu contextuel des templates quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openTemplateContextMenu && !event.target.closest('.template-context-menu')) {
+        setOpenTemplateContextMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openTemplateContextMenu]);
 
   useEffect(() => {
     localStorage.setItem('lore-templates-data', JSON.stringify(templates));
@@ -223,7 +281,7 @@ const TemplatePanel = () => {
   const createTemplate = (categoryId) => {
     // Redirection vers la page "Nouvel évènement"
     console.log(`Créer un template dans la catégorie: ${categoryId}`);
-    setCurrentView('new-quest');
+    setCurrentView('new-event');
     setIsOpen(true);
   };
 
@@ -249,7 +307,47 @@ const TemplatePanel = () => {
     // Envoyer vers la page "Nouvel évènement" en mode modification
     console.log('Modification du template:', template);
     setSelectedTemplate(template);
-    setCurrentView('new-quest');
+    setCurrentView('new-event');
+  };
+
+  // Fonction pour gérer les actions du menu contextuel des catégories de templates
+  const handleTemplateContextMenuAction = (categoryId, action) => {
+    switch (action) {
+      case 'delete':
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+          // Supprimer la catégorie
+          setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+          // Supprimer les templates associés à cette catégorie
+          setTemplates(prev => prev.filter(template => template.category !== categoryId));
+          // Supprimer les sous-catégories associées
+          setSubcategories(prev => prev.filter(sub => sub.category !== categoryId));
+          // Supprimer de expandedSections si présent
+          setExpandedSections(prev => {
+            const newState = { ...prev };
+            delete newState[categoryId];
+            return newState;
+          });
+          console.log(`Catégorie supprimée: ${categoryId}`);
+        }
+        break;
+      case 'archive':
+        // Archiver la catégorie
+        console.log(`Tentative d'archivage de la catégorie: ${categoryId}`);
+        setCategories(prev => {
+          const updated = prev.map(cat => 
+            cat.id === categoryId 
+              ? { ...cat, isArchived: true }
+              : cat
+          );
+          console.log('Catégories après archivage:', updated);
+          return updated;
+        });
+        console.log(`Catégorie archivée: ${categoryId}`);
+        break;
+      default:
+        break;
+    }
+    setOpenTemplateContextMenu(null);
   };
 
   const handleEventCreated = (eventData) => {
@@ -420,6 +518,24 @@ const TemplatePanel = () => {
             {/* Sections dynamiques basées sur les catégories */}
             {categories
               .filter(category => {
+                // Filtrage par statut d'archivage
+                if (selectedFilter === 'archives') {
+                  // Pour les archives, afficher seulement les catégories qui ont des templates archivés
+                  const hasArchivedTemplates = templates.some(template => 
+                    template.category === category.id && template.isArchived
+                  );
+                  return hasArchivedTemplates;
+                } else if (selectedFilter === 'favoris') {
+                  // Pour les favoris, afficher seulement les catégories qui ont des templates favoris
+                  const hasFavoriteTemplates = templates.some(template => 
+                    template.category === category.id && template.isFavorite && !template.isArchived
+                  );
+                  return hasFavoriteTemplates;
+                } else {
+                  return !category.isArchived;
+                }
+              })
+              .filter(category => {
                 // Filtrage des catégories par recherche
                 if (!searchTerm) return true;
                 const searchLower = searchTerm.toLowerCase();
@@ -436,12 +552,27 @@ const TemplatePanel = () => {
                 return hasMatchingTemplates;
               })
               .map(category => {
+                // Debug temporaire pour vérifier les templates archivés
+                if (selectedFilter === 'archives') {
+                  console.log(`Catégorie: ${category.name}, Templates archivés:`, 
+                    templates.filter(t => t.category === category.id && t.isArchived));
+                }
+                
                 const categoryTemplates = templates.filter(template => {
                   // Filtrage par statut
-                  const matchesFilter = selectedFilter === 'aucun' ? !template.isArchived : 
-                 (selectedFilter === 'favoris' && template.isFavorite) ||
-                 (selectedFilter === 'archives' && template.isArchived) ||
-                   (selectedFilter === 'categorie' && template.category === category.id);
+                  let matchesFilter = false;
+                  
+                  if (selectedFilter === 'aucun') {
+                    matchesFilter = !template.isArchived;
+                  } else if (selectedFilter === 'favoris') {
+                    matchesFilter = template.isFavorite && !template.isArchived;
+                  } else if (selectedFilter === 'archives') {
+                    matchesFilter = template.isArchived;
+                  } else if (selectedFilter === 'categorie') {
+                    matchesFilter = !template.isArchived;
+                  } else {
+                    matchesFilter = !template.isArchived;
+                  }
                   
                   // Filtrage par recherche
                   const matchesSearch = !searchTerm || 
@@ -450,7 +581,8 @@ const TemplatePanel = () => {
                   return template.category === category.id && matchesFilter && matchesSearch;
                 });
 
-              if (selectedFilter === 'archives' && !categoryTemplates.some(t => t.isArchived)) {
+              // Ne pas afficher la catégorie si elle n'a aucun template correspondant au filtre
+              if (categoryTemplates.length === 0) {
                 return null;
               }
 
@@ -509,6 +641,42 @@ const TemplatePanel = () => {
                       >
                         {expandedSections[category.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
+                      
+                      {/* Menu contextuel */}
+                      <div className="relative template-context-menu">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenTemplateContextMenu(openTemplateContextMenu === category.id ? null : category.id);
+                          }}
+                          className="p-1 hover:bg-[#552E1A]/10 rounded transition-colors"
+                        >
+                          <span className="text-[#552E1A] text-lg leading-none">⋮</span>
+                        </button>
+                        
+                        {openTemplateContextMenu === category.id && (
+                          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTemplateContextMenuAction(category.id, 'archive');
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors rounded-t-lg"
+                            >
+                              Archiver
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTemplateContextMenuAction(category.id, 'delete');
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors rounded-b-lg"
+                            >
+                              Supprimer
+                      </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
@@ -731,9 +899,15 @@ const TemplatePanel = () => {
         // États pour l'édition des quêtes
         const [editingQuestTitle, setEditingQuestTitle] = React.useState(null);
         const [editingQuestCount, setEditingQuestCount] = React.useState(null);
-        const [questTitles, setQuestTitles] = React.useState({
-          'histoire-principale': 'Histoire principale',
-          'liberer-otages': 'Libérer les otages alliés'
+        const [questTitles, setQuestTitles] = React.useState(() => {
+          const saved = localStorage.getItem('lore-quests-titles');
+          if (saved) {
+            return JSON.parse(saved);
+          }
+          return {
+            'histoire-principale': 'Histoire principale',
+            'liberer-otages': 'Libérer les otages alliés'
+          };
         });
         const [questCounts, setQuestCounts] = React.useState({
           'chasseurs': { current: 4, total: 4 },
@@ -741,7 +915,12 @@ const TemplatePanel = () => {
         });
         
         // États pour les catégories et quêtes dynamiques
-        const [categories, setCategories] = React.useState([
+        const [categories, setCategories] = React.useState(() => {
+          const saved = localStorage.getItem('lore-quests-categories');
+          if (saved) {
+            return JSON.parse(saved);
+          }
+          return [
           {
             id: 'histoire-principale',
             title: 'Histoire principale',
@@ -765,12 +944,19 @@ const TemplatePanel = () => {
               }
             ]
           }
-        ]);
+        ];
+        });
         
         // États pour les dropdowns
-        const [expandedQuests, setExpandedQuests] = React.useState({
-          'histoire-principale': true,
-          'liberer-otages': true
+        const [expandedQuests, setExpandedQuests] = React.useState(() => {
+          const saved = localStorage.getItem('lore-quests-expanded-sections');
+          if (saved) {
+            return JSON.parse(saved);
+          }
+          return {
+            'histoire-principale': true,
+            'liberer-otages': true
+          };
         });
         
         // États pour les menus contextuels
@@ -781,6 +967,21 @@ const TemplatePanel = () => {
         
         // État pour l'édition du total des compteurs
         const [editingQuestTotal, setEditingQuestTotal] = React.useState(null);
+        
+        // Sauvegarde automatique des catégories de quêtes
+        React.useEffect(() => {
+          localStorage.setItem('lore-quests-categories', JSON.stringify(categories));
+        }, [categories]);
+        
+        // Sauvegarde automatique des sections étendues des quêtes
+        React.useEffect(() => {
+          localStorage.setItem('lore-quests-expanded-sections', JSON.stringify(expandedQuests));
+        }, [expandedQuests]);
+        
+        // Sauvegarde automatique des titres des quêtes
+        React.useEffect(() => {
+          localStorage.setItem('lore-quests-titles', JSON.stringify(questTitles));
+        }, [questTitles]);
         
         // Fonction pour ouvrir la fiche du personnage
         const openCharacterSheet = (characterName) => {
@@ -1037,7 +1238,10 @@ const TemplatePanel = () => {
           if (newQuestCategory) {
             setCategories(prev => prev.map(cat => 
               cat.id === newQuestCategory
-                ? { ...cat, quests: [...cat.quests, newQuest] }
+                ? { 
+                    ...cat, 
+                    quests: [...(cat.quests || []), newQuest] 
+                  }
                 : cat
             ));
           }
@@ -1053,7 +1257,7 @@ const TemplatePanel = () => {
           setNewQuestDescription('');
           
           // Retourner à la page Quêtes
-          setCurrentView('templates');
+          setCurrentView('quests');
           
           console.log('Nouvelle quête créée:', newQuest);
         };
@@ -1071,15 +1275,15 @@ const TemplatePanel = () => {
           setNewQuestDescription('');
           
           // Retourner à la page Quêtes
-          setCurrentView('templates');
+          setCurrentView('quests');
         };
 
         // Si on est en mode création de quête, afficher le formulaire
         if (currentView === 'new-quest') {
           return (
-            <div className="h-full flex flex-col bg-gradient-to-br from-amber-50 to-orange-50">
+            <div className="h-full flex flex-col">
               {/* Header avec titre et bouton retour */}
-              <div className="flex items-center gap-4 p-6 border-b border-[#552E1A]/20 bg-white/50">
+              <div className="flex items-center gap-4 p-6 border-b border-[#552E1A]/20">
                 <button
                   onClick={cancelNewQuest}
                   className="flex items-center justify-center w-8 h-8 bg-golden rounded-lg hover:bg-golden/80 transition-colors"
@@ -1090,7 +1294,7 @@ const TemplatePanel = () => {
               </div>
 
               {/* Formulaire */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-2">
                 {/* Champ titre */}
                 <div>
                   <input
@@ -1103,7 +1307,7 @@ const TemplatePanel = () => {
                 </div>
 
                 {/* Champ catégorie */}
-                <div>
+                <div className="relative">
                   <select
                     value={newQuestCategory}
                     onChange={(e) => setNewQuestCategory(e.target.value)}
@@ -1116,6 +1320,7 @@ const TemplatePanel = () => {
                       </option>
                     ))}
                   </select>
+                  <ChevronDown size={20} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#552E1A] pointer-events-none" />
                 </div>
 
                 {/* Champ lieu */}
@@ -1197,21 +1402,21 @@ const TemplatePanel = () => {
                 </div>
               </div>
 
-              {/* Boutons d'action */}
-              <div className="flex justify-end gap-4 p-6 border-t border-[#552E1A]/20 bg-white/50">
-                <button
-                  onClick={cancelNewQuest}
-                  className="px-6 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={createNewQuest}
-                  className="px-6 py-3 bg-golden text-white rounded-lg hover:bg-golden/80 transition-colors font-semibold"
-                >
-                  Créer la quête
-                </button>
-              </div>
+                {/* Boutons d'action */}
+                <div className="flex justify-end gap-4 px-6 py-8 border-t border-[#552E1A]/20">
+                  <button
+                    onClick={cancelNewQuest}
+                    className="px-6 py-3 bg-white/70 border border-[#552E1A]/20 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors font-semibold eagle-lake-font"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={createNewQuest}
+                    className="px-6 py-3 bg-golden text-[#552E1A] rounded-lg hover:bg-golden/80 transition-colors font-semibold shadow-lg eagle-lake-font"
+                  >
+                    Créer la quête
+                  </button>
+                </div>
             </div>
           );
         }
@@ -1858,6 +2063,7 @@ const TemplatePanel = () => {
       />
     );
   }
+
 
   // Sinon, afficher la vue templates normale
   return (

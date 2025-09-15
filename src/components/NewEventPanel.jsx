@@ -189,7 +189,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
                       >
-                        <option value="">Sélectionner une catégorie...</option>
+                        <option value="">Sélection de catégorie</option>
                         {categories.map(category => (
                           <option key={category.id} value={category.id}>
                             {category.name}
@@ -224,41 +224,44 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                     
                     {/* Tags existants */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {predefinedTags.map(tag => (
-                        <button
+                      {predefinedTags.map(tag => {
+                        const isSelected = selectedTags.find(t => t.id === tag.id);
+                        return (
+                          <button
+                            key={tag.id}
+                            onClick={() => handleTagSelect(tag)}
+                            disabled={isSelected}
+                            className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1 ${isSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          >
+                            <Tag size={12} />
+                            {tag.name}
+                            {isSelected && <span className="ml-1">✓</span>}
+                          </button>
+                        );
+                      })}
+                      {/* Tags personnalisés ajoutés */}
+                      {selectedTags.filter(tag => tag.id.startsWith('custom-')).map(tag => (
+                        <div
                           key={tag.id}
-                          onClick={() => handleTagSelect(tag)}
-                          className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1`}
+                          className="text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm"
+                          style={{ 
+                            backgroundColor: '#552E1A',
+                            border: '1px solid #552E1A'
+                          }}
                         >
                           <Tag size={12} />
                           {tag.name}
-                        </button>
+                          <button
+                            onClick={() => handleTagRemove(tag.id)}
+                            className="hover:bg-white/30 rounded-full p-0.5 transition-colors flex items-center justify-center"
+                            title="Supprimer ce tag"
+                          >
+                            <X size={12} className="text-white" />
+                          </button>
+                        </div>
                       ))}
                     </div>
 
-                    {/* Tags sélectionnés */}
-                    {selectedTags.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-[#552E1A]/70 text-sm mb-2">Tags sélectionnés :</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedTags.map(tag => (
-                            <div
-                              key={tag.id}
-                              className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2`}
-                            >
-                              <Tag size={12} />
-                              {tag.name}
-                              <button
-                                onClick={() => handleTagRemove(tag.id)}
-                                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Ajouter un tag personnalisé */}
                     <div className="flex gap-2">
@@ -275,8 +278,15 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                         }}
                       />
                       <button
+                        type="button"
                         onClick={handleAddCustomTag}
-                        className="bg-[#552E1A] text-white px-4 py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
+                        className="bg-[#552E1A] text-white px-4 py-2 rounded-lg font-medium"
+                        style={{ 
+                          zIndex: 9999, 
+                          position: 'relative',
+                          pointerEvents: 'auto',
+                          cursor: 'pointer'
+                        }}
                       >
                         Ajouter
                       </button>
