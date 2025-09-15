@@ -223,7 +223,7 @@ const TemplatePanel = () => {
   const createTemplate = (categoryId) => {
     // Redirection vers la page "Nouvel évènement"
     console.log(`Créer un template dans la catégorie: ${categoryId}`);
-    setCurrentView('new-event');
+    setCurrentView('new-quest');
     setIsOpen(true);
   };
 
@@ -249,7 +249,7 @@ const TemplatePanel = () => {
     // Envoyer vers la page "Nouvel évènement" en mode modification
     console.log('Modification du template:', template);
     setSelectedTemplate(template);
-    setCurrentView('new-event');
+    setCurrentView('new-quest');
   };
 
   const handleEventCreated = (eventData) => {
@@ -376,7 +376,7 @@ const TemplatePanel = () => {
               </div>
             </div>
             
-            {/* Bouton de recherche */}
+            {/* Bouton de recherche avec dropdown */}
             <div className="relative z-10">
               <button 
                 onClick={(e) => {
@@ -396,7 +396,7 @@ const TemplatePanel = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Rechercher..."
-                      className="bg-transparent text-white px-2 py-1 text-sm border-none focus:outline-none placeholder-white/70 w-32"
+                      className="bg-transparent text-white pl-1 pr-1 py-1 text-sm border-none focus:outline-none placeholder-white/70 w-24"
                       autoFocus
                     />
                     <button
@@ -405,7 +405,7 @@ const TemplatePanel = () => {
                         setShowSearchInput(false);
                         setSearchTerm('');
                       }}
-                      className="text-white hover:text-black transition-colors p-1"
+                      className="text-white hover:text-gray-300 transition-colors p-1"
                     >
                       <X size={14} />
                     </button>
@@ -418,14 +418,37 @@ const TemplatePanel = () => {
           {/* Contenu scrollable - Seulement les sections */}
           <div className="flex-1 space-y-4 overflow-y-auto min-h-0 pb-4">
             {/* Sections dynamiques basées sur les catégories */}
-            {categories.map(category => {
-              const categoryTemplates = templates.filter(template => 
+            {categories
+              .filter(category => {
+                // Filtrage des catégories par recherche
+                if (!searchTerm) return true;
+                const searchLower = searchTerm.toLowerCase();
+                
+                // Recherche dans le nom de la catégorie
+                if (category.name.toLowerCase().includes(searchLower)) return true;
+                
+                // Recherche dans les templates de cette catégorie
+                const hasMatchingTemplates = templates.some(template => 
                 template.category === category.id && 
-                (selectedFilter === 'aucun' || 
+                  template.name.toLowerCase().includes(searchLower)
+                );
+                
+                return hasMatchingTemplates;
+              })
+              .map(category => {
+                const categoryTemplates = templates.filter(template => {
+                  // Filtrage par statut
+                  const matchesFilter = selectedFilter === 'aucun' ? !template.isArchived : 
                  (selectedFilter === 'favoris' && template.isFavorite) ||
                  (selectedFilter === 'archives' && template.isArchived) ||
-                 (selectedFilter === 'categorie' && template.category === category.id))
-              );
+                   (selectedFilter === 'categorie' && template.category === category.id);
+                  
+                  // Filtrage par recherche
+                  const matchesSearch = !searchTerm || 
+                    template.name.toLowerCase().includes(searchTerm.toLowerCase());
+                  
+                  return template.category === category.id && matchesFilter && matchesSearch;
+                });
 
               if (selectedFilter === 'archives' && !categoryTemplates.some(t => t.isArchived)) {
                 return null;
@@ -494,6 +517,22 @@ const TemplatePanel = () => {
                       {/* Sous-catégories */}
                       {subcategories
                         .filter(sub => sub.category === category.id)
+                        .filter(subcategory => {
+                          // Filtrage des sous-catégories par recherche
+                          if (!searchTerm) return true;
+                          const searchLower = searchTerm.toLowerCase();
+                          
+                          // Recherche dans le nom de la sous-catégorie
+                          if (subcategory.name.toLowerCase().includes(searchLower)) return true;
+                          
+                          // Recherche dans les templates de cette sous-catégorie
+                          const hasMatchingTemplates = categoryTemplates.some(template => 
+                            template.subcategory === subcategory.id && 
+                            template.name.toLowerCase().includes(searchLower)
+                          );
+                          
+                          return hasMatchingTemplates;
+                        })
                         .map(subcategory => {
                           const subcategoryTemplates = categoryTemplates.filter(t => t.subcategory === subcategory.id);
                           
@@ -679,6 +718,16 @@ const TemplatePanel = () => {
         const [questSelectedFilter, setQuestSelectedFilter] = React.useState('aucun');
         const [questSelectedSort, setQuestSelectedSort] = React.useState('aucun');
         
+        // États pour le formulaire de nouvelle quête
+        const [newQuestTitle, setNewQuestTitle] = React.useState('');
+        const [newQuestCategory, setNewQuestCategory] = React.useState('');
+        const [newQuestLocation, setNewQuestLocation] = React.useState('');
+        const [newQuestStartPoint, setNewQuestStartPoint] = React.useState('');
+        const [newQuestDestination, setNewQuestDestination] = React.useState('');
+        const [newQuestSponsor, setNewQuestSponsor] = React.useState('');
+        const [newQuestRewards, setNewQuestRewards] = React.useState('');
+        const [newQuestDescription, setNewQuestDescription] = React.useState('');
+        
         // États pour l'édition des quêtes
         const [editingQuestTitle, setEditingQuestTitle] = React.useState(null);
         const [editingQuestCount, setEditingQuestCount] = React.useState(null);
@@ -691,24 +740,25 @@ const TemplatePanel = () => {
           'mages': { current: 6, total: 6 }
         });
         
-        // États pour les quêtes dynamiques
-        const [quests, setQuests] = React.useState([
+        // États pour les catégories et quêtes dynamiques
+        const [categories, setCategories] = React.useState([
           {
             id: 'histoire-principale',
             title: 'Histoire principale',
-            type: 'main',
+            type: 'category',
             progress: 50,
             isExpanded: true,
-            subQuests: [
+            quests: [
               {
                 id: 'liberer-otages',
                 title: 'Libérer les otages alliés',
+                type: 'quest',
                 progress: 100,
                 isExpanded: true,
                 sponsor: 'Nom du personnage',
                 reward: 'Corne d\'abondance ; 1300 PO ; 4000 XP',
                 description: 'Les Bastions de M\'ror sont attaqués par des Duergars à la solde d\'Orcus. Pour déstabiliser l\'armée naine, les Duergars ont pris en otage des alliés sur d\'autres fronts. Il faut récupérer les otages pour permettre la défense de la cité sans craindre d\'incident diplomatique en cas de dégât collatéral.',
-                objectives: [
+                subQuests: [
                   { id: 'chasseurs', name: 'Libérer les chasseurs de la forêt écarlate', current: 4, total: 4 },
                   { id: 'mages', name: 'Sauver les mages d\'Arkanix', current: 6, total: 6 }
                 ]
@@ -726,6 +776,12 @@ const TemplatePanel = () => {
         // États pour les menus contextuels
         const [openContextMenu, setOpenContextMenu] = React.useState(null);
         
+        // État pour l'édition des noms d'objectifs
+        const [editingObjectiveName, setEditingObjectiveName] = React.useState(null);
+        
+        // État pour l'édition du total des compteurs
+        const [editingQuestTotal, setEditingQuestTotal] = React.useState(null);
+        
         // Fonction pour ouvrir la fiche du personnage
         const openCharacterSheet = (characterName) => {
           console.log(`Ouverture de la fiche du personnage: ${characterName}`);
@@ -733,63 +789,158 @@ const TemplatePanel = () => {
           // navigate(`/characters/${characterName}`);
         };
         
-        // Fonction pour créer une nouvelle quête
-        const createNewQuest = () => {
-          const newQuestId = `quest-${Date.now()}`;
-          const newQuest = {
-            id: newQuestId,
-            title: 'Nouvelle quête',
-            type: 'main',
+        // Fonction pour créer une nouvelle catégorie
+        const createNewCategory = () => {
+          const newCategoryId = `category-${Date.now()}`;
+          const newCategory = {
+            id: newCategoryId,
+            title: 'Nouvelle catégorie',
+            type: 'category',
             progress: 0,
             isExpanded: true,
-            subQuests: []
+            quests: []
           };
           
-          setQuests(prev => [...prev, newQuest]);
-          setExpandedQuests(prev => ({ ...prev, [newQuestId]: true }));
-          setQuestTitles(prev => ({ ...prev, [newQuestId]: 'Nouvelle quête' }));
+          setCategories(prev => [...prev, newCategory]);
+          setExpandedQuests(prev => ({ ...prev, [newCategoryId]: true }));
+          setQuestTitles(prev => ({ ...prev, [newCategoryId]: 'Nouvelle catégorie' }));
           
-          console.log('Nouvelle quête créée:', newQuest);
+          console.log('Nouvelle catégorie créée:', newCategory);
         };
         
         // Fonctions pour le menu contextuel
-        const handleContextMenuAction = (questId, action) => {
+        const handleContextMenuAction = (itemId, action) => {
           setOpenContextMenu(null);
           
-          switch (action) {
-            case 'modify':
-              setEditingQuestTitle(questId);
-              break;
-            case 'archive':
-              console.log(`Archivage de la quête: ${questId}`);
-              // TODO: Implémenter l'archivage
-              break;
-            case 'delete':
-              if (confirm('Êtes-vous sûr de vouloir supprimer cette quête ?')) {
-                setQuests(prev => prev.filter(quest => quest.id !== questId));
-                setExpandedQuests(prev => {
-                  const newState = { ...prev };
-                  delete newState[questId];
-                  return newState;
-                });
-                setQuestTitles(prev => {
-                  const newState = { ...prev };
-                  delete newState[questId];
-                  return newState;
-                });
-                console.log(`Quête supprimée: ${questId}`);
-              }
-              break;
-            default:
-              break;
+          // Vérifier si c'est une sous-quête, une quête ou une catégorie
+          const isSubQuest = categories.some(cat => 
+            cat.quests.some(quest => 
+              quest.subQuests && quest.subQuests.some(sub => sub.id === itemId)
+            )
+          );
+          
+          const isQuest = categories.some(cat => 
+            cat.quests.some(quest => quest.id === itemId)
+          );
+          
+          if (isSubQuest) {
+            // Gestion des sous-quêtes
+            switch (action) {
+              case 'modify':
+                // Ouvrir la page de création/modification de quête dans le panel
+                setCurrentView('new-quest');
+                break;
+              case 'archive':
+                console.log(`Archivage de la sous-quête: ${itemId}`);
+                // TODO: Implémenter l'archivage
+                break;
+              case 'delete':
+                if (confirm('Êtes-vous sûr de vouloir supprimer cette sous-quête ?')) {
+                  setCategories(prev => prev.map(cat => ({
+                    ...cat,
+                    quests: cat.quests.map(quest => ({
+                      ...quest,
+                      subQuests: quest.subQuests ? quest.subQuests.filter(sub => sub.id !== itemId) : []
+                    }))
+                  })));
+                  setExpandedQuests(prev => {
+                    const newState = { ...prev };
+                    delete newState[itemId];
+                    return newState;
+                  });
+                  console.log(`Sous-quête supprimée: ${itemId}`);
+                }
+                break;
+              default:
+                break;
+            }
+          } else if (isQuest) {
+            // Gestion des quêtes
+            switch (action) {
+              case 'modify':
+                // Ouvrir la page de création/modification de quête dans le panel
+                setCurrentView('new-quest');
+                break;
+              case 'archive':
+                console.log(`Archivage de la quête: ${itemId}`);
+                // TODO: Implémenter l'archivage
+                break;
+              case 'delete':
+                if (confirm('Êtes-vous sûr de vouloir supprimer cette quête ?')) {
+                  setCategories(prev => prev.map(cat => ({
+                    ...cat,
+                    quests: cat.quests.filter(quest => quest.id !== itemId)
+                  })));
+                  setExpandedQuests(prev => {
+                    const newState = { ...prev };
+                    delete newState[itemId];
+                    return newState;
+                  });
+                  console.log(`Quête supprimée: ${itemId}`);
+                }
+                break;
+              default:
+                break;
+            }
+          } else {
+            // Gestion des catégories
+            switch (action) {
+              case 'archive':
+                console.log(`Archivage de la catégorie: ${itemId}`);
+                // TODO: Implémenter l'archivage
+                break;
+              case 'delete':
+                if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+                  setCategories(prev => prev.filter(cat => cat.id !== itemId));
+                  setExpandedQuests(prev => {
+                    const newState = { ...prev };
+                    delete newState[itemId];
+                    return newState;
+                  });
+                  setQuestTitles(prev => {
+                    const newState = { ...prev };
+                    delete newState[itemId];
+                    return newState;
+                  });
+                  console.log(`Catégorie supprimée: ${itemId}`);
+                }
+                break;
+              default:
+                break;
+            }
           }
         };
         
-        // Calcul du pourcentage de la quête principale basé sur les sous-quêtes
-        const calculateMainQuestProgress = () => {
-          const totalSubQuests = Object.keys(questCounts).length;
-          const completedSubQuests = Object.values(questCounts).filter(count => count.current >= count.total).length;
-          return Math.round((completedSubQuests / totalSubQuests) * 100);
+        // Calcul du pourcentage d'une sous-quête basé sur ses objectifs
+        const calculateSubQuestProgress = (subQuest) => {
+          if (subQuest.current !== undefined && subQuest.total !== undefined) {
+            return Math.round((subQuest.current / subQuest.total) * 100);
+          }
+          return 0;
+        };
+        
+        // Calcul du pourcentage d'une quête basé sur ses sous-quêtes
+        const calculateQuestProgress = (quest) => {
+          if (quest.subQuests && quest.subQuests.length > 0) {
+            const totalSubQuests = quest.subQuests.length;
+            const completedSubQuests = quest.subQuests.filter(subQuest => {
+              return calculateSubQuestProgress(subQuest) >= 100;
+            }).length;
+            return Math.round((completedSubQuests / totalSubQuests) * 100);
+          }
+          return quest.progress; // Retourner le progrès par défaut si pas de sous-quêtes
+        };
+        
+        // Calcul du pourcentage d'une catégorie basé sur ses quêtes
+        const calculateCategoryProgress = (category) => {
+          if (category.quests && category.quests.length > 0) {
+            const totalQuests = category.quests.length;
+            const completedQuests = category.quests.filter(quest => {
+              return calculateQuestProgress(quest) >= 100;
+            }).length;
+            return Math.round((completedQuests / totalQuests) * 100);
+          }
+          return category.progress; // Retourner le progrès par défaut si pas de quêtes
         };
         
         // Fonction pour obtenir la couleur basée sur le statut
@@ -808,6 +959,21 @@ const TemplatePanel = () => {
             case 'red': return 'bg-red-500';
             default: return 'bg-golden';
           }
+        };
+
+        // Ajouter une nouvelle sous-quête à une quête existante
+        const addSubQuestToQuest = (categoryId, questId) => {
+          const newSubQuestId = `subquest-${Date.now()}`;
+          const newSubQuest = { id: newSubQuestId, name: 'Nouvelle sous-quête', current: 0, total: 1 };
+          setCategories(prev => prev.map(cat => 
+            cat.id === categoryId
+              ? { ...cat, quests: cat.quests.map(q => 
+                  q.id === questId 
+                    ? { ...q, subQuests: [...q.subQuests, newSubQuest] }
+                    : q
+                )}
+              : cat
+          ));
         };
         
         // Fonction pour toggle les dropdowns
@@ -829,7 +995,227 @@ const TemplatePanel = () => {
           document.addEventListener('click', handleClickOutside);
           return () => document.removeEventListener('click', handleClickOutside);
         }, [openContextMenu]);
+
+        // Gérer les filtres - fermer/ouvrir les dropdowns selon le filtre
+        React.useEffect(() => {
+          if (questSelectedFilter === 'principales') {
+            // Fermer tous les dropdowns pour "Principales"
+            setExpandedQuests({});
+          } else if (questSelectedFilter === 'aucun') {
+            // Ouvrir tous les dropdowns par défaut pour "Aucun"
+            const defaultExpanded = {};
+            categories.forEach(category => {
+              defaultExpanded[category.id] = true;
+              if (category.quests) {
+                category.quests.forEach(quest => {
+                  defaultExpanded[quest.id] = true;
+                });
+              }
+            });
+            setExpandedQuests(defaultExpanded);
+          }
+        }, [questSelectedFilter, categories]);
         
+        // Fonction pour créer une nouvelle quête
+        const createNewQuest = () => {
+          const newQuest = {
+            id: `quest-${Date.now()}`,
+            title: newQuestTitle || 'Nouvelle quête',
+            type: 'quest',
+            progress: 0,
+            isExpanded: true,
+            sponsor: newQuestSponsor,
+            reward: newQuestRewards,
+            description: newQuestDescription,
+            location: newQuestLocation,
+            startPoint: newQuestStartPoint,
+            destination: newQuestDestination,
+            subQuests: []
+          };
+          
+          // Ajouter la quête à la catégorie sélectionnée
+          if (newQuestCategory) {
+            setCategories(prev => prev.map(cat => 
+              cat.id === newQuestCategory
+                ? { ...cat, quests: [...cat.quests, newQuest] }
+                : cat
+            ));
+          }
+          
+          // Réinitialiser le formulaire
+          setNewQuestTitle('');
+          setNewQuestCategory('');
+          setNewQuestLocation('');
+          setNewQuestStartPoint('');
+          setNewQuestDestination('');
+          setNewQuestSponsor('');
+          setNewQuestRewards('');
+          setNewQuestDescription('');
+          
+          // Retourner à la page Quêtes
+          setCurrentView('templates');
+          
+          console.log('Nouvelle quête créée:', newQuest);
+        };
+        
+        // Fonction pour annuler la création
+        const cancelNewQuest = () => {
+          // Réinitialiser le formulaire
+          setNewQuestTitle('');
+          setNewQuestCategory('');
+          setNewQuestLocation('');
+          setNewQuestStartPoint('');
+          setNewQuestDestination('');
+          setNewQuestSponsor('');
+          setNewQuestRewards('');
+          setNewQuestDescription('');
+          
+          // Retourner à la page Quêtes
+          setCurrentView('templates');
+        };
+
+        // Si on est en mode création de quête, afficher le formulaire
+        if (currentView === 'new-quest') {
+          return (
+            <div className="h-full flex flex-col bg-gradient-to-br from-amber-50 to-orange-50">
+              {/* Header avec titre et bouton retour */}
+              <div className="flex items-center gap-4 p-6 border-b border-[#552E1A]/20 bg-white/50">
+                <button
+                  onClick={cancelNewQuest}
+                  className="flex items-center justify-center w-8 h-8 bg-golden rounded-lg hover:bg-golden/80 transition-colors"
+                >
+                  <ChevronRight size={16} className="text-[#552E1A] rotate-180" />
+                </button>
+                <h1 className="text-2xl font-bold text-[#552E1A] eagle-lake-font">Nouvelle quête</h1>
+              </div>
+
+              {/* Formulaire */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Champ titre */}
+                <div>
+                  <input
+                    type="text"
+                    value={newQuestTitle}
+                    onChange={(e) => setNewQuestTitle(e.target.value)}
+                    placeholder="Intitulé de la quête..."
+                    className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                  />
+                </div>
+
+                {/* Champ catégorie */}
+                <div>
+                  <select
+                    value={newQuestCategory}
+                    onChange={(e) => setNewQuestCategory(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">Sélectionner une catégorie</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Champ lieu */}
+                <div>
+                  <input
+                    type="text"
+                    value={newQuestLocation}
+                    onChange={(e) => setNewQuestLocation(e.target.value)}
+                    placeholder="Lieu..."
+                    className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                  />
+                </div>
+
+                {/* Champs localisation en 2 colonnes */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="text"
+                      value={newQuestStartPoint}
+                      onChange={(e) => setNewQuestStartPoint(e.target.value)}
+                      placeholder="Point de départ..."
+                      className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={newQuestDestination}
+                      onChange={(e) => setNewQuestDestination(e.target.value)}
+                      placeholder="Destination..."
+                      className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Champ commanditaire */}
+                <div>
+                  <input
+                    type="text"
+                    value={newQuestSponsor}
+                    onChange={(e) => setNewQuestSponsor(e.target.value)}
+                    placeholder="Commanditaire..."
+                    className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                  />
+                </div>
+
+                {/* Section récompenses */}
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newQuestRewards}
+                    onChange={(e) => setNewQuestRewards(e.target.value)}
+                    placeholder="Récompenses..."
+                    className="flex-1 px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    className="px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors"
+                  >
+                    Argent
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors"
+                  >
+                    Exp
+                  </button>
+                </div>
+
+                {/* Champ description */}
+                <div className="flex-1">
+                  <textarea
+                    value={newQuestDescription}
+                    onChange={(e) => setNewQuestDescription(e.target.value)}
+                    placeholder="Description..."
+                    rows={8}
+                    className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex justify-end gap-4 p-6 border-t border-[#552E1A]/20 bg-white/50">
+                <button
+                  onClick={cancelNewQuest}
+                  className="px-6 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={createNewQuest}
+                  className="px-6 py-3 bg-golden text-white rounded-lg hover:bg-golden/80 transition-colors font-semibold"
+                >
+                  Créer la quête
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="h-full flex flex-col">
             {/* Barre d'outils */}
@@ -846,9 +1232,6 @@ const TemplatePanel = () => {
                   <option value="terminees">Terminées</option>
                   <option value="non-commencees">Non commencées</option>
                   <option value="principales">Principales</option>
-                  <option value="secondaires">Secondaires</option>
-                  <option value="urgentes">Urgentes</option>
-                  <option value="favoris">Favoris</option>
                 </select>
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <ChevronDown size={16} className="text-white" />
@@ -867,8 +1250,6 @@ const TemplatePanel = () => {
                   <option value="nom-desc">Nom (Z-A)</option>
                   <option value="progression-asc">Progression ↑</option>
                   <option value="progression-desc">Progression ↓</option>
-                  <option value="recompense-asc">Récompense ↑</option>
-                  <option value="recompense-desc">Récompense ↓</option>
                   <option value="date-creation">Date création</option>
                   <option value="priorite">Priorité</option>
                 </select>
@@ -897,7 +1278,7 @@ const TemplatePanel = () => {
                         value={questSearchTerm}
                         onChange={(e) => setQuestSearchTerm(e.target.value)}
                         placeholder="Rechercher..."
-                        className="bg-transparent text-white px-2 py-1 text-sm border-none focus:outline-none placeholder-white/70 w-32"
+                        className="bg-transparent text-white pl-1 pr-1 py-1 text-sm border-none focus:outline-none placeholder-white/70 w-24"
                         autoFocus
                       />
                       <button
@@ -906,7 +1287,7 @@ const TemplatePanel = () => {
                           setQuestShowSearchInput(false);
                           setQuestSearchTerm('');
                         }}
-                        className="text-white hover:text-black transition-colors p-1"
+                        className="text-white hover:text-gray-300 transition-colors p-1"
                       >
                         <X size={14} />
                       </button>
@@ -918,21 +1299,62 @@ const TemplatePanel = () => {
 
           {/* Contenu scrollable */}
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {quests.map((quest) => (
-              <div key={quest.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
+            {categories
+              .filter((category) => {
+                // Filtrage par statut
+                if (questSelectedFilter === 'en-cours') {
+                  const progress = calculateCategoryProgress(category);
+                  return progress > 0 && progress < 100;
+                } else if (questSelectedFilter === 'terminees') {
+                  const progress = calculateCategoryProgress(category);
+                  return progress === 100;
+                } else if (questSelectedFilter === 'non-commencees') {
+                  const progress = calculateCategoryProgress(category);
+                  return progress === 0;
+                } else if (questSelectedFilter === 'principales') {
+                  return true; // Toutes les catégories sont principales
+                }
+                return true; // Aucun filtre
+              })
+              .filter((category) => {
+                // Filtrage par recherche
+                if (!questSearchTerm) return true;
+                const searchLower = questSearchTerm.toLowerCase();
+                
+                // Recherche dans le titre de la catégorie
+                if (category.title.toLowerCase().includes(searchLower)) return true;
+                
+                // Recherche dans les quêtes
+                if (category.quests) {
+                  for (const quest of category.quests) {
+                    if (quest.title.toLowerCase().includes(searchLower)) return true;
+                    
+                    // Recherche dans les sous-quêtes
+                    if (quest.subQuests) {
+                      for (const subQuest of quest.subQuests) {
+                        if (subQuest.name.toLowerCase().includes(searchLower)) return true;
+                      }
+                    }
+                  }
+                }
+                
+                return false;
+              })
+              .map((category) => (
+              <div key={category.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
                 <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
                   <div className="flex items-center gap-3">
-                    {editingQuestTitle === quest.id ? (
+                    {editingQuestTitle === category.id ? (
                       <input
                         type="text"
-                        defaultValue={questTitles[quest.id] || quest.title}
+                        defaultValue={questTitles[category.id] || category.title}
                         onBlur={(e) => {
-                          setQuestTitles(prev => ({ ...prev, [quest.id]: e.target.value }));
+                          setQuestTitles(prev => ({ ...prev, [category.id]: e.target.value }));
                           setEditingQuestTitle(null);
                         }}
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {
-                            setQuestTitles(prev => ({ ...prev, [quest.id]: e.target.value }));
+                            setQuestTitles(prev => ({ ...prev, [category.id]: e.target.value }));
                             setEditingQuestTitle(null);
                           }
                         }}
@@ -942,30 +1364,30 @@ const TemplatePanel = () => {
                     ) : (
                       <h3 
                         className="text-xl font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
-                        onClick={() => setEditingQuestTitle(quest.id)}
+                        onClick={() => setEditingQuestTitle(category.id)}
                       >
-                        {questTitles[quest.id] || quest.title}
+                        {questTitles[category.id] || category.title}
                       </h3>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#552E1A] font-medium">{quest.progress}%</span>
+                    <span className="text-[#552E1A] font-medium">{calculateCategoryProgress(category)}%</span>
                     <button 
-                      onClick={() => toggleQuestDropdown(quest.id)}
+                      onClick={() => toggleQuestDropdown(category.id)}
                       className="text-[#552E1A] hover:text-black transition-colors"
                     >
                       <ChevronDown 
                         size={16} 
-                        className={`transform transition-transform ${expandedQuests[quest.id] ? 'rotate-180' : ''}`} 
+                        className={`transform transition-transform ${expandedQuests[category.id] ? 'rotate-180' : ''}`} 
                       />
                     </button>
-                    <div className="relative">
+                    <div className="relative flex items-center">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenContextMenu(openContextMenu === quest.id ? null : quest.id);
+                          setOpenContextMenu(openContextMenu === category.id ? null : category.id);
                         }}
-                        className="text-[#552E1A] hover:text-black transition-colors ml-2"
+                        className="text-[#552E1A] hover:text-black transition-colors ml-2 flex items-center justify-center w-6 h-6"
                       >
                         <div className="flex flex-col gap-1">
                           <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
@@ -974,22 +1396,22 @@ const TemplatePanel = () => {
                         </div>
                       </button>
                       
-                      {openContextMenu === quest.id && (
+                      {openContextMenu === category.id && (
                         <div className="context-menu absolute right-0 top-full mt-2 bg-white border border-[#552E1A]/30 rounded-lg shadow-lg z-50 min-w-[120px]">
                           <button
-                            onClick={() => handleContextMenuAction(quest.id, 'modify')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContextMenuAction(category.id, 'archive');
+                            }}
                             className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors first:rounded-t-lg"
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() => handleContextMenuAction(quest.id, 'archive')}
-                            className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors"
                           >
                             Archiver
                           </button>
                           <button
-                            onClick={() => handleContextMenuAction(quest.id, 'delete')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContextMenuAction(category.id, 'delete');
+                            }}
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors last:rounded-b-lg"
                           >
                             Supprimer
@@ -999,38 +1421,374 @@ const TemplatePanel = () => {
                     </div>
                   </div>
                 </div>
-                {expandedQuests[quest.id] && (
+                {expandedQuests[category.id] && (
                   <div className="p-3">
                     <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
-                      <div className={`h-2 rounded-full ${getProgressBarColor(quest.progress, 100)}`} style={{width: `${quest.progress}%`}}></div>
+                      <div className={`h-2 rounded-full ${getProgressBarColor(calculateCategoryProgress(category), 100)}`} style={{width: `${calculateCategoryProgress(category)}%`}}></div>
                     </div>
                     
-                    {quest.subQuests && quest.subQuests.length > 0 && (
+                    {category.quests && category.quests.length > 0 && (
                       <div className="space-y-4">
-                        {quest.subQuests.map((subQuest) => (
-                          <div key={subQuest.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5">
+                        {category.quests.map((quest) => (
+                          <div key={quest.id} className="border border-[#552E1A]/30 rounded-lg bg-[#552E1A]/5 mt-4">
                             <div className="w-full flex items-center justify-between p-3 bg-[#552E1A]/10 hover:bg-[#552E1A]/20 transition-colors">
                               <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <h4 className="text-lg font-semibold text-[#552E1A] eagle-lake-font">
-                                  {subQuest.title}
-                                </h4>
+                                <div className={`w-3 h-3 rounded-full ${getProgressBarColor(calculateQuestProgress(quest), 100)}`}></div>
+                                {editingQuestTitle === quest.id ? (
+                                  <input
+                                    type="text"
+                                    defaultValue={quest.title}
+                                    onBlur={(e) => {
+                                      setCategories(prev => prev.map(cat => 
+                                        cat.id === category.id 
+                                          ? { ...cat, quests: cat.quests.map(q => q.id === quest.id ? { ...q, title: e.target.value } : q) } 
+                                          : cat
+                                      ));
+                                      setEditingQuestTitle(null);
+                                    }}
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        setCategories(prev => prev.map(cat => 
+                                          cat.id === category.id 
+                                            ? { ...cat, quests: cat.quests.map(q => q.id === quest.id ? { ...q, title: e.target.value } : q) } 
+                                            : cat
+                                        ));
+                                        setEditingQuestTitle(null);
+                                      }
+                                    }}
+                                    className="bg-transparent text-black font-semibold eagle-lake-font border-none focus:outline-none text-lg"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <h4 
+                                    className="text-lg font-semibold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
+                                    onClick={() => setEditingQuestTitle(quest.id)}
+                                  >
+                                    {quest.title}
+                                  </h4>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[#552E1A] font-medium">{subQuest.progress}%</span>
-                                <button className="text-[#552E1A] hover:text-black transition-colors">
-                                  <ChevronDown size={16} />
+                                <span className="text-[#552E1A] font-medium">{calculateQuestProgress(quest)}%</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleQuestDropdown(quest.id);
+                                  }}
+                                  className="text-[#552E1A] hover:text-black transition-colors"
+                                >
+                                  <ChevronDown 
+                                    size={16} 
+                                    className={`transition-transform duration-200 ${expandedQuests[quest.id] ? 'rotate-180' : ''}`} 
+                                  />
                                 </button>
+                                <div className="relative flex items-center">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenContextMenu(openContextMenu === quest.id ? null : quest.id);
+                                    }}
+                                    className="text-[#552E1A] hover:text-black transition-colors ml-2 flex items-center justify-center w-6 h-6"
+                                  >
+                                    <div className="flex flex-col gap-1">
+                                      <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                      <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                      <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                    </div>
+                                  </button>
+                                  
+                                  {openContextMenu === quest.id && (
+                                    <div className="context-menu absolute right-0 top-full mt-2 bg-white border border-[#552E1A]/30 rounded-lg shadow-lg z-50 min-w-[120px]">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleContextMenuAction(quest.id, 'modify');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors first:rounded-t-lg"
+                                      >
+                                        Modifier
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleContextMenuAction(quest.id, 'archive');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors"
+                                      >
+                                        Archiver
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleContextMenuAction(quest.id, 'delete');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors last:rounded-b-lg"
+                                      >
+                                        Supprimer
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            {expandedQuests[quest.id] && (
+                              <div className="p-3">
+                                <div className="w-full bg-[#552E1A]/20 rounded-full h-2 mb-4">
+                                  <div className={`h-2 rounded-full ${getProgressBarColor(calculateQuestProgress(quest), 100)}`} style={{width: `${calculateQuestProgress(quest)}%`}}></div>
+                                </div>
+
+                                <div className="space-y-3 text-sm">
+                                  <div>
+                                    <span className="font-medium text-[#552E1A]">Commanditaire : </span>
+                                    <span 
+                                      className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors underline hover:no-underline"
+                                      onClick={() => openCharacterSheet(quest.sponsor)}
+                                    >
+                                      {quest.sponsor}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-[#552E1A]">Récompense : </span>
+                                    <span className="text-[#552E1A]/80">{quest.reward}</span>
+                                  </div>
+                                  <div className="text-[#552E1A]/80 leading-relaxed">
+                                    {quest.description}
+                                  </div>
+                                </div>
+
+                                <div className="mt-6 space-y-3">
+                                  {quest.subQuests.map((subQuest) => (
+                                    <div key={subQuest.id} className={`flex items-center justify-between rounded-lg p-3 border transition-colors ${
+                                      getQuestStatusColor(subQuest.current, subQuest.total) === 'green' 
+                                        ? 'bg-green-50 border-green-200 hover:bg-green-100' 
+                                        : getQuestStatusColor(subQuest.current, subQuest.total) === 'yellow'
+                                        ? 'bg-yellow-50 border-yellow-240 hover:bg-yellow-100'
+                                        : 'bg-red-50 border-red-200 hover:bg-red-100'
+                                    }`}>
+                                      <div className="flex items-center gap-3">
+                                        <div className={`w-3 h-3 rounded-full ${
+                                          getQuestStatusColor(subQuest.current, subQuest.total) === 'green' 
+                                            ? 'bg-green-500' 
+                                            : getQuestStatusColor(subQuest.current, subQuest.total) === 'yellow'
+                                            ? 'bg-yellow-500'
+                                            : 'bg-red-500'
+                                        }`}></div>
+                                        {editingObjectiveName === subQuest.id ? (
+                                          <input
+                                            type="text"
+                                            defaultValue={subQuest.name}
+                                            onBlur={(e) => {
+                                              setCategories(prev => prev.map(cat => 
+                                                cat.id === category.id 
+                                                  ? { ...cat, quests: cat.quests.map(q => 
+                                                      q.id === quest.id 
+                                                        ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                            sq.id === subQuest.id ? { ...sq, name: e.target.value } : sq
+                                                          )} 
+                                                        : q
+                                                    )} 
+                                                  : cat
+                                              ));
+                                              setEditingObjectiveName(null);
+                                            }}
+                                            onKeyPress={(e) => {
+                                              if (e.key === 'Enter') {
+                                                setCategories(prev => prev.map(cat => 
+                                                  cat.id === category.id 
+                                                    ? { ...cat, quests: cat.quests.map(q => 
+                                                        q.id === quest.id 
+                                                          ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                              sq.id === subQuest.id ? { ...sq, name: e.target.value } : sq
+                                                            )} 
+                                                          : q
+                                                      )} 
+                                                    : cat
+                                                ));
+                                                setEditingObjectiveName(null);
+                                              }
+                                            }}
+                                            className="bg-transparent text-black font-medium border-none focus:outline-none text-[#552E1A]"
+                                            autoFocus
+                                          />
+                                        ) : (
+                                          <span 
+                                            className="text-[#552E1A] font-medium cursor-pointer hover:text-black transition-colors"
+                                            onClick={() => setEditingObjectiveName(subQuest.id)}
+                                          >
+                                            {subQuest.name}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center min-w-[50px] justify-end">
+                                          {editingQuestCount === subQuest.id ? (
+                                            <div className="flex items-center gap-1">
+                                              <input
+                                                type="number"
+                                                defaultValue={subQuest.current}
+                                                min="0"
+                                                max={subQuest.total}
+                                                onBlur={(e) => {
+                                                  const newValue = Math.max(0, Math.min(parseInt(e.target.value) || 0, subQuest.total));
+                                                  setCategories(prev => prev.map(cat => 
+                                                    cat.id === category.id 
+                                                      ? { ...cat, quests: cat.quests.map(q => 
+                                                          q.id === quest.id 
+                                                            ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                                sq.id === subQuest.id ? { ...sq, current: newValue } : sq
+                                                              )} 
+                                                            : q
+                                                        )} 
+                                                      : cat
+                                                  ));
+                                                  setEditingQuestCount(null);
+                                                }}
+                                                onKeyPress={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    const newValue = Math.max(0, Math.min(parseInt(e.target.value) || 0, subQuest.total));
+                                                    setCategories(prev => prev.map(cat => 
+                                                      cat.id === category.id 
+                                                        ? { ...cat, quests: cat.quests.map(q => 
+                                                            q.id === quest.id 
+                                                              ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                                  sq.id === subQuest.id ? { ...sq, current: newValue } : sq
+                                                                )} 
+                                                              : q
+                                                          )} 
+                                                        : cat
+                                                    ));
+                                                    setEditingQuestCount(null);
+                                                  }
+                                                }}
+                                                className="bg-white text-black text-center border border-[#552E1A]/30 rounded px-1 py-1 text-sm font-medium w-8 focus:outline-none focus:ring-2 focus:ring-golden/50"
+                                                autoFocus
+                                              />
+                                              <span className="text-[#552E1A] font-medium">/ {subQuest.total}</span>
+                                            </div>
+                                          ) : editingQuestTotal === subQuest.id ? (
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-[#552E1A] font-medium">{subQuest.current}</span>
+                                              <span className="text-[#552E1A] font-medium">/</span>
+                                              <input
+                                                type="number"
+                                                defaultValue={subQuest.total}
+                                                min="1"
+                                                onBlur={(e) => {
+                                                  const newTotal = Math.max(1, parseInt(e.target.value) || 1);
+                                                  const newCurrent = Math.min(subQuest.current, newTotal);
+                                                  setCategories(prev => prev.map(cat => 
+                                                    cat.id === category.id 
+                                                      ? { ...cat, quests: cat.quests.map(q => 
+                                                          q.id === quest.id 
+                                                            ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                                sq.id === subQuest.id ? { ...sq, total: newTotal, current: newCurrent } : sq
+                                                              )} 
+                                                            : q
+                                                        )} 
+                                                      : cat
+                                                  ));
+                                                  setEditingQuestTotal(null);
+                                                }}
+                                                onKeyPress={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    const newTotal = Math.max(1, parseInt(e.target.value) || 1);
+                                                    const newCurrent = Math.min(subQuest.current, newTotal);
+                                                    setCategories(prev => prev.map(cat => 
+                                                      cat.id === category.id 
+                                                        ? { ...cat, quests: cat.quests.map(q => 
+                                                            q.id === quest.id 
+                                                              ? { ...q, subQuests: q.subQuests.map(sq => 
+                                                                  sq.id === subQuest.id ? { ...sq, total: newTotal, current: newCurrent } : sq
+                                                                )} 
+                                                              : q
+                                                          )} 
+                                                        : cat
+                                                    ));
+                                                    setEditingQuestTotal(null);
+                                                  }
+                                                }}
+                                                className="bg-white text-black text-center border border-[#552E1A]/30 rounded px-1 py-1 text-sm font-medium w-8 focus:outline-none focus:ring-2 focus:ring-golden/50"
+                                                autoFocus
+                                              />
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center gap-1">
+                                              <span 
+                                                className={`font-medium text-right w-6 cursor-pointer hover:opacity-70 transition-opacity ${
+                                                  getQuestStatusColor(subQuest.current, subQuest.total) === 'green' 
+                                                    ? 'text-green-600' 
+                                                    : getQuestStatusColor(subQuest.current, subQuest.total) === 'yellow'
+                                                    ? 'text-yellow-600'
+                                                    : 'text-red-600'
+                                                }`}
+                                                onClick={() => setEditingQuestCount(subQuest.id)}
+                                              >
+                                                {subQuest.current}
+                                              </span>
+                                              <span className="text-[#552E1A] font-medium">/</span>
+                                              <span 
+                                                className="text-[#552E1A] font-medium cursor-pointer hover:text-black transition-colors"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setEditingQuestTotal(subQuest.id);
+                                                }}
+                                              >
+                                                {subQuest.total}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="relative flex items-center">
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenContextMenu(openContextMenu === subQuest.id ? null : subQuest.id);
+                                            }}
+                                            className="text-[#552E1A] hover:text-black transition-colors ml-2 flex items-center justify-center w-6 h-6"
+                                          >
+                                            <div className="flex flex-col gap-1">
+                                              <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                              <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                              <div className="w-1 h-1 bg-[#552E1A] rounded-full"></div>
+                                            </div>
+                                          </button>
+                                          
+                                          {openContextMenu === subQuest.id && (
+                                            <div className="context-menu absolute right-0 top-full mt-2 bg-white border border-[#552E1A]/30 rounded-lg shadow-lg z-50 min-w-[120px]">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleContextMenuAction(subQuest.id, 'delete');
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors rounded-lg"
+                                              >
+                                                Supprimer
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <div className="pt-2 flex justify-end">
+                                    <button
+                                      onClick={() => addSubQuestToQuest(category.id, quest.id)}
+                                      className="mt-2 inline-flex items-center gap-2 text-[#552E1A] hover:text-black bg-[#552E1A]/10 hover:bg-[#552E1A]/20 border border-[#552E1A]/20 px-3 py-2 rounded transition-colors text-sm"
+                                    >
+                                      <Plus size={14} /> Ajouter une sous-quête
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     )}
                     
-                    {quest.subQuests.length === 0 && (
+                    {(!category.quests || category.quests.length === 0) && (
                       <div className="text-center py-8 text-[#552E1A]/60">
-                        <p className="text-sm">Aucune sous-quête pour le moment</p>
+                        <p className="text-sm">Aucune quête pour le moment</p>
                         <p className="text-xs mt-1">Cliquez sur le titre pour l'éditer</p>
                       </div>
                     )}
@@ -1043,7 +1801,7 @@ const TemplatePanel = () => {
           {/* Bouton fixe Nouvelle catégorie - Position fixe en bas à droite */}
           <div className="fixed bottom-12 right-6 z-50">
             <button 
-              onClick={createNewQuest}
+              onClick={createNewCategory}
               className="bg-golden text-[#552E1A] py-3 px-4 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 eagle-lake-font shadow-lg"
             >
               <Plus size={16} />
