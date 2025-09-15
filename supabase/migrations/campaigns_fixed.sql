@@ -56,3 +56,4 @@ CREATE POLICY "players_all_policy" ON players FOR ALL USING (
 
 
 
+

@@ -45,3 +45,4 @@ CREATE POLICY "Users can manage players in their campaigns" ON players FOR ALL U
 
 
 
+

@@ -387,3 +387,4 @@ console.log('Contexte:', aiService.context);
 
 *Guide créé le 11 Janvier 2025 - Version 1.0*
 *Chatbot IA LORE - Assistant intelligent pour JDR*
+

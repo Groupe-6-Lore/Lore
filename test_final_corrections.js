@@ -44,3 +44,4 @@ console.log("   6. Vérifier que les cards se mettent à jour");
 console.log("   7. Vérifier le layout des pages détails");
 
 
+

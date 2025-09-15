@@ -385,3 +385,4 @@ Pour toute question ou problème :
 
 *Sauvegarde créée le 11 Janvier 2025 - Version 3.0*
 *Projet LORE - Système de gestion de campagnes de JDR*
+
