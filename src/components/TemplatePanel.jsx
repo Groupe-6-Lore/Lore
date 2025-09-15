@@ -137,6 +137,306 @@ const TemplatePanel = () => {
     const saved = localStorage.getItem('lore-templates-editing-category');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // États pour la page Objets
+  const [objectSelectedFilter, setObjectSelectedFilter] = useState('aucun');
+  const [objectSelectedSort, setObjectSelectedSort] = useState('aucun');
+  const [objectSearchTerm, setObjectSearchTerm] = useState('');
+  const [objectShowSearchInput, setObjectShowSearchInput] = useState(false);
+  const [editingObjectCategory, setEditingObjectCategory] = useState(null);
+  const [objectCategoryDropdownOpen, setObjectCategoryDropdownOpen] = useState(null);
+  const [objectCurrentView, setObjectCurrentView] = useState('objects'); // 'objects' ou 'new-object'
+  const [selectedObject, setSelectedObject] = useState(null);
+  
+  // États pour le formulaire de création d'objet
+  const [newObjectName, setNewObjectName] = useState('');
+  const [newObjectDescription, setNewObjectDescription] = useState('');
+  const [newObjectCategory, setNewObjectCategory] = useState('');
+  const [newObjectTags, setNewObjectTags] = useState([]);
+  const [newObjectTag, setNewObjectTag] = useState('');
+
+  // Effet pour ouvrir automatiquement les catégories lors de la recherche
+  React.useEffect(() => {
+    if (objectSearchTerm.trim()) {
+      setObjectCategories(prev => prev.map(cat => ({ ...cat, isExpanded: true })));
+    }
+  }, [objectSearchTerm]);
+
+  // Effet pour fermer le dropdown de catégorie quand on clique ailleurs
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (objectCategoryDropdownOpen && !event.target.closest('.relative')) {
+        setObjectCategoryDropdownOpen(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [objectCategoryDropdownOpen]);
+
+  // Fonction pour créer une nouvelle catégorie d'objets
+  const createNewObjectCategory = () => {
+    const newCategory = {
+      id: `category-${Date.now()}`,
+      title: 'Nouvelle catégorie',
+      isExpanded: true,
+      objects: []
+    };
+    setObjectCategories(prev => [...prev, newCategory]);
+    setEditingObjectCategory(newCategory.id);
+  };
+
+  // Fonctions pour la création d'objet
+  const createNewObject = () => {
+    if (!newObjectName.trim() || !newObjectCategory) return;
+    
+    const newObject = {
+      id: `object-${Date.now()}`,
+      name: newObjectName,
+      description: newObjectDescription,
+      tags: newObjectTags,
+      image: '/images/objects/placeholder.svg'
+    };
+    
+    setObjectCategories(prev => prev.map(cat => 
+      cat.id === newObjectCategory 
+        ? { ...cat, objects: [...cat.objects, newObject] }
+        : cat
+    ));
+    
+    // Reset form
+    setNewObjectName('');
+    setNewObjectDescription('');
+    setNewObjectCategory('');
+    setNewObjectTags([]);
+    setNewObjectTag('');
+    setObjectCurrentView('objects');
+  };
+
+  const cancelNewObject = () => {
+    setNewObjectName('');
+    setNewObjectDescription('');
+    setNewObjectCategory('');
+    setNewObjectTags([]);
+    setNewObjectTag('');
+    setObjectCurrentView('objects');
+  };
+
+  const addObjectTag = () => {
+    if (newObjectTag.trim() && !newObjectTags.includes(newObjectTag.trim())) {
+      setNewObjectTags(prev => [...prev, newObjectTag.trim()]);
+      setNewObjectTag('');
+    }
+  };
+
+  const removeObjectTag = (tagToRemove) => {
+    setNewObjectTags(prev => prev.filter(tag => tag !== tagToRemove));
+  };
+
+  // Fonction pour ouvrir la consultation d'objet (à implémenter plus tard)
+  const openObjectConsultation = (object) => {
+    setSelectedObject(object);
+    console.log('Objet sélectionné pour consultation:', object);
+    // TODO: Implémenter la navigation vers la page de consultation
+  };
+
+  // Fonctions de filtrage et tri pour les objets
+  const getFilteredAndSortedObjects = () => {
+    let filteredCategories = [...objectCategories];
+
+    // Filtrage par catégorie
+    if (objectSelectedFilter !== 'aucun') {
+      filteredCategories = filteredCategories.filter(category => {
+        switch (objectSelectedFilter) {
+          case 'armes':
+            return category.id === 'armes';
+          case 'armures':
+            return category.id === 'armures';
+          case 'objets-magiques':
+            return category.id === 'objets-magiques';
+          case 'consommables':
+            return category.objects.some(obj => obj.type === 'potion' || obj.tags.includes('Consommable'));
+          case 'rares':
+            return category.objects.some(obj => obj.rarity === 'rare');
+          case 'legendaires':
+            return category.objects.some(obj => obj.rarity === 'legendaire');
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filtrage par recherche
+    if (objectSearchTerm.trim()) {
+      filteredCategories = filteredCategories.map(category => ({
+        ...category,
+        objects: category.objects.filter(obj => 
+          obj.name.toLowerCase().includes(objectSearchTerm.toLowerCase()) ||
+          obj.tags.some(tag => tag.toLowerCase().includes(objectSearchTerm.toLowerCase())) ||
+          (obj.description && obj.description.toLowerCase().includes(objectSearchTerm.toLowerCase()))
+        )
+      })).filter(category => category.objects.length > 0);
+    }
+
+    // Tri des objets dans chaque catégorie
+    filteredCategories = filteredCategories.map(category => ({
+      ...category,
+      objects: [...category.objects].sort((a, b) => {
+        switch (objectSelectedSort) {
+          case 'nom-asc':
+            return a.name.localeCompare(b.name, 'fr');
+          case 'nom-desc':
+            return b.name.localeCompare(a.name, 'fr');
+          case 'rarete-asc':
+            const rarityOrder = { 'commun': 1, 'rare': 2, 'legendaire': 3 };
+            return rarityOrder[a.rarity] - rarityOrder[b.rarity];
+          case 'rarete-desc':
+            const rarityOrderDesc = { 'commun': 1, 'rare': 2, 'legendaire': 3 };
+            return rarityOrderDesc[b.rarity] - rarityOrderDesc[a.rarity];
+          case 'type':
+            return a.type.localeCompare(b.type, 'fr');
+          default:
+            return 0;
+        }
+      })
+    }));
+
+    return filteredCategories;
+  };
+
+  const [objectCategories, setObjectCategories] = useState([
+    {
+      id: 'armes',
+      title: 'Armes',
+      isExpanded: true,
+      objects: [
+        { 
+          id: 'epee-longue', 
+          name: 'Épée longue', 
+          tags: ['Mêlée', 'Légendaire'], 
+          image: null,
+          type: 'arme',
+          rarity: 'legendaire',
+          description: 'Une épée longue légendaire'
+        },
+        { 
+          id: 'arc-elfique', 
+          name: 'Arc elfique', 
+          tags: ['Distance', 'Magique'], 
+          image: null,
+          type: 'arme',
+          rarity: 'rare',
+          description: 'Un arc elfique magique'
+        },
+        { 
+          id: 'dague-poison', 
+          name: 'Dague empoisonnée', 
+          tags: ['Mêlée', 'Poison'], 
+          image: null,
+          type: 'arme',
+          rarity: 'rare',
+          description: 'Une dague empoisonnée'
+        },
+        { 
+          id: 'marteau-guerre', 
+          name: 'Marteau de guerre', 
+          tags: ['Mêlée', 'Lourd'], 
+          image: null,
+          type: 'arme',
+          rarity: 'commun',
+          description: 'Un marteau de guerre lourd'
+        },
+        { 
+          id: 'baton-mage', 
+          name: 'Bâton de mage', 
+          tags: ['Magique', 'Focus'], 
+          image: null,
+          type: 'arme',
+          rarity: 'rare',
+          description: 'Un bâton de mage magique'
+        },
+        { 
+          id: 'bouclier-dragon', 
+          name: 'Bouclier de dragon', 
+          tags: ['Défense', 'Rare'], 
+          image: null,
+          type: 'arme',
+          rarity: 'legendaire',
+          description: 'Un bouclier de dragon rare'
+        }
+      ]
+    },
+    {
+      id: 'armures',
+      title: 'Armures',
+      isExpanded: true,
+      objects: [
+        { 
+          id: 'armure-cuir', 
+          name: 'Armure de cuir', 
+          tags: ['Légère', 'Défense'], 
+          image: null,
+          type: 'armure',
+          rarity: 'commun',
+          description: 'Une armure de cuir légère'
+        },
+        { 
+          id: 'cotte-maille', 
+          name: 'Cotte de maille', 
+          tags: ['Moyenne', 'Métal'], 
+          image: null,
+          type: 'armure',
+          rarity: 'rare',
+          description: 'Une cotte de maille résistante'
+        },
+        { 
+          id: 'armure-plate', 
+          name: 'Armure de plates', 
+          tags: ['Lourde', 'Métal'], 
+          image: null,
+          type: 'armure',
+          rarity: 'legendaire',
+          description: 'Une armure de plates légendaire'
+        }
+      ]
+    },
+    {
+      id: 'objets-magiques',
+      title: 'Objets magiques',
+      isExpanded: true,
+      objects: [
+        { 
+          id: 'potion-sante', 
+          name: 'Potion de santé', 
+          tags: ['Consommable', 'Soin'], 
+          image: null,
+          type: 'potion',
+          rarity: 'commun',
+          description: 'Une potion qui restaure la santé'
+        },
+        { 
+          id: 'anneau-pouvoir', 
+          name: 'Anneau de pouvoir', 
+          tags: ['Magique', 'Anneau'], 
+          image: null,
+          type: 'anneau',
+          rarity: 'rare',
+          description: 'Un anneau magique puissant'
+        },
+        { 
+          id: 'amulette-protection', 
+          name: 'Amulette de protection', 
+          tags: ['Magique', 'Protection'], 
+          image: null,
+          type: 'amulette',
+          rarity: 'legendaire',
+          description: 'Une amulette de protection légendaire'
+        }
+      ]
+    }
+  ]);
   const [editingTemplate, setEditingTemplate] = useState(() => {
     const saved = localStorage.getItem('lore-templates-editing-template');
     return saved ? JSON.parse(saved) : null;
@@ -967,6 +1267,7 @@ const TemplatePanel = () => {
         
         // État pour l'édition du total des compteurs
         const [editingQuestTotal, setEditingQuestTotal] = React.useState(null);
+
         
         // Sauvegarde automatique des catégories de quêtes
         React.useEffect(() => {
@@ -2033,7 +2334,267 @@ const TemplatePanel = () => {
       closedImage: '/images/templates/object-tab-closed.svg',
       openImage: '/images/templates/object-tab-open.svg',
       color: 'from-yellow-500 to-yellow-600',
-      content: <div className="text-center text-yellow-400/60">Contenu à définir</div>
+      content: (
+        <div className="h-full flex flex-col">
+          {objectCurrentView === 'objects' ? (
+            <>
+              {/* Barre d'outils - Fixe */}
+              <div className="flex items-center gap-3 mb-6 flex-shrink-0">
+            {/* Filtre dropdown */}
+            <div className="relative">
+              <select 
+                value={objectSelectedFilter} 
+                onChange={(e) => setObjectSelectedFilter(e.target.value)}
+                className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+              >
+                <option value="aucun">Filtrer par Aucun</option>
+                <option value="armes">Armes</option>
+                <option value="armures">Armures</option>
+                <option value="objets-magiques">Objets magiques</option>
+                <option value="consommables">Consommables</option>
+                <option value="rares">Rares</option>
+                <option value="legendaires">Légendaires</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+            </div>
+
+            {/* Tri dropdown */}
+            <div className="relative">
+              <select 
+                value={objectSelectedSort} 
+                onChange={(e) => setObjectSelectedSort(e.target.value)}
+                className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+              >
+                <option value="aucun">Tri Aucun</option>
+                <option value="nom-asc">Nom (A-Z)</option>
+                <option value="nom-desc">Nom (Z-A)</option>
+                <option value="rarete-asc">Rareté ↑</option>
+                <option value="rarete-desc">Rareté ↓</option>
+                <option value="type">Par type</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+            </div>
+
+            {/* Bouton recherche */}
+            <div className="relative">
+              <button
+                onClick={() => setObjectShowSearchInput(!objectShowSearchInput)}
+                className="bg-[#552E1A] text-white p-2 rounded-lg hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50"
+              >
+                <Search size={16} />
+              </button>
+              
+              {/* Input de recherche */}
+              {objectShowSearchInput && (
+                <div className="absolute top-full right-0 mt-2 z-50">
+                  <input
+                    type="text"
+                    value={objectSearchTerm}
+                    onChange={(e) => setObjectSearchTerm(e.target.value)}
+                    placeholder="Rechercher..."
+                    className="w-24 pl-1 pr-1 py-2 bg-white border border-[#552E1A]/30 rounded-lg text-[#552E1A] text-sm focus:outline-none focus:ring-2 focus:ring-golden/50"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Contenu scrollable */}
+          <div className="flex-1 overflow-y-auto pr-4">
+            {getFilteredAndSortedObjects().map(category => (
+              <div key={category.id} className="mb-8">
+                {/* Header de catégorie */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3 relative">
+                    {editingObjectCategory === category.id ? (
+                      <input
+                        type="text"
+                        defaultValue={category.title}
+                        onBlur={(e) => {
+                          setObjectCategories(prev => prev.map(cat => 
+                            cat.id === category.id ? { ...cat, title: e.target.value } : cat
+                          ));
+                          setEditingObjectCategory(null);
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            setObjectCategories(prev => prev.map(cat => 
+                              cat.id === category.id ? { ...cat, title: e.target.value } : cat
+                            ));
+                            setEditingObjectCategory(null);
+                          }
+                        }}
+                        className="text-xl font-bold text-[#552E1A] eagle-lake-font bg-transparent border-none focus:outline-none"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <h3 
+                          className="text-xl font-bold text-[#552E1A] eagle-lake-font cursor-pointer hover:text-black transition-colors"
+                          onClick={() => setEditingObjectCategory(category.id)}
+                        >
+                          {category.title}
+                        </h3>
+                        <button
+                          onClick={() => setObjectCategoryDropdownOpen(
+                            objectCategoryDropdownOpen === category.id ? null : category.id
+                          )}
+                          className="text-[#552E1A] cursor-pointer hover:text-black transition-colors"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                        
+                        {/* Dropdown de catégorie */}
+                        {objectCategoryDropdownOpen === category.id && (
+                          <div className="absolute left-0 top-full mt-2 bg-white border border-[#552E1A]/30 rounded-lg shadow-lg z-50 min-w-[160px]">
+                            <button
+                              onClick={() => {
+                                setObjectCategories(prev => prev.map(cat => 
+                                  cat.id === category.id 
+                                    ? { ...cat, isExpanded: !cat.isExpanded }
+                                    : cat
+                                ));
+                                setObjectCategoryDropdownOpen(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors first:rounded-t-lg"
+                            >
+                              {category.isExpanded ? 'Fermer la catégorie' : 'Ouvrir la catégorie'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingObjectCategory(category.id);
+                                setObjectCategoryDropdownOpen(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-[#552E1A] hover:bg-[#552E1A]/10 transition-colors"
+                            >
+                              Renommer la catégorie
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+                                  setObjectCategories(prev => prev.filter(cat => cat.id !== category.id));
+                                  setObjectCategoryDropdownOpen(null);
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors last:rounded-b-lg"
+                            >
+                              Supprimer la catégorie
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setObjectCurrentView('new-object')}
+                      className="bg-golden text-[#552E1A] px-4 py-2 rounded-lg font-semibold hover:bg-golden/80 transition-colors eagle-lake-font"
+                    >
+                      Créer un objet
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grille d'objets */}
+                {category.isExpanded && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {category.objects
+                      .filter(object => {
+                        if (!objectSearchTerm.trim()) return true;
+                        const searchLower = objectSearchTerm.toLowerCase();
+                        return object.name.toLowerCase().includes(searchLower) ||
+                               object.tags.some(tag => tag.toLowerCase().includes(searchLower));
+                      })
+                      .map(object => (
+                      <div
+                        key={object.id}
+                        onClick={() => openObjectConsultation(object)}
+                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                      >
+                        {/* Zone image */}
+                        <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
+                          {/* Pattern de damier transparent */}
+                          <div 
+                            className="w-full h-full opacity-20 rounded-lg"
+                            style={{
+                              backgroundImage: `
+                                linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                                linear-gradient(-45deg, transparent 75%, #ccc 75%)
+                              `,
+                              backgroundSize: '20px 20px',
+                              backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                            }}
+                          />
+                          
+                          {/* Tags */}
+                          <div className="absolute top-3 right-3 flex flex-col gap-1">
+                            {object.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="text-white px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                                style={{ backgroundColor: '#46718A' }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Footer de la carte */}
+                        <div className="p-3 flex items-center justify-between">
+                          <span className="text-[#552E1A] font-medium">{object.name}</span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(object.name);
+                              setCopyNotification(`"${object.name}" copié !`);
+                              setTimeout(() => setCopyNotification(null), 2000);
+                            }}
+                            className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                            title="Copier le nom"
+                          >
+                            <Copy size={12} className="text-[#552E1A]" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Bouton fixe */}
+          <div className="fixed bottom-12 right-6 z-50">
+            <button 
+              onClick={createNewObjectCategory}
+              className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-golden/80 transition-colors eagle-lake-font flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Nouvelle catégorie
+            </button>
+          </div>
+
+              {/* Notification de copie */}
+              {copyNotification && (
+                <div className="fixed top-4 right-4 bg-[#552E1A] text-white px-4 py-2 rounded-lg shadow-lg z-50">
+                  {copyNotification}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Page de création d'objet - Vide pour le moment */
+            <div className="flex-1 overflow-y-auto pr-4">
+              <div className="text-center text-[#552E1A]/60 py-8">
+                <p>Page de création d'objet à définir</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )
     }
   ];
 
