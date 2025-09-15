@@ -172,7 +172,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
           </div>
 
           {/* Formulaire */}
-          <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)]">
+          <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)] pr-4">
             <div className="max-w-5xl">
               {/* Section principale avec image à droite */}
               <div className="grid grid-cols-2 gap-8 mb-6">
@@ -187,7 +187,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
+                        className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
                       >
                         <option value="">Sélection de catégorie</option>
                         {categories.map(category => (
@@ -212,7 +212,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                       value={eventTitle}
                       onChange={(e) => setEventTitle(e.target.value)}
                       placeholder="Titre de l'évènement"
-                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                      className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
                     />
                   </div>
 
@@ -269,7 +269,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Ajouter un tag personnalisé..."
+                        placeholder="Ajouter un tag"
                         className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {

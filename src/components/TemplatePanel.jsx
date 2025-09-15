@@ -13,7 +13,8 @@ import {
   Archive, 
   Plus,
   Star,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 
 const TemplatePanel = () => {
@@ -152,7 +153,9 @@ const TemplatePanel = () => {
   const [newObjectName, setNewObjectName] = useState('');
   const [newObjectDescription, setNewObjectDescription] = useState('');
   const [newObjectCategory, setNewObjectCategory] = useState('');
-  const [newObjectTags, setNewObjectTags] = useState([]);
+  const [newObjectLevel, setNewObjectLevel] = useState('');
+  const [newObjectAlteration, setNewObjectAlteration] = useState('');
+  const [newObjectTags, setNewObjectTags] = useState(['Tag', 'Tag', 'Tag', 'Tag', 'Tag']); // Tags par défaut comme dans l'image
   const [newObjectTag, setNewObjectTag] = useState('');
 
   // Effet pour ouvrir automatiquement les catégories lors de la recherche
@@ -196,8 +199,12 @@ const TemplatePanel = () => {
       id: `object-${Date.now()}`,
       name: newObjectName,
       description: newObjectDescription,
-      tags: newObjectTags,
-      image: '/images/objects/placeholder.svg'
+      level: newObjectLevel,
+      alteration: newObjectAlteration,
+      tags: newObjectTags.filter(tag => tag.trim() !== ''), // Filtrer les tags vides
+      image: '/images/objects/placeholder.svg',
+      type: 'objet',
+      rarity: 'commun'
     };
     
     setObjectCategories(prev => prev.map(cat => 
@@ -210,7 +217,9 @@ const TemplatePanel = () => {
     setNewObjectName('');
     setNewObjectDescription('');
     setNewObjectCategory('');
-    setNewObjectTags([]);
+    setNewObjectLevel('');
+    setNewObjectAlteration('');
+    setNewObjectTags(['Tag', 'Tag', 'Tag', 'Tag', 'Tag']);
     setNewObjectTag('');
     setObjectCurrentView('objects');
   };
@@ -219,7 +228,9 @@ const TemplatePanel = () => {
     setNewObjectName('');
     setNewObjectDescription('');
     setNewObjectCategory('');
-    setNewObjectTags([]);
+    setNewObjectLevel('');
+    setNewObjectAlteration('');
+    setNewObjectTags(['Tag', 'Tag', 'Tag', 'Tag', 'Tag']);
     setNewObjectTag('');
     setObjectCurrentView('objects');
   };
@@ -2586,10 +2597,176 @@ const TemplatePanel = () => {
               )}
             </>
           ) : (
-            /* Page de création d'objet - Vide pour le moment */
-            <div className="flex-1 overflow-y-auto pr-4">
-              <div className="text-center text-[#552E1A]/60 py-8">
-                <p>Page de création d'objet à définir</p>
+            /* Page de création d'objet - Structure exacte de NewEventPanel */
+            <div className="h-full flex flex-col pt-6 pr-6">
+              {/* Titre avec bouton retour */}
+              <div className="flex items-center gap-3 mb-6">
+                <button
+                  onClick={cancelNewObject}
+                  className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                >
+                  <ArrowLeft size={16} className="text-[#552E1A]" />
+                </button>
+                <h1 className="text-black text-2xl font-bold eagle-lake-font">
+                  Nouvel objet
+                </h1>
+              </div>
+
+              {/* Formulaire */}
+              <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)] pr-4">
+                <div className="max-w-5xl">
+                  {/* Section principale avec image à droite */}
+                  <div className="grid grid-cols-2 gap-8 mb-6">
+                    {/* Colonne gauche - Champs de saisie */}
+                    <div className="space-y-6">
+                      {/* Champ catégorie */}
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                          Catégorie
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={newObjectCategory}
+                            onChange={(e) => setNewObjectCategory(e.target.value)}
+                            className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
+                          >
+                            <option value="">Sélection de catégorie</option>
+                            {objectCategories.map(category => (
+                              <option key={category.id} value={category.id}>
+                                {category.title}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <ChevronDown size={20} className="text-[#552E1A]" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Champ nom */}
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                          Nom de l'objet
+                        </label>
+                        <input
+                          type="text"
+                          value={newObjectName}
+                          onChange={(e) => setNewObjectName(e.target.value)}
+                          placeholder="Nom de l'objet"
+                          className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                        />
+                      </div>
+
+                      {/* Section Tags */}
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-3 eagle-lake-font">
+                          Tags
+                        </label>
+                        
+                        {/* Tags existants */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {newObjectTags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="bg-[#46718A] text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Ajouter un tag personnalisé */}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newObjectTag}
+                            onChange={(e) => setNewObjectTag(e.target.value)}
+                            placeholder="Ajouter un tag"
+                            className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                addObjectTag();
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={addObjectTag}
+                            className="bg-[#552E1A] text-white px-4 py-2 rounded-lg font-medium"
+                            style={{ 
+                              zIndex: 9999, 
+                              position: 'relative',
+                              pointerEvents: 'auto',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Ajouter
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Champ lieu */}
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                          Lieu
+                        </label>
+                        <input
+                          type="text"
+                          value={newObjectAlteration}
+                          onChange={(e) => setNewObjectAlteration(e.target.value)}
+                          placeholder="Lieu..."
+                          className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Colonne droite - Upload d'image */}
+                    <div>
+                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                        Image de l'objet
+                      </label>
+                      <div className="relative">
+                        <div className="cursor-pointer block w-full h-48 bg-[#F5F1E8] border-2 border-dashed border-[#552E1A]/30 rounded-lg flex items-center justify-center hover:border-[#552E1A]/50 transition-colors">
+                          <div className="text-center">
+                            <div className="text-[#552E1A]/60 text-sm mb-1">Cliquez pour ajouter une image</div>
+                            <div className="text-[#552E1A]/40 text-xs">PNG, JPG, GIF jusqu'à 10MB</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Champ description */}
+                  <div className="mb-6">
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Description
+                    </label>
+                    <textarea
+                      value={newObjectDescription}
+                      onChange={(e) => setNewObjectDescription(e.target.value)}
+                      placeholder="Description de l'objet..."
+                      rows={4}
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60 resize-none"
+                    />
+                  </div>
+
+                  {/* Boutons d'action */}
+                  <div className="flex justify-end gap-4">
+                    <button
+                      onClick={cancelNewObject}
+                      className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={createNewObject}
+                      disabled={!newObjectName.trim() || !newObjectCategory}
+                      className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed eagle-lake-font"
+                    >
+                      Créer l'objet
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
