@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TemplateTab from './TemplateTab';
 import NewEventPanel from './NewEventPanel';
 import ConsultationTemplatePanel from './ConsultationTemplatePanel';
@@ -10,6 +10,7 @@ import {
   Filter, 
   ArrowUpDown, 
   Copy, 
+  Edit,
   Archive, 
   Plus,
   Star,
@@ -183,6 +184,7 @@ const TemplatePanel = () => {
     };
   }, [objectCategoryDropdownOpen]);
 
+
   // Fonction pour créer une nouvelle catégorie d'objets
   const createNewObjectCategory = () => {
     const newCategory = {
@@ -199,8 +201,10 @@ const TemplatePanel = () => {
   const createNewObject = () => {
     if (!newObjectName.trim() || !newObjectCategory) return;
     
-    const newObject = {
-      id: `object-${Date.now()}`,
+    const isEditing = selectedObject && objectCurrentView === 'new-object';
+    
+    const objectData = {
+      id: isEditing ? selectedObject.id : `object-${Date.now()}`,
       name: newObjectName,
       description: newObjectDescription,
       level: newObjectLevel,
@@ -208,17 +212,34 @@ const TemplatePanel = () => {
       tags: newObjectTags.filter(tag => tag.trim() !== ''), // Filtrer les tags vides
       image: '/images/objects/placeholder.svg',
       type: 'objet',
-      rarity: 'commun'
+      rarity: 'commun',
+      categoryId: newObjectCategory
     };
     
-    setObjectCategories(prev => prev.map(cat => 
-      cat.id === newObjectCategory 
-        ? { ...cat, objects: [...cat.objects, newObject] }
-        : cat
-    ));
+    if (isEditing) {
+      // Mettre à jour l'objet existant
+      setObjectCategories(prev => prev.map(cat => {
+        if (cat.id === newObjectCategory) {
+          return {
+            ...cat,
+            objects: cat.objects.map(obj => 
+              obj.id === selectedObject.id ? objectData : obj
+            )
+          };
+        }
+        return cat;
+      }));
+    } else {
+      // Créer un nouvel objet
+      setObjectCategories(prev => prev.map(cat => 
+        cat.id === newObjectCategory 
+          ? { ...cat, objects: [...cat.objects, objectData] }
+          : cat
+      ));
+    }
     
-    // Naviguer vers consultation d'objet (contenu à définir plus tard)
-    setSelectedObject(newObject);
+    // Naviguer vers consultation d'objet
+    setSelectedObject(objectData);
     setObjectCurrentView('consultation');
   };
 
@@ -230,6 +251,7 @@ const TemplatePanel = () => {
     setNewObjectAlteration('');
     setNewObjectTags(['Tag', 'Tag', 'Tag', 'Tag', 'Tag']);
     setNewObjectTag('');
+    setSelectedObject(null);
     setObjectCurrentView('objects');
   };
 
@@ -263,6 +285,21 @@ const TemplatePanel = () => {
   // Edition de tags sur les cartes objets (inline)
   const [editingObjectTagsId, setEditingObjectTagsId] = useState(null);
   const [editingObjectTagInput, setEditingObjectTagInput] = useState('');
+
+  // Effet pour fermer l'édition des tags quand on clique ailleurs
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (editingObjectTagsId && !event.target.closest('.object-tags-editing')) {
+        setEditingObjectTagsId(null);
+        setEditingObjectTagInput('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingObjectTagsId]);
   const addTagToObject = (categoryId, objectId, tag) => {
     if (!tag.trim()) return;
     setObjectCategories(prev => prev.map(cat => {
@@ -1760,13 +1797,13 @@ const TemplatePanel = () => {
                 <div className="flex justify-end gap-4 px-6 py-8 border-t border-[#552E1A]/20">
                   <button
                     onClick={cancelNewQuest}
-                    className="px-6 py-3 bg-white/70 border border-[#552E1A]/20 rounded-lg text-[#552E1A] hover:bg-white/90 transition-colors font-semibold eagle-lake-font"
+                    className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={createNewQuest}
-                    className="px-6 py-3 bg-golden text-[#552E1A] rounded-lg hover:bg-golden/80 transition-colors font-semibold shadow-lg eagle-lake-font"
+                    className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
                   >
                     Créer la quête
                   </button>
@@ -2563,7 +2600,8 @@ const TemplatePanel = () => {
                       .map(object => (
                       <div
                         key={object.id}
-                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                        onClick={() => openObjectConsultation(object)}
+                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                       >
                         {/* Zone image */}
                         <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
@@ -2583,7 +2621,7 @@ const TemplatePanel = () => {
                           />
                           
                           {/* Tags (éditables) */}
-                          <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                          <div className="absolute top-3 right-3 flex flex-col items-end gap-1 object-tags-editing">
                             <div
                               className="flex flex-wrap gap-1 justify-end max-w-[70%] cursor-text"
                               onClick={(e) => {
@@ -2648,12 +2686,9 @@ const TemplatePanel = () => {
 
                         {/* Footer de la carte */}
                         <div className="p-3 flex items-center justify-between">
-                          <button
-                            onClick={() => openObjectConsultation(object)}
-                            className="text-left text-[#552E1A] font-medium hover:underline"
-                          >
+                          <span className="text-left text-[#552E1A] font-medium">
                             {object.name}
-                          </button>
+                          </span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2695,24 +2730,157 @@ const TemplatePanel = () => {
             </>
           ) : objectCurrentView === 'consultation' && selectedObject ? (
             <div className="h-full flex flex-col pt-6 pr-6">
-              <div className="flex items-center gap-3 mb-6">
-                <button
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-sm text-[#552E1A] mb-4">
+                <button 
                   onClick={() => setObjectCurrentView('objects')}
-                  className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                  className="hover:underline"
                 >
-                  <ArrowLeft size={16} className="text-[#552E1A]" />
+                  Objets
                 </button>
-                <h1 className="text-black text-2xl font-bold eagle-lake-font">{selectedObject.name}</h1>
+                <ChevronRight size={14} className="text-[#552E1A]" />
+                <button 
+                  onClick={() => {
+                    setObjectCurrentView('objects');
+                    // Optionnel: ouvrir automatiquement la catégorie
+                    const category = objectCategories.find(cat => cat.id === selectedObject.categoryId);
+                    if (category) {
+                      setObjectCategories(prev => prev.map(cat => 
+                        cat.id === category.id ? { ...cat, isExpanded: true } : cat
+                      ));
+                    }
+                  }}
+                  className="text-[#552E1A] font-medium hover:underline"
+                >
+                  {objectCategories.find(cat => cat.id === selectedObject.categoryId)?.title || 'Catégorie'}
+                </button>
+                <ChevronRight size={14} className="text-[#552E1A]" />
+                <span className="text-golden font-medium underline">
+                  {selectedObject.name}
+                </span>
               </div>
+
+              {/* En-tête avec bouton retour et titre */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setObjectCurrentView('objects')}
+                    className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                  >
+                    <ArrowLeft size={16} className="text-[#552E1A]" />
+                  </button>
+                  <h1 className="text-black text-2xl font-bold eagle-lake-font">{selectedObject.name}</h1>
+                </div>
+                {/* Bouton croix supprimé selon la demande */}
+              </div>
+
+              {/* Contenu principal */}
               <div className="flex-1 overflow-y-auto pr-4">
-                <div className="max-w-5xl space-y-4">
-                  <div className="text-[#552E1A]">Rareté: {selectedObject.rarity || '—'}</div>
-                  <div className="text-[#552E1A]">Niveau: {selectedObject.level || '—'} • Altération: {selectedObject.alteration || '—'}</div>
-                  <div className="text-[#552E1A]">{selectedObject.description || 'Aucune description.'}</div>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {selectedObject.tags?.map((t, i) => (
-                      <span key={i} className="bg-[#46718A] text-white px-3 py-1 rounded-full text-sm">{t}</span>
-                    ))}
+                <div className="max-w-5xl">
+                  {/* Layout en 2 colonnes */}
+                  <div className="grid grid-cols-2 gap-8 mb-6">
+                    {/* Colonne gauche - Métadonnées et description */}
+                    <div className="space-y-6">
+                      {/* Métadonnées */}
+                      <div className="space-y-3">
+                        <div>
+                          <span className="font-bold text-[#552E1A]">Niveau : </span>
+                          <span className="text-[#552E1A]">{selectedObject.level || '00'}</span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#552E1A]">Altération : </span>
+                          <span className="text-[#552E1A]">{selectedObject.alteration || '+0'}</span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#552E1A]">Commanditaire : </span>
+                          <span className="text-[#552E1A]">Nom du personnage</span>
+                        </div>
+                      </div>
+
+                      {/* Section Tags */}
+                      <div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedObject.tags?.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"
+                              style={{ backgroundColor: '#46718A' }}
+                            >
+                              <Tag size={12} />
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Section Description supprimée d'ici pour passer en pleine largeur */}
+                    </div>
+
+                    {/* Colonne droite - Image */}
+                    <div>
+                      <div 
+                        className="w-full h-64 bg-gray-200 rounded-lg border border-[#552E1A]/20 flex items-center justify-center"
+                        style={{
+                          backgroundImage: `
+                            linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                            linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                            linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                            linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
+                          `,
+                          backgroundSize: '20px 20px',
+                          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                        }}
+                      >
+                        <div className="text-[#552E1A]/60 text-center">
+                          <div className="text-4xl mb-2">🗡️</div>
+                          <p className="text-sm">Image de l'objet</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description pleine largeur */}
+                  <div className="mt-2">
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Description
+                    </label>
+                    <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 max-h-80 overflow-y-auto">
+                      <div className="text-[#552E1A] whitespace-pre-wrap">
+                        {selectedObject.description || 'Aucune description disponible.'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Boutons d'action */}
+                  <div className="flex justify-end gap-4 pt-6 border-t border-[#552E1A]/20">
+                    <button
+                      onClick={() => {
+                        setNewObjectName(selectedObject.name);
+                        setNewObjectDescription(selectedObject.description || '');
+                        setNewObjectCategory(selectedObject.categoryId || '');
+                        setNewObjectLevel(selectedObject.level || '');
+                        setNewObjectAlteration(selectedObject.alteration || '');
+                        setNewObjectTags(selectedObject.tags || []);
+                        setNewObjectTag('');
+                        setObjectCurrentView('new-object');
+                      }}
+                      className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors flex items-center gap-2 font-medium"
+                    >
+                      <Edit size={16} />
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => {
+                        const link = `${window.location.origin}/campaigns/default-campaign/objects/${selectedObject.id}`;
+                        navigator.clipboard.writeText(link);
+                        setCopyNotification('Lien copié !');
+                        setTimeout(() => setCopyNotification(''), 2000);
+                      }}
+                      className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2"
+                    >
+                      <Copy size={16} />
+                      Copier le lien
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2882,18 +3050,21 @@ const TemplatePanel = () => {
                     </div>
                   </div>
 
-                  {/* Champ description */}
+                  {/* Champ description - Pleine largeur */}
                   <div className="mb-6">
                     <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
                       Description
                     </label>
-                    <textarea
-                      value={newObjectDescription}
-                      onChange={(e) => setNewObjectDescription(e.target.value)}
-                      placeholder="Description de l'objet..."
-                      rows={4}
-                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60 resize-none"
-                    />
+                    <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 max-h-64 overflow-y-auto">
+                      <textarea
+                        value={newObjectDescription}
+                        onChange={(e) => setNewObjectDescription(e.target.value)}
+                        placeholder="Description de l'objet..."
+                        rows={8}
+                        className="w-full bg-transparent text-[#552E1A] resize-none focus:outline-none placeholder-[#552E1A]/60"
+                        style={{ minHeight: '200px' }}
+                      />
+                    </div>
                   </div>
 
                   {/* Boutons d'action */}
@@ -2907,7 +3078,7 @@ const TemplatePanel = () => {
                     <button
                       onClick={createNewObject}
                       disabled={!newObjectName.trim() || !newObjectCategory}
-                      className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed eagle-lake-font"
+                      className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Créer l'objet
                     </button>

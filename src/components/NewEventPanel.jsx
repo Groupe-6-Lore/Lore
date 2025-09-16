@@ -403,7 +403,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                 <button
                   onClick={handleCreateEvent}
                   disabled={!eventTitle.trim() || !selectedCategory}
-                  className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed eagle-lake-font"
+                  className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {templateToEdit ? 'Modifier l\'évènement' : 'Créer l\'évènement'}
                 </button>
