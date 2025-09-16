@@ -1,0 +1,365 @@
+      id: 'characters',
+      title: 'Personnages',
+      icon: '👤',
+      closedImage: '/images/templates/character-tab-closed.svg',
+      openImage: '/images/templates/character-tab-open.svg',
+      color: 'from-green-500 to-green-600',
+      content: (
+        <div className="h-full flex flex-col">
+          {/* Barre d'outils */}
+          <div className="flex items-center gap-3 mb-6 flex-shrink-0">
+            <div className="relative">
+              <select 
+                value={characterSelectedFilter} 
+                onChange={(e) => setCharacterSelectedFilter(e.target.value)}
+                className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+              >
+                <option value="aucun">Filtrer par Aucun</option>
+                <optgroup label="Catégorie">
+                  <option value="categorie-aventuriers">Aventuriers</option>
+                  <option value="categorie-allies">Alliés</option>
+                  <option value="categorie-adversaires">Adversaires</option>
+                </optgroup>
+                <optgroup label="Classe">
+                  <option value="classe-mage">Mage</option>
+                  <option value="classe-guerrier">Guerrier</option>
+                  <option value="classe-voleur">Voleur</option>
+                  <option value="classe-clerc">Clerc</option>
+                  <option value="classe-barbare">Barbare</option>
+                  <option value="classe-paladin">Paladin</option>
+                  <option value="classe-druide">Druide</option>
+                  <option value="classe-assassin">Assassin</option>
+                  <option value="classe-sorcier">Sorcier</option>
+                </optgroup>
+                <optgroup label="Niveau">
+                  <option value="niveau-1-3">1-3</option>
+                  <option value="niveau-4-6">4-6</option>
+                  <option value="niveau-7-plus">7+</option>
+                </optgroup>
+              </select>
+              <ChevronDown size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+            </div>
+            <div className="relative">
+              <select 
+                value={characterSelectedSort} 
+                onChange={(e) => setCharacterSelectedSort(e.target.value)}
+                className="bg-[#552E1A] text-white px-3 py-2 pr-8 rounded-lg text-sm border-none hover:bg-[#6B3A2A] transition-colors focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer min-w-[140px]"
+              >
+                <option value="aucun">Tri Aucun</option>
+                <option value="nom-asc">Nom (A-Z)</option>
+                <option value="nom-desc">Nom (Z-A)</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setCharacterShowSearchInput(!characterShowSearchInput)}
+                className="bg-[#552E1A] text-white p-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
+              >
+                <Search size={16} />
+              </button>
+              {characterShowSearchInput && (
+                <div className="absolute top-full right-0 mt-2 z-50">
+                  <input
+                    type="text"
+                    value={characterSearchTerm}
+                    onChange={(e) => setCharacterSearchTerm(e.target.value)}
+                    placeholder="Rechercher..."
+                    className="w-24 pl-1 pr-1 py-2 bg-white border border-[#552E1A]/30 rounded-lg text-[#552E1A] text-sm focus:outline-none focus:ring-2 focus:ring-golden/50"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Contenu */}
+          {characterCurrentView === 'consultation' && selectedCharacter ? (
+            <div className="flex-1 overflow-y-auto pr-4">
+              {/* Header avec titre et bouton fermeture */}
+              <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCharacterCurrentView('characters')}
+                    className="w-10 h-10 bg-golden rounded-full flex items-center justify-center hover:bg-golden/80 transition-colors"
+                  >
+                    <ArrowLeft size={20} className="text-[#552E1A]" />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-golden rounded flex items-center justify-center">
+                      <span className="text-[#552E1A] text-lg font-bold">👤</span>
+                    </div>
+                    <h1 className="text-2xl font-bold text-[#552E1A] eagle-lake-font">{selectedCharacter.name}</h1>
+                  </div>
+                </div>
+              </div>
+
+              {/* Onglets de navigation */}
+              <div className="flex border-b border-[#552E1A]/20 mb-6 flex-shrink-0">
+                <button
+                  onClick={() => setCharacterActiveTab('biographie')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    characterActiveTab === 'biographie'
+                      ? 'text-[#552E1A] border-b-2 border-golden'
+                      : 'text-[#552E1A]/60 hover:text-[#552E1A]'
+                  }`}
+                >
+                  Biographie
+                </button>
+                <button
+                  onClick={() => setCharacterActiveTab('feuille')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    characterActiveTab === 'feuille'
+                      ? 'text-[#552E1A] border-b-2 border-golden'
+                      : 'text-[#552E1A]/60 hover:text-[#552E1A]'
+                  }`}
+                >
+                  Feuille de personnage
+                </button>
+                <button
+                  onClick={() => setCharacterActiveTab('inventaire')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    characterActiveTab === 'inventaire'
+                      ? 'text-[#552E1A] border-b-2 border-golden'
+                      : 'text-[#552E1A]/60 hover:text-[#552E1A]'
+                  }`}
+                >
+                  Inventaire
+                </button>
+              </div>
+
+              {/* Contenu des onglets */}
+              <div className="flex-1 overflow-y-auto">
+                {characterActiveTab === 'biographie' && (
+                  <div className="max-w-5xl">
+                    {/* Layout en 2 colonnes */}
+                    <div className="grid grid-cols-2 gap-8 mb-6">
+                      {/* Colonne gauche - Métadonnées */}
+                      <div className="space-y-6">
+                        {/* Métadonnées du personnage */}
+                        <div className="space-y-3">
+                          <div>
+                            <span className="font-bold text-[#552E1A]">Classe : </span>
+                            <span className="text-[#552E1A]">{selectedCharacter.class || 'Non définie'}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Espèce : </span>
+                              <span className="text-[#552E1A]">Humain</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Genre : </span>
+                              <span className="text-[#552E1A]">Masculin</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Âge : </span>
+                              <span className="text-[#552E1A]">25 ans</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Taille : </span>
+                              <span className="text-[#552E1A]">1,80m</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Métier : </span>
+                              <span className="text-[#552E1A]">Aventurier</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Niveau : </span>
+                              <span className="text-[#552E1A]">{selectedCharacter.level || '00'}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#552E1A]">Expérience : </span>
+                            <span className="text-[#552E1A]">2500 XP</span>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#552E1A]">Alignement : </span>
+                            <span className="text-[#552E1A]">Neutre bon</span>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#552E1A]">Divinité : </span>
+                            <span className="text-[#552E1A]">Non définie</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Niveau : </span>
+                              <span className="text-[#552E1A]">{selectedCharacter.level || '00'}</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[#552E1A]">Altération : </span>
+                              <span className="text-[#552E1A]">+0</span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#552E1A]">Affiliations : </span>
+                            <span className="text-[#552E1A]">Groupe ; Guilde des Aventuriers ; Cour de Breland</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Colonne droite - Portrait */}
+                      <div>
+                        <div className="w-full h-80 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg border border-[#552E1A]/20 flex items-center justify-center">
+                          <div className="text-white text-center">
+                            <div className="text-6xl mb-4">🧙‍♂️</div>
+                            <p className="text-lg font-medium">Portrait du personnage</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section description/biographie */}
+                    <div className="mb-6">
+                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                        Biographie
+                      </label>
+                      <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 max-h-80 overflow-y-auto">
+                        <div className="text-[#552E1A] whitespace-pre-wrap text-justify">
+                          {selectedCharacter.description || `Alors que vous franchissez les dernières collines embrumées qui séparent les terres civilisées des contrées sauvages, vous apercevez au loin la silhouette imposante d'un personnage encapuchonné. Sa cape sombre flotte dans le vent, et l'éclat métallique de son équipement trahit une expérience certaine des dangers de ces terres.
+
+Ce personnage mystérieux semble attendre quelque chose, ou quelqu'un. Son attitude calme mais vigilante suggère qu'il n'en est pas à sa première aventure dans ces régions hostiles. Les cicatrices visibles sur ses mains et les nombreuses poches de sa ceinture révèlent un passé riche en exploits et en découvertes.
+
+Qui est-il vraiment ? Un allié potentiel dans votre quête, ou un obstacle à surmonter ? Seul le temps et votre courage vous le diront...`}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Boutons d'action */}
+                    <div className="flex justify-end gap-4 pt-6 border-t border-[#552E1A]/20">
+                      <button
+                        onClick={() => {
+                          // TODO: Navigation vers modification personnage
+                        }}
+                        className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium flex items-center gap-2"
+                      >
+                        <Edit size={16} />
+                        Modifier
+                      </button>
+                      <button
+                        onClick={() => {
+                          // TODO: Fonctionnalité d'attribution
+                        }}
+                        className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium flex items-center gap-2"
+                      >
+                        <Star size={16} />
+                        Attribuer
+                      </button>
+                      <button
+                        onClick={() => {
+                          const link = `${window.location.origin}/campaigns/default-campaign/characters/${selectedCharacter.id}`;
+                          navigator.clipboard.writeText(link);
+                          setCopyNotification('Lien copié !');
+                          setTimeout(() => setCopyNotification(''), 2000);
+                        }}
+                        className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2"
+                      >
+                        <Copy size={16} />
+                        Copier le lien
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {characterActiveTab === 'feuille' && (
+                  <div className="max-w-5xl">
+                    <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-6">
+                      <h3 className="text-lg font-bold text-[#552E1A] mb-4 eagle-lake-font">Feuille de personnage</h3>
+                      <p className="text-[#552E1A]">Contenu de la feuille de personnage à développer...</p>
+                    </div>
+                  </div>
+                )}
+
+                {characterActiveTab === 'inventaire' && (
+                  <div className="max-w-5xl">
+                    <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-6">
+                      <h3 className="text-lg font-bold text-[#552E1A] mb-4 eagle-lake-font">Inventaire</h3>
+                      <p className="text-[#552E1A]">Contenu de l'inventaire à développer...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto pr-4">
+              {getFilteredAndSortedCharacters().map(category => (
+                <div key={category.id} className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-[#552E1A] eagle-lake-font">{category.title}</h3>
+                    <button 
+                    onClick={() => setCharacterCurrentView('new-character')}
+                    className="bg-golden text-[#552E1A] px-4 py-2 rounded-lg font-semibold hover:bg-golden/80 transition-colors eagle-lake-font"
+                  >
+                    Créer un personnage
+                  </button>
+                </div>
+                {category.isExpanded && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {category.characters.map(character => (
+                      <div
+                        key={character.id}
+                        onClick={() => openCharacterConsultation(character)}
+                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                      >
+                        {/* Zone image */}
+                        <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
+                          {/* Zone tags éditables (comme objets) */}
+                          <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                            <div
+                              className="flex flex-wrap gap-1 justify-end max-w-[70%] cursor-text"
+                              onClick={(e) => { e.stopPropagation(); setEditingCharacterTagsId(character.id); }}
+                            >
+                              {(character.tags || []).map((tag, index) => (
+                                <span key={index} className="text-white px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex items-center gap-1" style={{ backgroundColor: '#46718A' }}>
+                                  {tag}
+                                  {editingCharacterTagsId === character.id && (
+                                    <button onClick={(e) => { e.stopPropagation(); removeTagFromCharacter(category.id, character.id, tag); }} className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors group" title="Supprimer ce tag">
+                                      <X size={10} className="text-white group-hover:text-red-100" />
+                                    </button>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {editingCharacterTagsId === character.id ? (
+                                <>
+                                  <input type="text" value={editingCharacterTagInput} onChange={(e) => setEditingCharacterTagInput(e.target.value)} placeholder="Ajouter un tag" className="bg-white/90 border border-[#552E1A]/30 rounded px-2 py-0.5 text-xs text-[#552E1A]" onKeyPress={(e) => { if (e.key === 'Enter') { addTagToCharacter(category.id, character.id, editingCharacterTagInput); setEditingCharacterTagInput(''); } }} />
+                                  <button onClick={(e) => { e.stopPropagation(); addTagToCharacter(category.id, character.id, editingCharacterTagInput); setEditingCharacterTagInput(''); }} className="bg-[#552E1A] text-white px-2 py-0.5 rounded text-xs">Ajouter</button>
+                                </>
+                              ) : (
+                                <button onClick={(e) => { e.stopPropagation(); setEditingCharacterTagsId(character.id); }} className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors" title="Modifier les tags">
+                                  <span className="text-[#552E1A] text-xs font-bold">+</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Footer */}
+                        <div className="p-3 flex items-center justify-between">
+                          <span className="text-left text-[#552E1A] font-medium">{character.name}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Bouton + flottant en bas à droite (style doré) */}
+          <div className="fixed bottom-12 right-6 z-50">
+            <button 
+              onClick={() => createNewCharacterCategory()}
+              className="bg-golden text-[#552E1A] py-3 px-4 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 eagle-lake-font shadow-lg"
+            >
+              <Plus size={16} />
+              Nouvelle catégorie
+            </button>
+          </div>
+          )}
+        </div>
+      )
+    },
