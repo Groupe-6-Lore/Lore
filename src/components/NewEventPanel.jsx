@@ -18,6 +18,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
   const [newTag, setNewTag] = useState('');
   const [eventImage, setEventImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [hoveredTag, setHoveredTag] = useState(null);
 
   // Initialiser les champs si on est en mode modification
   useEffect(() => {
@@ -43,13 +44,21 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
   ];
 
   const handleTagSelect = (tag) => {
-    if (!selectedTags.find(t => t.id === tag.id)) {
+    const existingTag = selectedTags.find(t => t.id === tag.id);
+    if (existingTag) {
+      // Si le tag est déjà sélectionné, le supprimer
+      setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+    } else {
+      // Sinon, l'ajouter
       setSelectedTags([...selectedTags, tag]);
     }
   };
 
   const handleTagRemove = (tagId) => {
-    setSelectedTags(selectedTags.filter(t => t.id !== tagId));
+    const tag = selectedTags.find(t => t.id === tagId);
+    if (tag && confirm(`Êtes-vous sûr de vouloir supprimer le tag "${tag.name}" ?`)) {
+      setSelectedTags(selectedTags.filter(t => t.id !== tagId));
+    }
   };
 
   const handleAddCustomTag = () => {
@@ -187,7 +196,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
+                        className="w-[218px] h-[42px] bg-[#F5F1E8] text-[#552E1A] px-4 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
                       >
                         <option value="">Sélection de catégorie</option>
                         {categories.map(category => (
@@ -196,7 +205,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                           </option>
                         ))}
                       </select>
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                         <ChevronDown size={20} className="text-[#552E1A]" />
                       </div>
                     </div>
@@ -222,7 +231,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                       Tags
                     </label>
                     
-                    {/* Tags existants */}
+                    {/* Tags prédéfinis - clic pour ajouter/supprimer */}
                     <div className="flex flex-wrap gap-2 mb-4">
                       {predefinedTags.map(tag => {
                         const isSelected = selectedTags.find(t => t.id === tag.id);
@@ -230,37 +239,52 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                           <button
                             key={tag.id}
                             onClick={() => handleTagSelect(tag)}
-                            disabled={isSelected}
-                            className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1 ${isSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            className={`${tag.color} text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-1 cursor-pointer ${isSelected ? 'ring-2 ring-white' : ''}`}
                           >
                             <Tag size={12} />
                             {tag.name}
-                            {isSelected && <span className="ml-1">✓</span>}
+                            {isSelected && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTagRemove(tag.id);
+                                }}
+                                onMouseEnter={() => setHoveredTag(tag.id)}
+                                onMouseLeave={() => setHoveredTag(null)}
+                                className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors flex items-center justify-center ml-1 group"
+                                title="Supprimer ce tag"
+                              >
+                                <X size={10} className="text-white group-hover:text-red-100" />
+                              </button>
+                            )}
                           </button>
                         );
                       })}
-                      {/* Tags personnalisés ajoutés */}
-                      {selectedTags.filter(tag => tag.id.startsWith('custom-')).map(tag => (
-                        <div
-                          key={tag.id}
-                          className="text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm"
-                          style={{ 
-                            backgroundColor: '#552E1A',
-                            border: '1px solid #552E1A'
-                          }}
-                        >
-                          <Tag size={12} />
-                          {tag.name}
-                          <button
-                            onClick={() => handleTagRemove(tag.id)}
-                            className="hover:bg-white/30 rounded-full p-0.5 transition-colors flex items-center justify-center"
-                            title="Supprimer ce tag"
-                          >
-                            <X size={12} className="text-white" />
-                          </button>
-                        </div>
-                      ))}
                     </div>
+
+                    {/* Tags personnalisés ajoutés */}
+                    {selectedTags.filter(tag => tag.id.startsWith('custom-')).map(tag => (
+                      <div
+                        key={tag.id}
+                        className="inline-block text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm mr-2 mb-2"
+                        style={{ 
+                          backgroundColor: '#552E1A',
+                          border: '1px solid #552E1A'
+                        }}
+                      >
+                        <Tag size={12} />
+                        {tag.name}
+                        <button
+                          onClick={() => handleTagRemove(tag.id)}
+                          onMouseEnter={() => setHoveredTag(tag.id)}
+                          onMouseLeave={() => setHoveredTag(null)}
+                          className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors flex items-center justify-center group"
+                          title="Supprimer ce tag"
+                        >
+                          <X size={12} className="text-white group-hover:text-red-100" />
+                        </button>
+                      </div>
+                    ))}
 
 
                     {/* Ajouter un tag personnalisé */}

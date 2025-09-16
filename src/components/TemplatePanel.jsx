@@ -14,7 +14,8 @@ import {
   Plus,
   Star,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Tag
 } from 'lucide-react';
 
 const TemplatePanel = () => {
@@ -22,6 +23,9 @@ const TemplatePanel = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [currentView, setCurrentView] = useState('templates'); // 'templates', 'new-event', ou 'consultation'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  
+  // Tags prédéfinis pour les objets (supprimés - seuls les tags personnalisés sont disponibles)
+  const objectPredefinedTags = [];
   
   // États pour les sections collapsibles
   const [expandedSections, setExpandedSections] = useState(() => {
@@ -213,15 +217,9 @@ const TemplatePanel = () => {
         : cat
     ));
     
-    // Reset form
-    setNewObjectName('');
-    setNewObjectDescription('');
-    setNewObjectCategory('');
-    setNewObjectLevel('');
-    setNewObjectAlteration('');
-    setNewObjectTags(['Tag', 'Tag', 'Tag', 'Tag', 'Tag']);
-    setNewObjectTag('');
-    setObjectCurrentView('objects');
+    // Naviguer vers consultation d'objet (contenu à définir plus tard)
+    setSelectedObject(newObject);
+    setObjectCurrentView('consultation');
   };
 
   const cancelNewObject = () => {
@@ -243,14 +241,58 @@ const TemplatePanel = () => {
   };
 
   const removeObjectTag = (tagToRemove) => {
-    setNewObjectTags(prev => prev.filter(tag => tag !== tagToRemove));
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le tag "${tagToRemove}" ?`)) {
+      setNewObjectTags(prev => prev.filter(tag => tag !== tagToRemove));
+    }
+  };
+
+  const togglePredefinedObjectTag = (tagName) => {
+    setNewObjectTags(prev => {
+      const exists = prev.includes(tagName);
+      if (exists) {
+        // Demander confirmation avant suppression
+        if (confirm(`Êtes-vous sûr de vouloir supprimer le tag "${tagName}" ?`)) {
+          return prev.filter(t => t !== tagName);
+        }
+        return prev; // Garder le tag si l'utilisateur annule
+      }
+      return [...prev, tagName];
+    });
+  };
+
+  // Edition de tags sur les cartes objets (inline)
+  const [editingObjectTagsId, setEditingObjectTagsId] = useState(null);
+  const [editingObjectTagInput, setEditingObjectTagInput] = useState('');
+  const addTagToObject = (categoryId, objectId, tag) => {
+    if (!tag.trim()) return;
+    setObjectCategories(prev => prev.map(cat => {
+      if (cat.id !== categoryId) return cat;
+      return {
+        ...cat,
+        objects: cat.objects.map(obj => obj.id === objectId
+          ? { ...obj, tags: obj.tags.includes(tag.trim()) ? obj.tags : [...obj.tags, tag.trim()] }
+          : obj)
+      };
+    }));
+  };
+  const removeTagFromObject = (categoryId, objectId, tagToRemove) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le tag "${tagToRemove}" ?`)) {
+      setObjectCategories(prev => prev.map(cat => {
+        if (cat.id !== categoryId) return cat;
+        return {
+          ...cat,
+          objects: cat.objects.map(obj => obj.id === objectId
+            ? { ...obj, tags: obj.tags.filter(t => t !== tagToRemove) }
+            : obj)
+        };
+      }));
+    }
   };
 
   // Fonction pour ouvrir la consultation d'objet (à implémenter plus tard)
   const openObjectConsultation = (object) => {
     setSelectedObject(object);
-    console.log('Objet sélectionné pour consultation:', object);
-    // TODO: Implémenter la navigation vers la page de consultation
+    setObjectCurrentView('consultation');
   };
 
   // Fonctions de filtrage et tri pour les objets
@@ -2521,8 +2563,7 @@ const TemplatePanel = () => {
                       .map(object => (
                       <div
                         key={object.id}
-                        onClick={() => openObjectConsultation(object)}
-                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
                       >
                         {/* Zone image */}
                         <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
@@ -2541,25 +2582,81 @@ const TemplatePanel = () => {
                             }}
                           />
                           
-                          {/* Tags */}
-                          <div className="absolute top-3 right-3 flex flex-col gap-1">
-                            {object.tags.map((tag, index) => (
-                              <span
-                                key={index}
-                                className="text-white px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
-                                style={{ backgroundColor: '#46718A' }}
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                          {/* Tags (éditables) */}
+                          <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                            <div
+                              className="flex flex-wrap gap-1 justify-end max-w-[70%] cursor-text"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingObjectTagsId(object.id);
+                              }}
+                            >
+                              {object.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="text-white px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex items-center gap-1"
+                                  style={{ backgroundColor: '#46718A' }}
+                                >
+                                  {tag}
+                                  {editingObjectTagsId === object.id && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); removeTagFromObject(category.id, object.id, tag); }}
+                                      className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors group"
+                                      title="Supprimer ce tag"
+                                    >
+                                      <X size={10} className="text-white group-hover:text-red-100" />
+                                    </button>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {editingObjectTagsId === object.id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={editingObjectTagInput}
+                                    onChange={(e) => setEditingObjectTagInput(e.target.value)}
+                                    placeholder="Ajouter un tag"
+                                    className="bg-white/90 border border-[#552E1A]/30 rounded px-2 py-0.5 text-xs text-[#552E1A]"
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        addTagToObject(category.id, object.id, editingObjectTagInput);
+                                        setEditingObjectTagInput('');
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); addTagToObject(category.id, object.id, editingObjectTagInput); setEditingObjectTagInput(''); }}
+                                    className="bg-[#552E1A] text-white px-2 py-0.5 rounded text-xs"
+                                  >
+                                    Ajouter
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingObjectTagsId(object.id); }}
+                                  className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                                  title="Modifier les tags"
+                                >
+                                  <span className="text-[#552E1A] text-xs font-bold">+</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Footer de la carte */}
                         <div className="p-3 flex items-center justify-between">
-                          <span className="text-[#552E1A] font-medium">{object.name}</span>
                           <button
-                            onClick={() => {
+                            onClick={() => openObjectConsultation(object)}
+                            className="text-left text-[#552E1A] font-medium hover:underline"
+                          >
+                            {object.name}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               navigator.clipboard.writeText(object.name);
                               setCopyNotification(`"${object.name}" copié !`);
                               setTimeout(() => setCopyNotification(null), 2000);
@@ -2596,6 +2693,30 @@ const TemplatePanel = () => {
                 </div>
               )}
             </>
+          ) : objectCurrentView === 'consultation' && selectedObject ? (
+            <div className="h-full flex flex-col pt-6 pr-6">
+              <div className="flex items-center gap-3 mb-6">
+                <button
+                  onClick={() => setObjectCurrentView('objects')}
+                  className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                >
+                  <ArrowLeft size={16} className="text-[#552E1A]" />
+                </button>
+                <h1 className="text-black text-2xl font-bold eagle-lake-font">{selectedObject.name}</h1>
+              </div>
+              <div className="flex-1 overflow-y-auto pr-4">
+                <div className="max-w-5xl space-y-4">
+                  <div className="text-[#552E1A]">Rareté: {selectedObject.rarity || '—'}</div>
+                  <div className="text-[#552E1A]">Niveau: {selectedObject.level || '—'} • Altération: {selectedObject.alteration || '—'}</div>
+                  <div className="text-[#552E1A]">{selectedObject.description || 'Aucune description.'}</div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {selectedObject.tags?.map((t, i) => (
+                      <span key={i} className="bg-[#46718A] text-white px-3 py-1 rounded-full text-sm">{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             /* Page de création d'objet - Structure exacte de NewEventPanel */
             <div className="h-full flex flex-col pt-6 pr-6">
@@ -2618,7 +2739,7 @@ const TemplatePanel = () => {
                   {/* Section principale avec image à droite */}
                   <div className="grid grid-cols-2 gap-8 mb-6">
                     {/* Colonne gauche - Champs de saisie */}
-                    <div className="space-y-6">
+                    <div className="space-y-2">
                       {/* Champ catégorie */}
                       <div>
                         <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
@@ -2628,7 +2749,7 @@ const TemplatePanel = () => {
                           <select
                             value={newObjectCategory}
                             onChange={(e) => setNewObjectCategory(e.target.value)}
-                            className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
+                            className="w-[218px] h-[42px] bg-[#F5F1E8] text-[#552E1A] px-4 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
                           >
                             <option value="">Sélection de catégorie</option>
                             {objectCategories.map(category => (
@@ -2637,7 +2758,7 @@ const TemplatePanel = () => {
                               </option>
                             ))}
                           </select>
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <ChevronDown size={20} className="text-[#552E1A]" />
                           </div>
                         </div>
@@ -2663,15 +2784,24 @@ const TemplatePanel = () => {
                           Tags
                         </label>
                         
-                        {/* Tags existants */}
+                        {/* Tags personnalisés ajoutés */}
                         <div className="flex flex-wrap gap-2 mb-4">
                           {newObjectTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="bg-[#46718A] text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"
+                            <div
+                              key={`custom-${index}`}
+                              className="text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm"
+                              style={{ backgroundColor: '#46718A', border: '1px solid #46718A' }}
                             >
+                              <Tag size={12} />
                               {tag}
-                            </span>
+                              <button
+                                onClick={() => removeObjectTag(tag)}
+                                className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors flex items-center justify-center group"
+                                title="Supprimer ce tag"
+                              >
+                                <X size={12} className="text-white group-hover:text-red-100" />
+                              </button>
+                            </div>
                           ))}
                         </div>
 
@@ -2707,16 +2837,32 @@ const TemplatePanel = () => {
 
                       {/* Champ lieu */}
                       <div>
-                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                          Lieu
-                        </label>
-                        <input
-                          type="text"
-                          value={newObjectAlteration}
-                          onChange={(e) => setNewObjectAlteration(e.target.value)}
-                          placeholder="Lieu..."
-                          className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
-                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                              Niveau
+                            </label>
+                            <input
+                              type="text"
+                              value={newObjectLevel}
+                              onChange={(e) => setNewObjectLevel(e.target.value)}
+                              placeholder="Niveau"
+                              className="w-[98px] h-[48px] bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                              Altération
+                            </label>
+                            <input
+                              type="text"
+                              value={newObjectAlteration}
+                              onChange={(e) => setNewObjectAlteration(e.target.value)}
+                              placeholder="Altération"
+                              className="w-[110px] h-[48px] bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
