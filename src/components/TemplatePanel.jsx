@@ -29,7 +29,9 @@ const TemplatePanel = () => {
   const objectPredefinedTags = [];
   
   // États pour Personnages (similaires aux Objets)
-  const [characterCategories, setCharacterCategories] = useState([
+  const [characterCategories, setCharacterCategories] = useState(() => {
+    const saved = localStorage.getItem('lore-characters-categories');
+    return saved ? JSON.parse(saved) : [
     {
       id: 'perso-aventuriers',
       title: 'Aventuriers',
@@ -63,7 +65,8 @@ const TemplatePanel = () => {
         { id: 'char-12', name: 'Darius', level: '6', class: 'Chevalier noir', tags: ['Combat'], isFavorite: false, isArchived: false, description: '' }
       ]
     }
-  ]);
+  ];
+  });
   const [characterSelectedFilter, setCharacterSelectedFilter] = useState('aucun');
   const [characterSelectedSort, setCharacterSelectedSort] = useState('aucun');
   const [characterShowSearchInput, setCharacterShowSearchInput] = useState(false);
@@ -80,12 +83,88 @@ const TemplatePanel = () => {
   const [newCharacterClass, setNewCharacterClass] = useState('');
   const [newCharacterTags, setNewCharacterTags] = useState([]);
   const [newCharacterTag, setNewCharacterTag] = useState('');
+  const [newCharacterAlignment, setNewCharacterAlignment] = useState('');
+  const [newCharacterDivinity, setNewCharacterDivinity] = useState('');
+  const [newCharacterFirstName, setNewCharacterFirstName] = useState('');
+  const [newCharacterLastName, setNewCharacterLastName] = useState('');
+  const [newCharacterSpecies, setNewCharacterSpecies] = useState('');
+  const [newCharacterGender, setNewCharacterGender] = useState('');
+  const [newCharacterAge, setNewCharacterAge] = useState('');
+  const [newCharacterHeight, setNewCharacterHeight] = useState('');
+  const [newCharacterJob, setNewCharacterJob] = useState('');
+  const [newCharacterXP, setNewCharacterXP] = useState('');
+  const [newCharacterAffiliations, setNewCharacterAffiliations] = useState('');
+  const [selectedAttributionId, setSelectedAttributionId] = useState(null);
+  
+  // États pour la consultation de personnage
+  const [consultationPrimaryStats, setConsultationPrimaryStats] = useState({
+    corps: 50,
+    relationnel: 50,
+    esprit: 50
+  });
+  const [consultationSecondaryStats, setConsultationSecondaryStats] = useState({
+    pvMax: 100,
+    pvActuels: 100,
+    resistance: 10,
+    nbRecupJour: 3,
+    nbRecupActuel: 3,
+    valeurRecup: 10
+  });
+  const [consultationSkills, setConsultationSkills] = useState([
+    { id: 1, name: 'Combat', value: 5 },
+    { id: 2, name: 'Magie', value: 3 },
+    { id: 3, name: 'Discrétion', value: 7 },
+    { id: 4, name: 'Persuasion', value: 4 }
+  ]);
+  const [consultationInventory, setConsultationInventory] = useState(() => {
+    const saved = localStorage.getItem('lore-characters-inventory');
+    return saved ? JSON.parse(saved) : [
+    { id: 1, label: 'Épée longue', tags: ['arme', 'métal'], objectId: 'epee-longue' },
+    { id: 2, label: 'Armure de cuir', tags: ['défense'], objectId: 'armure-cuir' },
+    { id: 3, label: 'Potion de santé', tags: ['consommable', 'magie'], objectId: 'potion-sante' },
+    { id: 4, label: 'Anneau de pouvoir', tags: ['magie'], objectId: 'anneau-pouvoir' }
+  ];
+  });
   
   // Edition de catégories et tags Personnages
   const [editingCharacterCategory, setEditingCharacterCategory] = useState(null);
   const [characterCategoryDropdownOpen, setCharacterCategoryDropdownOpen] = useState(null);
   const [editingCharacterTagsId, setEditingCharacterTagsId] = useState(null);
   const [editingCharacterTagInput, setEditingCharacterTagInput] = useState('');
+  
+  const AttributionList = () => {
+    const entries = [
+      { id: 'player-1', name: 'Elandra', avatar: '🧝‍♀️' },
+      { id: 'player-2', name: 'Kael', avatar: '🧙‍♂️' },
+      { id: 'player-3', name: 'Mira', avatar: '🏹' },
+      { id: 'player-4', name: 'Thoren', avatar: '🛡️' },
+      { id: 'player-5', name: 'Selwyn', avatar: '🗡️' },
+      { id: 'player-6', name: 'Ilyana', avatar: '🔮' }
+    ];
+
+    return (
+      <div className="space-y-3">
+        {entries.map(entry => (
+          <div key={entry.id} className="flex items-center justify-between bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">{entry.avatar}</div>
+              <span className="text-[#552E1A]">{entry.name}</span>
+            </div>
+            <button
+              onClick={() => setSelectedAttributionId(entry.id)}
+              className="w-5 h-5 rounded-full border border-[#552E1A]/60 flex items-center justify-center"
+              aria-pressed={selectedAttributionId === entry.id}
+              title="Sélectionner"
+            >
+              {selectedAttributionId === entry.id ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-[#552E1A]"></span>
+              ) : null}
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   // Utilitaires Personnages
   const getFilteredAndSortedCharacters = () => {
@@ -605,7 +684,9 @@ const TemplatePanel = () => {
     return filteredCategories;
   };
 
-  const [objectCategories, setObjectCategories] = useState([
+  const [objectCategories, setObjectCategories] = useState(() => {
+    const saved = localStorage.getItem('lore-objects-categories');
+    return saved ? JSON.parse(saved) : [
     {
       id: 'armes',
       title: 'Armes',
@@ -735,7 +816,20 @@ const TemplatePanel = () => {
         }
       ]
     }
-  ]);
+  ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lore-characters-categories', JSON.stringify(characterCategories));
+  }, [characterCategories]);
+
+  useEffect(() => {
+    localStorage.setItem('lore-characters-inventory', JSON.stringify(consultationInventory));
+  }, [consultationInventory]);
+
+  useEffect(() => {
+    localStorage.setItem('lore-objects-categories', JSON.stringify(objectCategories));
+  }, [objectCategories]);
   const [editingTemplate, setEditingTemplate] = useState(() => {
     const saved = localStorage.getItem('lore-templates-editing-template');
     return saved ? JSON.parse(saved) : null;
@@ -2944,8 +3038,7 @@ const TemplatePanel = () => {
                       </button>
                       <button
                         onClick={() => {
-                          // Fonctionnalité à implémenter
-                          console.log('Attribuer le personnage');
+                          setCharacterCurrentView('assign-character');
                         }}
                         className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium flex items-center gap-2 h-12"
                       >
@@ -2975,26 +3068,318 @@ const TemplatePanel = () => {
                 )}
 
                 {characterActiveTab === 'feuille' && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">📋</div>
-                    <h3 className="text-xl font-bold text-[#552E1A] mb-2 eagle-lake-font">
-                      Feuille de personnage
-                    </h3>
-                    <p className="text-[#552E1A]/60">
-                      Cette section sera développée prochainement
-                    </p>
+                  <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
+                    {/* Section Caractéristiques principales */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold text-[#552E1A] mb-4 eagle-lake-font">
+                        Caractéristiques
+                      </h3>
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 text-center">
+                          <h4 className="font-bold text-[#552E1A] mb-2">Corps</h4>
+                          <div 
+                            className="text-2xl font-bold text-[#552E1A] cursor-pointer hover:bg-[#E8E0D0] rounded px-2 py-1 transition-colors"
+                            onClick={() => {
+                              const newValue = prompt('Nouvelle valeur pour Corps (0-100):', consultationPrimaryStats.corps);
+                              if (newValue !== null && !isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                setConsultationPrimaryStats(prev => ({ ...prev, corps: parseInt(newValue) }));
+                              }
+                            }}
+                          >
+                            {consultationPrimaryStats.corps}%
+                          </div>
+                        </div>
+                        <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 text-center">
+                          <h4 className="font-bold text-[#552E1A] mb-2">Relationnel</h4>
+                          <div 
+                            className="text-2xl font-bold text-[#552E1A] cursor-pointer hover:bg-[#E8E0D0] rounded px-2 py-1 transition-colors"
+                            onClick={() => {
+                              const newValue = prompt('Nouvelle valeur pour Relationnel (0-100):', consultationPrimaryStats.relationnel);
+                              if (newValue !== null && !isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                setConsultationPrimaryStats(prev => ({ ...prev, relationnel: parseInt(newValue) }));
+                              }
+                            }}
+                          >
+                            {consultationPrimaryStats.relationnel}%
+                          </div>
+                        </div>
+                        <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 text-center">
+                          <h4 className="font-bold text-[#552E1A] mb-2">Esprit</h4>
+                          <div 
+                            className="text-2xl font-bold text-[#552E1A] cursor-pointer hover:bg-[#E8E0D0] rounded px-2 py-1 transition-colors"
+                            onClick={() => {
+                              const newValue = prompt('Nouvelle valeur pour Esprit (0-100):', consultationPrimaryStats.esprit);
+                              if (newValue !== null && !isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                setConsultationPrimaryStats(prev => ({ ...prev, esprit: parseInt(newValue) }));
+                              }
+                            }}
+                          >
+                            {consultationPrimaryStats.esprit}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Statistiques secondaires */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold text-[#552E1A] mb-4 eagle-lake-font">
+                        Statistiques
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">PV max</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.pvMax} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, pvMax: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">PV actuels</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.pvActuels} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, pvActuels: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">Résistance</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.resistance} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, resistance: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">Nb Récup./jour</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.nbRecupJour} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, nbRecupJour: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">Nb Récup. actuel</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.nbRecupActuel} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, nbRecupActuel: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] font-medium mb-1">Valeur de récup.</label>
+                            <input 
+                              type="number" 
+                              value={consultationSecondaryStats.valeurRecup} 
+                              onChange={(e) => setConsultationSecondaryStats(prev => ({ ...prev, valeurRecup: parseInt(e.target.value) || 0 }))}
+                              className="w-full h-10 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section Compétences */}
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-[#552E1A] eagle-lake-font">
+                          Compétences
+                        </h3>
+                        <button
+                          onClick={() => {
+                            setConsultationSkills(prev => [...prev, { id: Date.now(), name: 'Nouvelle compétence', value: 0 }]);
+                          }}
+                          className="bg-golden text-[#552E1A] px-4 py-2 rounded-lg font-medium hover:bg-golden/80 transition-colors flex items-center gap-2"
+                        >
+                          <Plus size={16} />
+                          Ajouter une compétence
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {consultationSkills.map((skill, index) => (
+                          <div key={skill.id} className="flex items-center justify-between bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-4 py-3">
+                            <div className="flex items-center gap-4">
+                              <span className="text-[#552E1A] font-medium">{skill.name}</span>
+                              <input
+                                type="number"
+                                value={skill.value}
+                                onChange={(e) => {
+                                  const newSkills = [...consultationSkills];
+                                  newSkills[index].value = parseInt(e.target.value) || 0;
+                                  setConsultationSkills(newSkills);
+                                }}
+                                className="w-16 h-8 bg-white border border-[#552E1A]/20 rounded px-2 text-[#552E1A] text-center focus:outline-none focus:ring-2 focus:ring-golden/50"
+                                placeholder="+00"
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (confirm('Supprimer cette compétence ?')) {
+                                  setConsultationSkills(prev => prev.filter((_, i) => i !== index));
+                                }
+                              }}
+                              className="w-6 h-6 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center"
+                              title="Supprimer cette compétence"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {characterActiveTab === 'inventaire' && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🎒</div>
-                    <h3 className="text-xl font-bold text-[#552E1A] mb-2 eagle-lake-font">
-                      Inventaire
-                    </h3>
-                    <p className="text-[#552E1A]/60">
-                      Cette section sera développée prochainement
-                    </p>
+                  <div className="relative">
+                    {/* Grille d'inventaire 2x2 */}
+                    <div className="grid grid-cols-2 gap-4 mb-2">
+                      {consultationInventory.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            if (!item.objectId) return;
+                            let found = null;
+                            for (const cat of objectCategories) {
+                              const o = (cat.objects || []).find(x => x.id === item.objectId);
+                              if (o) { found = o; break; }
+                            }
+                            if (found) {
+                              setSelectedObject(found);
+                              setObjectCurrentView('consultation');
+                              setActiveTab('objects');
+                            }
+                          }}
+                          className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                        >
+                          {/* Zone image style cartes Objets */}
+                          <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
+                            {/* Damier */}
+                            <div
+                              className="w-full h-full opacity-20 rounded-lg"
+                              style={{
+                                backgroundImage: `
+                                  linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                                  linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                                  linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                                  linear-gradient(-45deg, transparent 75%, #ccc 75%)
+                                `,
+                                backgroundSize: '20px 20px',
+                                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                              }}
+                            />
+
+                            {/* Tags (overlay, même fonctionnement) */}
+                            <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                              <div className="flex flex-wrap gap-1 justify-end max-w-[70%]">
+                                {item.tags.map((tag, tagIndex) => (
+                                  <span
+                                    key={tagIndex}
+                                    className="text-white px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex items-center gap-1"
+                                    style={{ backgroundColor: '#46718A' }}
+                                  >
+                                    {tag}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm('Supprimer ce tag ?')) {
+                                          const newInventory = [...consultationInventory];
+                                          newInventory[index].tags = newInventory[index].tags.filter((_, i) => i !== tagIndex);
+                                          setConsultationInventory(newInventory);
+                                        }
+                                      }}
+                                      className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors group"
+                                      title="Supprimer ce tag"
+                                    >
+                                      <X size={8} className="text-white group-hover:text-red-100" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newTag = prompt('Ajouter un tag:');
+                                    if (newTag && newTag.trim()) {
+                                      const newInventory = [...consultationInventory];
+                                      newInventory[index].tags = [...newInventory[index].tags, newTag.trim()];
+                                      setConsultationInventory(newInventory);
+                                    }
+                                  }}
+                                  className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                                  title="Ajouter un tag"
+                                >
+                                  <span className="text-[#552E1A] text-xs font-bold">+</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Footer comme cartes Objets */}
+                          <div className="p-3 flex items-center justify-between">
+                            <span className="text-left text-[#552E1A] font-medium">
+                              {item.label}
+                            </span>
+                            <button
+                              onClick={async () => {
+                                const link = `${window.location.origin}/campaigns/default-campaign/characters/${selectedCharacter?.id || 'unknown'}#inventory-${item.id}`;
+                                try {
+                                  await navigator.clipboard.writeText(link);
+                                  setCopyNotification('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.');
+                                  setTimeout(() => setCopyNotification(null), 3000);
+                                } catch (err) {
+                                  console.error('Erreur lors de la copie:', err);
+                                  setCopyNotification('Erreur lors de la copie du lien.');
+                                  setTimeout(() => setCopyNotification(null), 3000);
+                                }
+                              }}
+                              className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                              title="Copier le lien"
+                            >
+                              <Copy size={12} className="text-[#552E1A]" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Bouton Ajouter un objet (fixe en bas à droite) */}
+                    <button
+                      onClick={() => {
+                        const newId = `obj-${Date.now()}`;
+                        const newObj = {
+                          id: newId,
+                          name: 'Nouvel objet',
+                          tags: [],
+                          image: null,
+                          level: '00',
+                          alteration: '+0'
+                        };
+                        // Ajoute l'objet à la 1ère catégorie Objets
+                        setObjectCategories(prev => {
+                          const copy = prev.map(c => ({ ...c, objects: [...c.objects] }));
+                          if (copy.length > 0) {
+                            copy[0].objects.push(newObj);
+                          }
+                          return copy;
+                        });
+                        // Crée un slot d'inventaire lié à cet objet
+                        setConsultationInventory(prev => [...prev, { id: Date.now(), label: newObj.name, tags: [], objectId: newId }]);
+                      }}
+                      className="fixed bottom-24 right-6 bg-golden text-[#552E1A] px-4 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 shadow-lg z-50"
+                    >
+                      <Plus size={16} />
+                      Ajouter un objet
+                    </button>
                   </div>
                 )}
               </div>
@@ -3003,11 +3388,11 @@ const TemplatePanel = () => {
             {/* Vue nouveau personnage */}
             {characterCurrentView === 'new-character' && (
               <div className="max-w-5xl">
-                {/* Header avec bouton retour */}
-                <div className="flex items-center gap-3 mb-6">
+                {/* Header avec bouton retour (style consultation objet) */}
+                <div className="flex items-center gap-2 mb-4">
                   <button
                     onClick={() => setCharacterCurrentView('characters')}
-                    className="w-8 h-8 bg-golden rounded-full flex items-center justify-center hover:bg-golden/80 transition-colors"
+                    className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
                   >
                     <ArrowLeft size={16} className="text-[#552E1A]" />
                   </button>
@@ -3017,9 +3402,9 @@ const TemplatePanel = () => {
                 </div>
 
                 {/* Formulaire */}
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-2 gap-4">
                   {/* Colonne gauche - Formulaire */}
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {/* Catégorie */}
                     <div>
                       <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
@@ -3032,7 +3417,7 @@ const TemplatePanel = () => {
                           className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] focus:outline-none focus:ring-2 focus:ring-golden/50 appearance-none cursor-pointer"
                           style={{ width: '218px' }}
                         >
-                          <option value="">Sélectionner une catégorie...</option>
+                          <option value="">Sélection de catégorie</option>
                           {characterCategories.map(category => (
                             <option key={category.id} value={category.id}>
                               {category.title}
@@ -3043,148 +3428,114 @@ const TemplatePanel = () => {
                       </div>
                     </div>
 
-                    {/* Nom */}
-                    <div>
-                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                        Nom du personnage
-                      </label>
-                      <input
-                        type="text"
-                        value={newCharacterName}
-                        onChange={(e) => setNewCharacterName(e.target.value)}
-                        placeholder="Nom du personnage"
-                        className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50"
-                      />
+                    {/* Identité: Prénom / Nom (2 colonnes) */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="w-[100px]">
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Prénom</label>
+                        <input type="text" value={newCharacterFirstName} onChange={(e) => setNewCharacterFirstName(e.target.value)} placeholder="Prénom" className="w-[100px] h-[42px] bg-[#F5F1E8] text-[#552E1A] px-4 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60" />
+                      </div>
+                      <div className="w-[100px]">
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Nom</label>
+                        <input type="text" value={newCharacterLastName} onChange={(e) => setNewCharacterLastName(e.target.value)} placeholder="Nom" className="w-[100px] h-[42px] bg-[#F5F1E8] text-[#552E1A] px-4 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60" />
+                      </div>
                     </div>
 
-                    {/* Niveau et Classe */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Classe / Espèce (2 colonnes) */}
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                          Niveau
-                        </label>
-                        <input
-                          type="text"
-                          value={newCharacterLevel}
-                          onChange={(e) => setNewCharacterLevel(e.target.value)}
-                          placeholder="Niveau"
-                          className="w-full h-[48px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50"
-                          style={{ width: '110px' }}
-                        />
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Classe</label>
+                        <input type="text" value={newCharacterClass} onChange={(e) => setNewCharacterClass(e.target.value)} placeholder="Classe" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
                       </div>
                       <div>
-                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                          Classe
-                        </label>
-                        <input
-                          type="text"
-                          value={newCharacterClass}
-                          onChange={(e) => setNewCharacterClass(e.target.value)}
-                          placeholder="Classe"
-                          className="w-full h-[48px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50"
-                          style={{ width: '110px' }}
-                        />
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Espèce</label>
+                        <input type="text" value={newCharacterSpecies} onChange={(e) => setNewCharacterSpecies(e.target.value)} placeholder="Espèce" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
                       </div>
                     </div>
 
-                    {/* Tags */}
-                    <div>
-                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                        Tags
-                      </label>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {newCharacterTags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"
-                            style={{ backgroundColor: '#46718A' }}
-                          >
-                            <Tag size={12} />
-                            {tag}
-                            <button
-                              onClick={() => {
-                                if (confirm('Supprimer ce tag ?')) {
-                                  setNewCharacterTags(prev => prev.filter((_, i) => i !== index));
-                                }
-                              }}
-                              className="hover:bg-red-500/80 rounded-full p-0.5 transition-colors group ml-1"
-                              title="Supprimer ce tag"
-                            >
-                              <X size={10} className="text-white group-hover:text-red-100" />
-                            </button>
-                          </span>
-                        ))}
+                    {/* Genre / Âge / Taille (3 colonnes) */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Genre</label>
+                        <input type="text" value={newCharacterGender} onChange={(e) => setNewCharacterGender(e.target.value)} placeholder="Genre" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newCharacterTag}
-                          onChange={(e) => setNewCharacterTag(e.target.value)}
-                          placeholder="Ajouter un tag"
-                          className="flex-1 h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && newCharacterTag.trim()) {
-                              setNewCharacterTags(prev => [...prev, newCharacterTag.trim()]);
-                              setNewCharacterTag('');
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => {
-                            if (newCharacterTag.trim()) {
-                              setNewCharacterTags(prev => [...prev, newCharacterTag.trim()]);
-                              setNewCharacterTag('');
-                            }
-                          }}
-                          className="bg-[#552E1A] text-white px-4 py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
-                        >
-                          Ajouter
-                        </button>
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Âge</label>
+                        <input type="text" value={newCharacterAge} onChange={(e) => setNewCharacterAge(e.target.value)} placeholder="Âge" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Taille</label>
+                        <input type="text" value={newCharacterHeight} onChange={(e) => setNewCharacterHeight(e.target.value)} placeholder="Taille" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
                       </div>
                     </div>
 
-                    {/* Description */}
-                    <div>
-                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                        Description
-                      </label>
-                      <textarea
-                        value={newCharacterDescription}
-                        onChange={(e) => setNewCharacterDescription(e.target.value)}
-                        placeholder="Description du personnage..."
-                        className="w-full h-32 bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50 resize-none"
-                      />
+                    {/* Métier / Niveau / XP (3 colonnes) */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Métier</label>
+                        <input type="text" value={newCharacterJob} onChange={(e) => setNewCharacterJob(e.target.value)} placeholder="Métier" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Niveau</label>
+                        <input type="text" value={newCharacterLevel} onChange={(e) => setNewCharacterLevel(e.target.value)} placeholder="Niveau" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">XP</label>
+                        <input type="text" value={newCharacterXP} onChange={(e) => setNewCharacterXP(e.target.value)} placeholder="XP" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
+                      </div>
                     </div>
+
+                    {/* Affiliations - pleine largeur */}
+                    <div>
+                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Affiliations</label>
+                      <input type="text" value={newCharacterAffiliations} onChange={(e) => setNewCharacterAffiliations(e.target.value)} placeholder="Affiliations" className="w-full h-[42px] bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 text-[#552E1A] placeholder-[#552E1A]/60 focus:outline-none focus:ring-2 focus:ring-golden/50" />
+                    </div>
+
+                    {/* Description supprimée ici pour passer en pleine largeur en dessous */}
                   </div>
 
                   {/* Colonne droite - Zone d'image */}
                   <div>
-                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
-                      Portrait
-                    </label>
-                    <div
-                      className="w-full h-80 bg-gray-200 rounded-lg border border-[#552E1A]/20 flex items-center justify-center cursor-pointer"
-                      style={{
-                        backgroundImage: `
-                          linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-                          linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-                          linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-                          linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
-                        `,
-                        backgroundSize: '20px 20px',
-                        backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-                      }}
-                    >
-                      <div className="text-[#552E1A]/60 text-center">
-                        <div className="text-4xl mb-2">👤</div>
-                        <p className="text-sm">Portrait du personnage</p>
+                      <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                        Portrait
+                      </label>
+                        <div
+                          className="w-full h-64 bg-gray-200 rounded-lg border border-[#552E1A]/20 flex items-center justify-center cursor-pointer"
+                          style={{
+                            backgroundImage: `
+                              linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
+                            `,
+                            backgroundSize: '20px 20px',
+                            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                          }}
+                        >
+                          <div className="text-[#552E1A]/60 text-center">
+                            <div className="text-4xl mb-2">👤</div>
+                            <p className="text-sm">Portrait du personnage</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                </div>
+
+                {/* Description pleine largeur (comme Nouvel objet) */}
+                <div className="mt-4 max-w-5xl">
+                  <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">Description</label>
+                  <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-3 max-h-24 overflow-y-auto">
+                    <textarea
+                      value={newCharacterDescription}
+                      onChange={(e) => setNewCharacterDescription(e.target.value)}
+                      placeholder="Description du personnage..."
+                      rows={3}
+                      className="w-full bg-transparent text-[#552E1A] resize-none focus:outline-none placeholder-[#552E1A]/60"
+                      style={{ minHeight: '70px' }}
+                    />
                   </div>
                 </div>
 
                 {/* Boutons d'action */}
-                <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-[#552E1A]/20">
+                <div className="flex justify-end gap-4 mt-4 pt-4 border-t border-[#552E1A]/20">
                   <button
                     onClick={cancelNewCharacter}
                     className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
@@ -3197,6 +3548,48 @@ const TemplatePanel = () => {
                     className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Créer le personnage
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Vue attribution de personnage */}
+            {characterCurrentView === 'assign-character' && selectedCharacter && (
+              <div className="max-w-3xl">
+                {/* Header avec bouton retour et titre */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCharacterCurrentView('consultation')}
+                      className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+                    >
+                      <ArrowLeft size={16} className="text-[#552E1A]" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-[#552E1A] eagle-lake-font">
+                      {selectedCharacter.name}
+                    </h1>
+                  </div>
+                </div>
+
+                {/* Sous-titre */}
+                <h2 className="text-[#552E1A] font-medium mb-3 eagle-lake-font">Dans la partie</h2>
+
+                {/* Liste de sélection */}
+                <AttributionList />
+
+                {/* Boutons d'action */}
+                <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-[#552E1A]/20">
+                  <button
+                    onClick={() => setCharacterCurrentView('consultation')}
+                    className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => setCharacterCurrentView('consultation')}
+                    className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
+                  >
+                    Attribuer
                   </button>
                 </div>
               </div>
