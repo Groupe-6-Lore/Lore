@@ -16,6 +16,7 @@ import ConfigureCampaign from './pages/ConfigureCampaign';
 import CreateCampaign from './pages/CreateCampaign';
 import Payment from './pages/Payment';
 import CampaignDashboard from './pages/CampaignDashboard';
+import News from './pages/News';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -206,12 +207,7 @@ function App() {
           {/* Route protégée - News */}
           <Route path="/news" element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gradient-to-br from-primary-blue/80 via-primary-blue/60 to-primary-blue/90 flex items-center justify-center">
-                <div className="text-center text-light">
-                  <h1 className="text-4xl font-bold eagle-lake-font mb-4">Actualités</h1>
-                  <p className="text-light/80">Page en cours de développement...</p>
-                </div>
-              </div>
+              <News />
             </ProtectedRoute>
           } />
           

@@ -34,6 +34,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
+import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
+import HistoryModal from '../components/modals/HistoryModal';
 
 // Import des composants de drag & drop
 import {
@@ -704,6 +707,11 @@ const CampaignDashboard = () => {
 
   // États pour l'interface utilisateur
   const [showHistoryMenu, setShowHistoryMenu] = useState(false);
+  const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const [selectedSessions, setSelectedSessions] = useState([]);
   const [sessions, setSessions] = useState([]);
 
@@ -1502,6 +1510,23 @@ const CampaignDashboard = () => {
     updateDynamicImage();
   }, [textLines]);
 
+  // Charger les notifications au montage du composant
+  useEffect(() => {
+    const savedNotifications = JSON.parse(localStorage.getItem('lore_notifications') || '[]');
+    setNotifications(savedNotifications);
+  }, []);
+
+  // Écouter les nouvelles notifications
+  useEffect(() => {
+    const handleNotificationAdded = (event) => {
+      const newNotification = event.detail;
+      setNotifications(prev => [newNotification, ...prev]);
+    };
+
+    window.addEventListener('notificationAdded', handleNotificationAdded);
+    return () => window.removeEventListener('notificationAdded', handleNotificationAdded);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-primary-blue flex items-center justify-center">
@@ -1525,15 +1550,91 @@ const CampaignDashboard = () => {
         <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
         <div className="flex items-center space-x-6">
-          {/* Bouton News hexagonal vert */}
-          <button className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
-            <Newspaper size={20} />
+          {/* Bouton Sources hexagonal bleu */}
+          <button onClick={() => setShowSources(true)} className="relative">
+            <div className="w-12 h-12 bg-blue-500 transform rotate-45 rounded-sm flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
+              <span className="text-white font-bold text-[10px] transform -rotate-45">Sources</span>
+            </div>
+          </button>
+          {/* Bouton Joueurs hexagonal vert */}
+          <button 
+            onClick={() => setShowPlayers(true)}
+            className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors"
+          >
+            <Users size={20} />
           </button>
           
           {/* Bouton Notifications */}
-          <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
-            <Bell size={20} />
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors relative"
+            >
+              <Bell size={20} />
+              {notifications.filter(n => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {notifications.filter(n => !n.read).length}
+                </span>
+              )}
+            </button>
+            
+            {/* Dropdown Notifications */}
+            {showNotifications && (
+              <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-800">Notifications</h3>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-gray-500 text-center">Aucune notification</div>
+                  ) : (
+                    notifications.map(notification => (
+                      <div 
+                        key={notification.id} 
+                        className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${!notification.read ? 'bg-[#f7f1e5]' : ''}`}
+                        onClick={() => {
+                          // Marquer comme lu
+                          const updatedNotifications = notifications.map(n => 
+                            n.id === notification.id ? { ...n, read: true } : n
+                          );
+                          setNotifications(updatedNotifications);
+                          localStorage.setItem('lore_notifications', JSON.stringify(updatedNotifications));
+                        }}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? 'bg-golden' : 'bg-gray-300'}`}></div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-800">{notification.title}</div>
+                            <div className="text-sm text-gray-600 mt-1">{notification.message}</div>
+                            {notification.details && (
+                              <div className="text-xs text-gray-500 mt-1 italic">"{notification.details}"</div>
+                            )}
+                            <div className="text-xs text-gray-400 mt-1">
+                              {new Date(notification.timestamp).toLocaleString('fr-FR')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="p-3 border-t border-gray-200">
+                    <button 
+                      onClick={() => {
+                        const allRead = notifications.map(n => ({ ...n, read: true }));
+                        setNotifications(allRead);
+                        localStorage.setItem('lore_notifications', JSON.stringify(allRead));
+                      }}
+                      className="text-sm text-black hover:text-gray-700"
+                    >
+                      Marquer tout comme lu
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           
           {/* Bouton Paramètres */}
           <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
@@ -1826,89 +1927,7 @@ const CampaignDashboard = () => {
       </div>
 
       {/* Modal Historique */}
-      {showHistoryMenu && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" onClick={() => setShowHistoryMenu(false)}>
-          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-semibold text-gray-800">Sessions historiques</h3>
-                <button
-                  onClick={() => setShowHistoryMenu(false)}
-                  className="text-gray-400 hover:text-gray-600 p-2"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      selectedSessions.includes(session.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleSessionSelect(session.id)}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-800 text-sm">{session.title}</h4>
-                      <input
-                        type="checkbox"
-                        checked={selectedSessions.includes(session.id)}
-                        onChange={() => handleSessionSelect(session.id)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span>📅 {session.date}</span>
-                        <span>⏱️ {session.duration}</span>
-                      </div>
-                      <div className="mb-2">
-                        <span className="text-xs text-gray-500">
-                          Joueurs: {session.players.join(', ')}
-                        </span>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        session.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : session.status === 'in_progress'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {session.status === 'completed' ? 'Terminée' : 
-                         session.status === 'in_progress' ? 'En cours' : 'Planifiée'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-700 line-clamp-3">{session.summary}</p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                <span className="text-sm text-gray-600">
-                  {selectedSessions.length} session(s) sélectionnée(s)
-                </span>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setSelectedSessions([])}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    Tout désélectionner
-                  </button>
-                  <button
-                    onClick={handleViewSelectedSessions}
-                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
-                  >
-                    Voir les sessions
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <HistoryModal isOpen={showHistoryMenu} onClose={() => setShowHistoryMenu(false)} />
 
        {/* Panneau de suggestions IA */}
        {showSuggestions && (
@@ -1999,7 +2018,13 @@ const CampaignDashboard = () => {
        />
 
        {/* Template Panel avec languettes */}
-       <TemplatePanel />
+      <TemplatePanel />
+
+      {/* Modal Sources */}
+      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
      </div>
    );
  };
