@@ -37,16 +37,16 @@ export const mockAuth = {
     error: null
   }),
   onAuthStateChange: (callback) => {
-    // Simuler une connexion automatique en mode démo
-    setTimeout(() => {
-      callback('SIGNED_IN', {
-        user: { 
-          id: 'demo-user',
-          email: 'demo@lore.com',
-          user_metadata: { username: 'Demo User' }
-        }
-      })
-    }, 1000)
+    // Mode démo sans connexion automatique pour permettre l'édition des pages d'auth
+    // setTimeout(() => {
+    //   callback('SIGNED_IN', {
+    //     user: { 
+    //       id: 'demo-user',
+    //       email: 'demo@lore.com',
+    //       user_metadata: { username: 'Demo User' }
+    //     }
+    //   })
+    // }, 1000)
     
     return { data: { subscription: { unsubscribe: () => {} } } }
   }

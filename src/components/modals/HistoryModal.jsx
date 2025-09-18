@@ -72,3 +72,4 @@ const HistoryModal = ({ isOpen, onClose }) => {
 };
 
 export default HistoryModal;
+
