@@ -17,6 +17,7 @@ import CreateCampaign from './pages/CreateCampaign';
 import Payment from './pages/Payment';
 import CampaignDashboard from './pages/CampaignDashboard';
 import News from './pages/News';
+import Subscription from './pages/Subscription';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -90,6 +91,13 @@ function App() {
           <Route path="/campaigns/:campaignId" element={
             <ProtectedRoute>
               <CampaignDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Route protégée - Abonnement */}
+          <Route path="/abonnement" element={
+            <ProtectedRoute>
+              <Subscription />
             </ProtectedRoute>
           } />
           

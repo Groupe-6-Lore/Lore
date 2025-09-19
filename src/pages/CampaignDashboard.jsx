@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ChatbotPanel from '../components/ChatbotPanel';
 import TemplatePanel from '../components/TemplatePanel';
@@ -33,6 +33,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import SourcesModal from '../components/modals/SourcesModal';
 import PlayersModal from '../components/modals/PlayersModal';
@@ -711,6 +712,8 @@ const CampaignDashboard = () => {
   const [showPlayers, setShowPlayers] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [selectedSessions, setSelectedSessions] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -723,7 +726,12 @@ const CampaignDashboard = () => {
   // États pour le drag & drop
   const [activeId, setActiveId] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
-  const [textLines, setTextLines] = useState([
+  const [textLines, setTextLines] = useState([]);
+
+  // Contenu des textes selon la campagne
+  const getTextContent = (campaignId) => {
+    const textContents = {
+      1: [
     {
       id: 'line-1',
       content: 'Dans les terres brûlées du Royaume de Cendres, où les volcans crachent leur colère depuis des siècles, une prophétie ancienne se réveille.',
@@ -751,7 +759,273 @@ const CampaignDashboard = () => {
       isLink: true,
       linkUrl: 'https://example.com/pyros-map'
     }
-  ]);
+      ],
+      2: [
+        {
+          id: 'line-1',
+          content: 'Dans les profondeurs des Forêts d\'Émeraude, où la magie ancienne coule comme la sève des arbres millénaires, une relique sacrée a été perdue.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Les héros doivent traverser les dangers de la forêt enchantée pour retrouver la Relique d\'Émeraude avant que les forces du mal ne s\'en emparent.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence dans le sanctuaire druidique de **Eldrin le Sage**. Les héros reçoivent une vision prophétique de la relique perdue.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Luna Étoile-d\'Argent**, l\'elfe druide, interprète les signes de la nature. Elle sent que le temps presse.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte de la forêt',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/forest-map'
+        }
+      ],
+      3: [
+        {
+          id: 'line-1',
+          content: 'Dans le Désert de Sable, où les pyramides oubliées gardent leurs secrets depuis des millénaires, une tombe ancienne a été découverte.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Les héros doivent explorer la tombe du Pharaon oublié et affronter les malédictions qui la protègent pour découvrir ses trésors légendaires.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence dans le campement de **Dr. Amara Khaled**. L\'archéologue présente ses découvertes aux héros.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Marcus le Chercheur**, l\'aventurier expérimenté, examine les artefacts découverts. Il reconnaît des symboles anciens.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte du désert',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/desert-map'
+        }
+      ],
+      4: [
+        {
+          id: 'line-1',
+          content: 'Dans la Cité des Ombres, où les secrets se cachent dans chaque ruelle sombre, un culte maléfique prépare un rituel destructeur.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Les héros doivent infiltrer le culte des Ombres et déjouer leurs plans avant qu\'ils ne plongent la cité dans les ténèbres éternelles.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence dans la taverne "L\'Ombre Silencieuse". Un espion infiltré contacte discrètement les héros.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Shadow**, l\'espion mystérieux, révèle des informations cruciales sur les activités du culte dans la cité.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte de la cité',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/city-map'
+        }
+      ],
+      5: [
+        {
+          id: 'line-1',
+          content: 'Dans les Terres Gelées, où le froid mordant et les tempêtes de neige règnent en maîtres, une forteresse ancienne gît sous la glace.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Les héros doivent libérer la forteresse du Roi de Glace et briser la malédiction qui maintient la région dans un hiver éternel.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence dans l\'auberge "Le Refuge du Voyageur". Un guide expérimenté propose ses services aux héros.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Bjorn le Trappeur**, le guide nordique, partage ses connaissances sur les dangers des terres gelées.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte des terres gelées',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/frozen-lands-map'
+        }
+      ]
+      ,
+      6: [
+        {
+          id: 'line-1',
+          content: 'Au cœur des Dunes d\'Azir, les vents soulèvent des vagues de sable qui dévoilent parfois des ruines figées hors du temps.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Une fracture temporelle menace d\'engloutir le royaume dans une tempête infinie si l\'ancre n\'est pas stabilisée.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session débute sous la tente de **Maître Kael**, chronomancien, qui révèle une carte mouvante indiquant des points de rupture.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Sahir des Sables**, un guide nomade, propose de mener le groupe jusqu\'à une oasis figée depuis un siècle.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte des Dunes d\'Azir',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/azir-dunes-map'
+        }
+      ],
+      7: [
+        {
+          id: 'line-1',
+          content: 'Dans l\'Archipel d\'Argos, une brume maudite engloutit les rivages et fait disparaître navires et villages.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Seul le phare antique peut percer les brumes s\'il est rallumé avec une lentille mythique perdue depuis des âges.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence sur le pont de la goélette de **Capitaine Mora**, cap sur l\'île du Phare noyée dans les brumes.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Fray le Cartographe** déploie des cartes détrempées où apparaissent des récifs mouvants et des zones chantées par les sirènes.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Lien vers la carte de l\'archipel',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/argos-archipelago-map'
+        }
+      ],
+      8: [
+        {
+          id: 'line-1',
+          content: 'À Valoria, les rumeurs parlent d\'une arme légendaire dont les fragments resurgissent dans les bas-fonds et les salons du pouvoir.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Des guildes rivales s\'affrontent pour assembler les Lames du Destin et changer l\'avenir de la cité.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session s\'ouvre dans l\'atelier de **Maître Roderic**; un fragment d\'obsidienne pulse d\'une lumière sombre sur l\'établi.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Isha la Fine-Lame** propose une infiltration nocturne d\'un atelier clandestin pour récupérer un second fragment.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Plan de la Cité de Valoria',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/valoria-city-map'
+        }
+      ],
+      9: [
+        {
+          id: 'line-1',
+          content: 'Dans les montagnes d\'Ur-Khal, des grondements profonds et des glissements de terrain annoncent l\'éveil de colosses de pierre.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Des autels runiques doivent être scellés avant que les Titans ne se lèvent et ne ravagent les vallées.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session commence dans une grotte-atelier où **Selem le Lithomancien** grave des runes de scellement sur des pierres rituelles.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Garruk Brise-Pente**, un guide montagnard, décrit un col effondré menant au premier autel runique.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Carte des Montagnes d\'Ur-Khal',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/ur-khal-mountains-map'
+        }
+      ],
+      10: [
+        {
+          id: 'line-1',
+          content: 'Les Plaines Pourpres sont recouvertes d\'une brume écarlate qui corrompt plantes, bêtes et voyageurs.',
+          section: 'situation'
+        },
+        {
+          id: 'line-2',
+          content: 'Un élixir pourpre pourrait dissiper le voile, mais il faut des ingrédients rares et instables.',
+          section: 'situation'
+        },
+        {
+          id: 'line-3',
+          content: 'La session débute dans le laboratoire mobile de **Maëla de Rubis**, où des alambics crachotent des vapeurs carmin.',
+          section: 'debut'
+        },
+        {
+          id: 'line-4',
+          content: '**Oren la Boussole**, éclaireur, apporte des échantillons de spores écarlates prélevés près d\'un monolithe gravé.',
+          section: 'debut'
+        },
+        {
+          id: 'line-5',
+          content: 'Carte des Plaines Pourpres',
+          section: 'debut',
+          isLink: true,
+          linkUrl: 'https://example.com/crimson-plains-map'
+        }
+      ]
+    };
+    
+    return textContents[campaignId] || textContents[1];
+  };
 
   // Templates disponibles avec catégories (5 catégories principales)
 
@@ -806,10 +1080,12 @@ const CampaignDashboard = () => {
   const [editingLines, setEditingLines] = useState({});
   const [editingCards, setEditingCards] = useState({});
 
-  // Données de campagne d'exemple
+  // Données de campagne selon l'ID
   useEffect(() => {
-    const mockCampaign = {
-      id: campaignId,
+    const getCampaignData = (id) => {
+      const campaigns = {
+        1: {
+          id: 1,
       title: 'Les Gardiens de la Flamme Éternelle',
       universe: 'Royaume de Cendres',
       game_system: 'D&D 5e',
@@ -826,9 +1102,194 @@ const CampaignDashboard = () => {
         { type: 'minor', name: 'Minor quest', completed: 2, total: 4, status: 'in_progress' },
         { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
       ]
+        },
+        2: {
+          id: 2,
+          title: 'La Relique d\'Émeraude',
+          universe: 'Forêts d\'Émeraude',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Trouver la Relique d\'Émeraude perdue',
+          rencontre: {
+            title: 'Rencontre avec un druide',
+            content: 'Un ancien druide révèle les secrets de la forêt et guide les héros vers la relique sacrée.',
+            npc: 'Eldrin le Sage'
+          },
+          quests: [
+            { type: 'major', name: 'Major quest', completed: 2, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 3, total: 5, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 2, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 1, total: 2, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        3: {
+          id: 3,
+          title: 'La Tombe Oubliée',
+          universe: 'Désert de Sable',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Explorer la tombe du Pharaon oublié',
+          rencontre: {
+            title: 'Rencontre avec un archéologue',
+            content: 'Un archéologue passionné partage ses découvertes sur l\'ancienne civilisation et guide les héros.',
+            npc: 'Dr. Amara Khaled'
+          },
+          quests: [
+            { type: 'major', name: 'Major quest', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 1, total: 4, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 3, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        4: {
+          id: 4,
+          title: 'Le Pacte des Ombres',
+          universe: 'Cité des Ombres',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Démasquer le culte des Ombres',
+          rencontre: {
+            title: 'Rencontre avec un espion',
+            content: 'Un espion infiltré révèle des informations cruciales sur les activités du culte dans la cité.',
+            npc: 'Shadow'
+          },
+          quests: [
+            { type: 'major', name: 'Major quest', completed: 1, total: 4, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 2, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 1, total: 2, status: 'in_progress' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        5: {
+          id: 5,
+          title: 'La Forteresse de Givre',
+          universe: 'Terres Gelées',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Libérer la forteresse du Roi de Glace',
+          rencontre: {
+            title: 'Rencontre avec un guide',
+            content: 'Un guide expérimenté aide les héros à naviguer dans les terres gelées et à survivre au froid.',
+            npc: 'Bjorn le Trappeur'
+          },
+          quests: [
+            { type: 'major', name: 'Major quest', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 3, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        6: {
+          id: 6,
+          title: 'Les Sables du Temps',
+          universe: 'Dunes d’Azir',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Empêcher la tempête temporelle d’engloutir le royaume',
+          rencontre: {
+            title: 'Rencontre avec un chronomancien',
+            content: 'Un mage du temps met en garde contre une fracture temporelle imminente dans le désert.',
+            npc: 'Maître Kael'
+          },
+          quests: [
+            { type: 'major', name: 'Stabiliser l’ancre temporelle', completed: 0, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Récupérer des sables d’ambre', completed: 1, total: 5, status: 'in_progress' },
+            { type: 'minor', name: 'Explorer une oasis figée', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Secourir une caravane', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Négocier avec les nomades', completed: 0, total: 2, status: 'not_started' }
+          ]
+        },
+        7: {
+          id: 7,
+          title: 'Le Phare des Brumes',
+          universe: 'Archipel d’Argos',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Rallumer le phare antique pour dissiper les brumes maudites',
+          rencontre: {
+            title: 'Rencontre avec une capitaine corsaire',
+            content: 'Une capitaine propose d’escorter les héros entre les récifs mortels.',
+            npc: 'Capitaine Mora'
+          },
+          quests: [
+            { type: 'major', name: 'Trouver la lentille mythique', completed: 1, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Éviter les sirènes', completed: 2, total: 4, status: 'in_progress' },
+            { type: 'minor', name: 'Calibrer la lumière', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Cartographier les récifs', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Récupérer des pièces anciennes', completed: 0, total: 3, status: 'not_started' }
+          ]
+        },
+        8: {
+          id: 8,
+          title: 'Les Lames du Destin',
+          universe: 'Cité de Valoria',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Empêcher l’assemblage d’une arme légendaire',
+          rencontre: {
+            title: 'Rencontre avec un maître d’armes',
+            content: 'Un forgeron renommé confie une pièce cruciale à protéger coûte que coûte.',
+            npc: 'Maître Roderic'
+          },
+          quests: [
+            { type: 'major', name: 'Protéger le fragment d’obsidienne', completed: 1, total: 4, status: 'in_progress' },
+            { type: 'minor', name: 'Infiltrer un atelier clandestin', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Démasquer un contrebandier', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Duel sur la place centrale', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Convaincre le Conseil', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        9: {
+          id: 9,
+          title: 'La Marche des Titans',
+          universe: 'Montagnes d’Ur-Khal',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Arrêter l’éveil de colosses de pierre',
+          rencontre: {
+            title: 'Rencontre avec un géologue mystique',
+            content: 'Un sage des pierres explique les signes annonciateurs de l’éveil des titans.',
+            npc: 'Selem le Lithomancien'
+          },
+          quests: [
+            { type: 'major', name: 'Sceller trois autels runiques', completed: 0, total: 3, status: 'in_progress' },
+            { type: 'minor', name: 'Repérer un col effondré', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Récupérer de la poudre d’obsidienne', completed: 0, total: 2, status: 'not_started' },
+            { type: 'minor', name: 'Négocier avec les géants', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Évacuer un village', completed: 0, total: 1, status: 'not_started' }
+          ]
+        },
+        10: {
+          id: 10,
+          title: 'Le Voile Cramoisi',
+          universe: 'Plaines Pourpres',
+          game_system: 'D&D 5e',
+          queteMajeure: 'Dissiper une brume sanguine qui corrompt la terre',
+          rencontre: {
+            title: 'Rencontre avec une alchimiste',
+            content: 'Une alchimiste cherche un catalyseur rare pour purifier l’atmosphère.',
+            npc: 'Maëla de Rubis'
+          },
+          quests: [
+            { type: 'major', name: 'Concocter l’élixir pourpre', completed: 0, total: 2, status: 'in_progress' },
+            { type: 'minor', name: 'Récolter des spores écarlates', completed: 0, total: 3, status: 'not_started' },
+            { type: 'minor', name: 'Étudier un monolithe', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Protéger une caravane d’herboristes', completed: 0, total: 1, status: 'not_started' },
+            { type: 'minor', name: 'Tester l’élixir', completed: 0, total: 1, status: 'not_started' }
+          ]
+        }
+      };
+      
+      return campaigns[id] || campaigns[1]; // Fallback vers la campagne 1
     };
+
+    const mockCampaign = getCampaignData(parseInt(campaignId));
     setCampaign(mockCampaign);
     setLoading(false);
+  }, [campaignId]);
+
+  // Initialiser les textLines selon la campagne
+  useEffect(() => {
+    if (campaignId) {
+      const campaignTexts = getTextContent(parseInt(campaignId));
+      setTextLines(campaignTexts);
+    }
   }, [campaignId]);
 
   // Initialiser les sessions avec les données d'exemple
@@ -864,6 +1325,28 @@ const CampaignDashboard = () => {
     ];
     setSessions(initialSessions);
   }, []);
+
+  // Fermer le menu utilisateur au clic extérieur ou avec Échap
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowUserMenu(false);
+      }
+    };
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showUserMenu]);
 
   // Inventaire du marchand
   const [merchantInventory, setMerchantInventory] = useState([
@@ -1640,6 +2123,58 @@ const CampaignDashboard = () => {
           <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
             <Settings size={20} />
           </button>
+          
+          {/* Avatar utilisateur + menu */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setShowUserMenu(prev => !prev)}
+              className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold focus:outline-none focus:ring-2 focus:ring-golden/60"
+              title="Profil"
+            >
+              {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+            </button>
+
+            {showUserMenu && (
+              <div
+                className="absolute right-0 mt-2 w-52 bg-[#F0EAE1] text-gray-800 rounded-lg shadow-xl border border-black/5 z-[9999] origin-top-right transform transition-all duration-150"
+                style={{
+                  boxShadow: '0px 12px 32px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.15)'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+              <div className="py-2">
+                <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Profil</button>
+                <button 
+                  className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    navigate('/abonnement');
+                  }}
+                >
+                  Abonnement
+                </button>
+                <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Stockage</button>
+                <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Confidentialité</button>
+                <div className="my-1 border-t border-black/10"></div>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors text-red-700"
+                  onClick={async () => {
+                    try {
+                      await supabase.auth.signOut();
+                    } catch (e) {
+                      console.error('Erreur de déconnexion:', e);
+                    } finally {
+                      setShowUserMenu(false);
+                      navigate('/');
+                    }
+                  }}
+                >
+                  Déconnexion
+                </button>
+              </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

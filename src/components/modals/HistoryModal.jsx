@@ -8,19 +8,20 @@ const HistoryModal = ({ isOpen, onClose }) => {
 
   // Données d'exemple pour l'historique des parties
   const baseHistory = [
-    { id: 1, date: '01 / 01 / 23' },
-    { id: 2, date: '15 / 12 / 22' },
-    { id: 3, date: '28 / 11 / 22' },
-    { id: 4, date: '10 / 11 / 22' },
-    { id: 5, date: '25 / 10 / 22' },
-    { id: 6, date: '08 / 10 / 22' },
-    { id: 7, date: '20 / 09 / 22' },
-    { id: 8, date: '05 / 09 / 22' },
-    { id: 9, date: '18 / 08 / 22' },
-    { id: 10, date: '02 / 08 / 22' }
+    { id: 1, date: '15 / 01 / 25' }, // Plus récente
+    { id: 2, date: '08 / 01 / 25' },
+    { id: 3, date: '28 / 12 / 24' },
+    { id: 4, date: '20 / 12 / 24' },
+    { id: 5, date: '12 / 12 / 24' },
+    { id: 6, date: '05 / 12 / 24' },
+    { id: 7, date: '28 / 11 / 24' },
+    { id: 8, date: '20 / 11 / 24' },
+    { id: 9, date: '12 / 11 / 24' },
+    { id: 10, date: '05 / 11 / 24' }
   ];
 
   const sampleTitles = [
+    'Les Gardiens de la Flamme Eternelle', // Partie la plus récente
     "La Relique d'Émeraude",
     'La Tombe Oubliée',
     'Le Pacte des Ombres',
@@ -29,8 +30,7 @@ const HistoryModal = ({ isOpen, onClose }) => {
     'Le Phare des Brumes',
     'Les Lames du Destin',
     'La Marche des Titans',
-    'Le Voile Cramoisi',
-    'L’Écho des Ruines'
+    'Le Voile Cramoisi'
   ];
 
   const formatDate = (raw) => {

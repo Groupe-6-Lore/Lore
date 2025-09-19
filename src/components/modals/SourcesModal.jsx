@@ -3,6 +3,12 @@ import { X, Trash2, ChevronLeft, ChevronRight, Info, ZoomIn, ZoomOut, Check } fr
 
 // Modal Sources avec toast custom (undo)
 const SourcesModal = ({ isOpen, onClose }) => {
+  // Limites de stockage inspirées de Notion (adaptées à Lore)
+  const STORAGE_LIMIT_MB = 100;
+  const WARNING_THRESHOLD = 0.8; // 80%
+  const MAX_SINGLE_FILE_MB = 5; // Fichier individuel en Mo (plan gratuit)
+  const GRACE_DAYS = 3; // Période de grâce de 3 jours
+
   const initialFiles = useMemo(() => ([
     { id: 'f1', name: 'Livre Rogue Trader de base.pdf', sizeMo: 14, cover: '/images/sources/rogue-trader.jpg' },
     { id: 'f2', name: 'Vampire.pdf', sizeMo: 9, cover: '/images/sources/vampire.jpg' },
@@ -18,6 +24,11 @@ const SourcesModal = ({ isOpen, onClose }) => {
   const [toast, setToast] = useState(null); // {message, actionLabel, onAction}
   const toastTimerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [graceUntil, setGraceUntil] = useState(() => {
+    const raw = localStorage.getItem('lore_storage_grace_until');
+    return raw ? new Date(raw).getTime() : null;
+  });
 
   useEffect(() => {
     if (!isOpen) {
@@ -25,6 +36,7 @@ const SourcesModal = ({ isOpen, onClose }) => {
       setSelectedId('f3');
       setPage(1);
       hideToast();
+      setErrorMessage('');
     }
   }, [isOpen, initialFiles]);
 
@@ -32,7 +44,16 @@ const SourcesModal = ({ isOpen, onClose }) => {
   const totalUsed = files.reduce((sum, f) => sum + (f.sizeMo || 0), 0);
   const [zoom, setZoom] = useState(1);
   const [showInfo, setShowInfo] = useState(false);
+  const [showStorageToast, setShowStorageToast] = useState(false);
   const infoRef = useRef(null);
+
+  // États dérivés pour limites
+  const isNearLimit = totalUsed >= Math.floor(STORAGE_LIMIT_MB * WARNING_THRESHOLD) && totalUsed < STORAGE_LIMIT_MB;
+  const isOverLimit = totalUsed >= STORAGE_LIMIT_MB;
+  const nowTs = Date.now();
+  const isGraceActive = isOverLimit && graceUntil && nowTs <= graceUntil;
+  const isLocked = isOverLimit && (!graceUntil || nowTs > graceUntil);
+  const graceDaysLeft = isGraceActive ? Math.ceil((graceUntil - nowTs) / (1000 * 60 * 60 * 24)) : 0;
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -44,6 +65,27 @@ const SourcesModal = ({ isOpen, onClose }) => {
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, []);
+
+  // Activer la période de grâce et envoyer une notification quand on dépasse la limite
+  useEffect(() => {
+    if (!isOpen) return;
+    if (isOverLimit) {
+      if (!graceUntil) {
+        const until = Date.now() + GRACE_DAYS * 24 * 60 * 60 * 1000;
+        setGraceUntil(until);
+        localStorage.setItem('lore_storage_grace_until', new Date(until).toISOString());
+        try {
+          window.dispatchEvent(new CustomEvent('notificationAdded', { detail: {
+            id: `notif-${Date.now()}`,
+            title: 'Stockage dépassé — Période de grâce',
+            message: `Vous avez ${GRACE_DAYS} jours pour libérer de l’espace ou étendre votre stockage.`,
+            timestamp: Date.now(),
+            read: false
+          }}));
+        } catch (e) {}
+      }
+    }
+  }, [isOpen, isOverLimit, graceUntil]);
 
   const showToast = (message, actionLabel, onAction) => {
     hideToast();
@@ -117,10 +159,29 @@ const SourcesModal = ({ isOpen, onClose }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
           {/* Colonne gauche */}
           <div className="p-6 border-r border-black/10">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <h4 className="text-lg font-semibold">Mes sources</h4>
-              <span className="text-sm text-black/60">{totalUsed} Mo utilisés / 100 Mo</span>
+              <span className="text-sm text-black/60">{totalUsed} Mo utilisés / {STORAGE_LIMIT_MB} Mo</span>
             </div>
+            <div className="w-full h-2 bg-black/10 rounded mb-4 overflow-hidden">
+              <div className={`${isOverLimit ? 'bg-red-600' : isNearLimit ? 'bg-amber-500' : 'bg-golden'} h-2`} style={{ width: `${Math.min(100, (totalUsed / STORAGE_LIMIT_MB) * 100)}%` }} />
+            </div>
+
+            {isNearLimit && !isOverLimit && (
+              <div className="mb-3 text-sm bg-amber-100 text-amber-900 border border-amber-300 rounded p-2">
+                Vous approchez de la limite de stockage. Pensez à étendre votre stockage ou à supprimer des fichiers inutiles.
+              </div>
+            )}
+            {isOverLimit && isGraceActive && (
+              <div className="mb-3 text-sm bg-amber-100 text-amber-900 border border-amber-300 rounded p-2">
+                Limite atteinte. Période de grâce active: {graceDaysLeft} jour{graceDaysLeft > 1 ? 's' : ''} restant{graceDaysLeft > 1 ? 's' : ''} pour régulariser.
+              </div>
+            )}
+            {isLocked && (
+              <div className="mb-3 text-sm bg-red-100 text-red-900 border border-red-300 rounded p-2">
+                Limite atteinte et période de grâce expirée. L’ajout de nouvelles sources est bloqué. Étendez votre stockage pour continuer.
+              </div>
+            )}
 
             <div className="space-y-2 max-h-[380px] overflow-auto pr-1">
               {files.map((file) => (
@@ -150,19 +211,47 @@ const SourcesModal = ({ isOpen, onClose }) => {
             {/* Actions bas */}
             <div className="mt-4 flex items-center justify-between">
               <div>
-                <button className="text-amber-600 hover:text-amber-700" onClick={() => fileInputRef.current?.click()}>+ Ajouter un document</button>
+                {errorMessage && (
+                  <div className="mb-2 text-sm text-red-800 bg-red-100 border border-red-300 rounded p-2">{errorMessage}</div>
+                )}
+                <button 
+                  className={`text-amber-600 hover:text-amber-700 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => {
+                    if (isLocked) { setShowStorageToast(true); return; }
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  + Ajouter un document
+                </button>
                 <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => {
+                  setErrorMessage('');
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  const sizeMb = Math.max(0, file.size / (1024*1024));
+                  if (sizeMb > MAX_SINGLE_FILE_MB) {
+                    setErrorMessage('Votre fichier dépasse la limite de 5 Mo du plan gratuit.');
+                    e.target.value = '';
+                    return;
+                  }
+                  if (isLocked) {
+                    setShowStorageToast(true);
+                    e.target.value = '';
+                    return;
+                  }
                   const url = URL.createObjectURL(file);
-                  const newFile = { id: `u-${Date.now()}`, name: file.name, sizeMo: Math.max(1, Math.round(file.size / (1024*1024))), cover: '/images/sources/pdf-generic.png', url, pages: 198 };
+                  const newFile = { id: `u-${Date.now()}`, name: file.name, sizeMo: Math.max(1, Math.round(sizeMb)), cover: '/images/sources/pdf-generic.png', url, pages: 198 };
                   setFiles(prev => [...prev, newFile]);
                   setSelectedId(newFile.id);
                   setPage(1);
                   setZoom(1);
                 }} />
               </div>
-              <button className="px-3 py-2 rounded-lg border border-black/20 text-sm hover:bg-black/5">Étendre mon stockage</button>
+              <button 
+                className="px-3 py-2 rounded-lg border border-black/20 text-sm hover:bg-black/5"
+                onClick={() => setShowStorageToast(true)}
+              >
+                Étendre mon stockage
+              </button>
             </div>
           </div>
 
@@ -226,12 +315,50 @@ const SourcesModal = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      {/* Toast notification */}
+      {/* Toast notification (Undo) visuellement cohérent */}
       {toast && (
         <div className="fixed bottom-5 right-5 z-[1001]">
-          <div className="flex items-center space-x-4 bg-[#2d7d32] text-white px-4 py-3 rounded-lg shadow-xl">
-            <span className="font-medium">{toast.message}</span>
-            <button onClick={toast.onAction} className="px-3 py-1 rounded border border-pink-300 text-pink-200 hover:bg-pink-300/10">Annuler ×</button>
+          <div className="flex items-center space-x-4 bg-[#F0EAE1] text-[#1a1a1a] px-6 py-4 rounded-lg shadow-xl border border-black/10 max-w-md">
+            <span className="font-medium text-sm">{toast.message}</span>
+            <button onClick={toast.onAction} className="px-3 py-1 rounded border border-black/20 text-xs hover:bg-black/5 transition-colors">Annuler ×</button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Achat de stockage */}
+      {showStorageToast && (
+        <div className="fixed bottom-5 right-5 z-[1002]">
+          <div className="flex items-center space-x-4 bg-[#F0EAE1] text-[#1a1a1a] px-6 py-4 rounded-lg shadow-xl border border-black/10 max-w-md">
+            <div className="flex-1">
+              <div className="font-semibold text-sm mb-1">Achat de stockage supplémentaire</div>
+              <div className="text-xs text-black/70 mb-3">
+                Vous avez atteint la limite de votre stockage de sources. Pour continuer à enrichir votre univers, vous pouvez acheter de l'espace supplémentaire ou souscrire à notre abonnement.
+              </div>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => setShowStorageToast(false)}
+                  className="px-3 py-1 rounded border border-black/20 text-xs hover:bg-black/5 transition-colors"
+                >
+                  Fermer
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowStorageToast(false);
+                    // Redirection vers la page abonnement
+                    window.location.href = '/abonnement';
+                  }}
+                  className="px-3 py-1 rounded bg-golden hover:bg-golden/80 text-dark-blue font-semibold text-xs transition-colors"
+                >
+                  Voir les options
+                </button>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowStorageToast(false)}
+              className="text-black/60 hover:text-black transition-colors ml-2"
+            >
+              <X size={16} />
+            </button>
           </div>
         </div>
       )}
