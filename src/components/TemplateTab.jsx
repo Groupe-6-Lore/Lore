@@ -10,7 +10,8 @@ const TemplateTab = ({
   openImage,
   activeTab,
   onTabChange,
-  tabs = []
+  tabs = [],
+  panelRef
 }) => {
   return (
     <>
@@ -94,6 +95,7 @@ const TemplateTab = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={panelRef}
             initial={{ 
               opacity: 0, 
               x: 700 

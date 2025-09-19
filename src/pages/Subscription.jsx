@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, CreditCard, Star, Users, HardDrive, Shield, Settings, Plus, ShoppingCart, Check, X } from 'lucide-react';
+import { Download, CreditCard, Star, Users, HardDrive, Shield, Settings, Plus, ShoppingCart, Check, X, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
@@ -113,6 +113,17 @@ const Subscription = () => {
     <div className="min-h-screen bg-primary-blue">
       <Header onSourcesClick={() => setShowSources(true)} />
       
+      {/* Bouton Retour */}
+      <div className="px-32 pt-6">
+        <button
+          onClick={() => navigate('/campaigns')}
+          className="flex items-center space-x-2 text-golden hover:text-golden/80 transition-colors mb-4"
+        >
+          <ArrowLeft size={18} />
+          <span className="font-medium">Retour</span>
+        </button>
+      </div>
+
       {/* Navigation par onglets */}
       <div className="px-32 py-6">
         <nav className="flex space-x-8 border-b border-light/20">

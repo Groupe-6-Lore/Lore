@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Calendar, MapPin, Globe, Shield, Bell, Palette, Save, Edit3, Camera, X } from 'lucide-react';
+import { User, Mail, Calendar, MapPin, Globe, Shield, Bell, Palette, Save, Edit3, Camera, X, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
@@ -103,6 +103,17 @@ const Profile = () => {
     <div className="min-h-screen bg-primary-blue">
       <Header onSourcesClick={() => setShowSources(true)} />
       
+      {/* Bouton Retour */}
+      <div className="px-32 pt-6">
+        <button
+          onClick={() => navigate('/campaigns')}
+          className="flex items-center space-x-2 text-golden hover:text-golden/80 transition-colors mb-4"
+        >
+          <ArrowLeft size={18} />
+          <span className="font-medium">Retour</span>
+        </button>
+      </div>
+
       {/* Navigation par onglets */}
       <div className="px-32 py-6">
         <nav className="flex space-x-8 border-b border-light/20">
@@ -158,7 +169,7 @@ const Profile = () => {
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        profileData.username?.[0]?.toUpperCase() || 'U'
+                        (profileData.username && profileData.username[0]) ? profileData.username[0].toUpperCase() : 'U'
                       )}
                     </div>
                     {isEditing && (

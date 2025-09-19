@@ -104,7 +104,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
       isEdit: !!templateToEdit
     };
     
-    console.log(templateToEdit ? 'Évènement modifié:' : 'Nouvel évènement créé:', eventData);
+    console.log('Nouvel événement créé:', eventData);
     
     // Appeler la fonction pour ajouter l'évènement à la page templates
     if (onEventCreated) {
@@ -176,7 +176,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
               <ArrowLeft size={16} className="text-[#552E1A]" />
             </button>
             <h1 className="text-black text-2xl font-bold eagle-lake-font">
-              {templateToEdit ? 'Modifier l\'évènement' : 'Nouvel évènement'}
+              Nouvel événement
             </h1>
           </div>
 
@@ -263,7 +263,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                     </div>
 
                     {/* Tags personnalisés ajoutés */}
-                    {selectedTags.filter(tag => tag.id.startsWith('custom-')).map(tag => (
+                    {selectedTags.filter(tag => tag.id && tag.id.startsWith('custom-')).map(tag => (
                       <div
                         key={tag.id}
                         className="inline-block text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm mr-2 mb-2"
@@ -405,7 +405,7 @@ const NewEventPanel = ({ onBack, categories, onEventCreated, templateToEdit = nu
                   disabled={!eventTitle.trim() || !selectedCategory}
                   className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {templateToEdit ? 'Modifier l\'évènement' : 'Créer l\'évènement'}
+                  Créer l'événement
                 </button>
               </div>
             </div>

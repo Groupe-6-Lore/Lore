@@ -76,7 +76,13 @@ const Header = ({
             <ArrowLeft size={24} />
           </button>
         )}
-        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
+        <button
+          onClick={() => navigate('/campaigns')}
+          className="text-4xl font-bold tracking-wider text-light eagle-lake-font hover:text-golden transition-colors"
+          title="Retour à la sélection de campagnes"
+        >
+          LORE
+        </button>
       </div>
       
       {/* Boutons de droite */}

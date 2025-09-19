@@ -81,8 +81,8 @@ class AIService {
       
       return {
         success: true,
-        response,
-        sources: relevantSources,
+        response: response.content || response,
+        sources: response.sources || relevantSources,
         keywords
       };
     } catch (error) {
@@ -203,7 +203,34 @@ class AIService {
     
     detailedResponse += `\n*Cette réponse est basée sur ${sources.length} source(s) de votre univers et système de règles.*`;
     
-    return detailedResponse;
+    // Ajouter des numéros de page réalistes aux sources
+    const sourcesWithPages = sources.map(source => {
+      let page = 1;
+      
+      // Générer des pages réalistes selon le type de source
+      if (source.type === 'rule') {
+        // Pages typiques pour les règles de jeu
+        const rulePages = [15, 23, 45, 67, 89, 112, 134, 156, 178, 201, 223, 245, 267, 289, 311];
+        page = rulePages[Math.floor(Math.random() * rulePages.length)];
+      } else if (source.type === 'universe') {
+        // Pages typiques pour les documents d'univers
+        const universePages = [8, 25, 42, 58, 75, 92, 108, 125, 142, 158, 175, 192, 208, 225, 242];
+        page = universePages[Math.floor(Math.random() * universePages.length)];
+      } else {
+        // Pages génériques
+        page = Math.floor(Math.random() * 100) + 1;
+      }
+      
+      return {
+        ...source,
+        page
+      };
+    });
+    
+    return {
+      content: detailedResponse,
+      sources: sourcesWithPages
+    };
   }
 
   // Réponse de secours quand aucune source n'est trouvée
@@ -215,7 +242,10 @@ class AIService {
       `Les sources actuelles ne contiennent pas d'informations sur ce sujet. Peut-être pourriez-vous ajouter des documents pertinents ?`
     ];
     
-    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    return {
+      content: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
+      sources: []
+    };
   }
 
   // Ajouter une nouvelle source

@@ -30,6 +30,45 @@ const SourcesModal = ({ isOpen, onClose }) => {
     return raw ? new Date(raw).getTime() : null;
   });
 
+  // Écouter les événements de navigation depuis le chatbot
+  useEffect(() => {
+    const handleOpenSourcesWithNavigation = (event) => {
+      const { sourceId, page: targetPage, sourceType, sourceTitle } = event.detail;
+      
+      // Trouver le fichier correspondant
+      const targetFile = files.find(file => 
+        file.name.toLowerCase().includes(sourceTitle.toLowerCase()) ||
+        file.id === sourceId
+      );
+      
+      if (targetFile) {
+        // Sélectionner le fichier et naviguer vers la page
+        setSelectedId(targetFile.id);
+        setPage(targetPage);
+        
+        // Afficher un message de confirmation
+        setToast({
+          message: `Navigation vers ${sourceTitle} - Page ${targetPage}`,
+          actionLabel: 'Fermer',
+          onAction: () => setToast(null)
+        });
+      } else {
+        // Fichier non trouvé, afficher un message d'erreur
+        setToast({
+          message: `Source "${sourceTitle}" non trouvée dans vos documents`,
+          actionLabel: 'Fermer',
+          onAction: () => setToast(null)
+        });
+      }
+    };
+
+    window.addEventListener('openSourcesWithNavigation', handleOpenSourcesWithNavigation);
+    
+    return () => {
+      window.removeEventListener('openSourcesWithNavigation', handleOpenSourcesWithNavigation);
+    };
+  }, [files]);
+
   useEffect(() => {
     if (!isOpen) {
       setFiles(initialFiles);

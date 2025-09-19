@@ -24,6 +24,7 @@ const TemplatePanel = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState('templates'); // 'templates', 'new-event', ou 'consultation'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const panelRef = useRef(null);
   
   // Tags prédéfinis pour les objets (supprimés - seuls les tags personnalisés sont disponibles)
   const objectPredefinedTags = [];
@@ -404,6 +405,22 @@ const TemplatePanel = () => {
       return prev;
     });
   }, []);
+
+  // Gérer les clics extérieurs pour fermer le panel
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
   
   const [templates, setTemplates] = useState(() => {
     // Forcer la réinitialisation pour restaurer tous les templates
@@ -4341,6 +4358,7 @@ const TemplatePanel = () => {
       backgroundImage="/images/templates/templates-background.svg"
       closedImage={activeTabData?.closedImage}
       openImage={activeTabData?.openImage}
+      panelRef={panelRef}
     >
       {activeTabData?.content}
     </TemplateTab>

@@ -13,54 +13,40 @@ export const mockAuth = {
     data: { session: null },
     error: null
   }),
-  signInWithPassword: async () => {
-    // Simuler une connexion réussie
-    const user = { 
-      id: 'demo-user',
-      email: 'demo@lore.com',
-      user_metadata: { username: 'Demo User' }
-    };
-    
-    // Déclencher l'événement de connexion après un court délai
-    setTimeout(() => {
-      // Trouver le callback d'onAuthStateChange et l'appeler
-      if (window.authStateCallback) {
-        window.authStateCallback('SIGNED_IN', { user });
-      }
-    }, 100);
-    
-    return {
-      data: { user },
-      error: null
-    };
-  },
-  signUp: async () => {
-    // Simuler une inscription réussie
-    const user = { 
-      id: 'demo-user',
-      email: 'demo@lore.com',
-      user_metadata: { username: 'Demo User' }
-    };
-    
-    // Déclencher l'événement de connexion après un court délai
-    setTimeout(() => {
-      // Trouver le callback d'onAuthStateChange et l'appeler
-      if (window.authStateCallback) {
-        window.authStateCallback('SIGNED_IN', { user });
-      }
-    }, 100);
-    
-    return {
-      data: { user },
-      error: null
-    };
-  },
+  signInWithPassword: async () => ({
+    data: { 
+      user: { 
+        id: 'demo-user',
+        email: 'demo@lore.com',
+        user_metadata: { username: 'Demo User' }
+      } 
+    },
+    error: null
+  }),
+  signUp: async () => ({
+    data: { 
+      user: { 
+        id: 'demo-user',
+        email: 'demo@lore.com',
+        user_metadata: { username: 'Demo User' }
+      } 
+    },
+    error: null
+  }),
   signOut: async () => ({
     error: null
   }),
   onAuthStateChange: (callback) => {
-    // Stocker le callback globalement pour que les mocks puissent l'utiliser
-    window.authStateCallback = callback;
+    // Simuler une connexion automatique en mode démo
+    setTimeout(() => {
+      callback('SIGNED_IN', {
+        user: { 
+          id: 'demo-user',
+          email: 'demo@lore.com',
+          user_metadata: { username: 'Demo User' }
+        }
+      })
+    }, 1000)
     
     return { data: { subscription: { unsubscribe: () => {} } } }
   }
