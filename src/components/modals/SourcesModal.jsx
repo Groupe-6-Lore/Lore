@@ -6,7 +6,7 @@ const SourcesModal = ({ isOpen, onClose }) => {
   // Limites de stockage inspirées de Notion (adaptées à Lore)
   const STORAGE_LIMIT_MB = 100;
   const WARNING_THRESHOLD = 0.8; // 80%
-  const MAX_SINGLE_FILE_MB = 5; // Fichier individuel en Mo (plan gratuit)
+  const MAX_SINGLE_FILE_MB = 100; // Fichier individuel en Mo (plan gratuit)
   const GRACE_DAYS = 3; // Période de grâce de 3 jours
 
   const initialFiles = useMemo(() => ([
@@ -229,7 +229,7 @@ const SourcesModal = ({ isOpen, onClose }) => {
                   if (!file) return;
                   const sizeMb = Math.max(0, file.size / (1024*1024));
                   if (sizeMb > MAX_SINGLE_FILE_MB) {
-                    setErrorMessage('Votre fichier dépasse la limite de 5 Mo du plan gratuit.');
+                    setErrorMessage(`Votre fichier dépasse la limite de ${MAX_SINGLE_FILE_MB} Mo par fichier du plan gratuit.`);
                     e.target.value = '';
                     return;
                   }
@@ -344,8 +344,8 @@ const SourcesModal = ({ isOpen, onClose }) => {
                 <button 
                   onClick={() => {
                     setShowStorageToast(false);
-                    // Redirection vers la page abonnement
-                    window.location.href = '/abonnement';
+                    // Redirection vers la page stockage
+                    window.location.href = '/stockage';
                   }}
                   className="px-3 py-1 rounded bg-golden hover:bg-golden/80 text-dark-blue font-semibold text-xs transition-colors"
                 >

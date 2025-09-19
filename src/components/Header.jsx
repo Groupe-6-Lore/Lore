@@ -14,7 +14,8 @@ const Header = ({
   showSourcesButton = true,
   showPlayersButton = true,
   additionalButtons = [],
-  className = ""
+  className = "",
+  onSourcesClick = null // Callback for Sources button click
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -89,7 +90,10 @@ const Header = ({
         
         {/* Bouton Sources hexagonal bleu */}
         {showSourcesButton && (
-          <button className="relative">
+          <button 
+            className="relative"
+            onClick={onSourcesClick || (() => navigate('/sources'))}
+          >
             <div className="w-12 h-12 bg-blue-500 transform rotate-45 rounded-sm flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
               <span className="text-white font-bold text-[10px] transform -rotate-45">Sources</span>
             </div>
@@ -203,8 +207,16 @@ const Header = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="py-2">
-                  <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Profil</button>
+                     <div className="py-2">
+                       <button 
+                         className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors"
+                         onClick={() => {
+                           setShowUserMenu(false);
+                           navigate('/profil');
+                         }}
+                       >
+                         Profil
+                       </button>
                   <button 
                     className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors"
                     onClick={() => {
@@ -214,8 +226,24 @@ const Header = ({
                   >
                     Abonnement
                   </button>
-                  <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Stockage</button>
-                  <button className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors">Confidentialité</button>
+                       <button 
+                         className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors"
+                         onClick={() => {
+                           setShowUserMenu(false);
+                           navigate('/stockage');
+                         }}
+                       >
+                         Stockage
+                       </button>
+                  <button 
+                    className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate('/confidentialite');
+                    }}
+                  >
+                    Confidentialité
+                  </button>
                   <div className="my-1 border-t border-black/10"></div>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors text-red-700"

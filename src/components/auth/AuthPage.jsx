@@ -92,7 +92,7 @@ const AuthPage = () => {
       </header>
 
       {/* Contenu principal */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-8 lg:px-16">
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-8 lg:px-16 gap-16 lg:gap-24 xl:gap-32">
         
         {/* Section gauche - Texte d'accueil */}
         <div className="flex-1 max-w-2xl text-white">

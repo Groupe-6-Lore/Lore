@@ -18,6 +18,9 @@ import Payment from './pages/Payment';
 import CampaignDashboard from './pages/CampaignDashboard';
 import News from './pages/News';
 import Subscription from './pages/Subscription';
+import Profile from './pages/Profile';
+import Storage from './pages/Storage';
+import Privacy from './pages/Privacy';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -98,6 +101,27 @@ function App() {
           <Route path="/abonnement" element={
             <ProtectedRoute>
               <Subscription />
+            </ProtectedRoute>
+          } />
+
+          {/* Route protégée - Profil */}
+          <Route path="/profil" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+
+          {/* Route protégée - Stockage */}
+          <Route path="/stockage" element={
+            <ProtectedRoute>
+              <Storage />
+            </ProtectedRoute>
+          } />
+
+          {/* Route protégée - Confidentialité */}
+          <Route path="/confidentialite" element={
+            <ProtectedRoute>
+              <Privacy />
             </ProtectedRoute>
           } />
           

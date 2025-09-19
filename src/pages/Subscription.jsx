@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { Download, CreditCard, Star, Users, HardDrive, Shield, Settings, Plus, ShoppingCart, Check, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import SourcesModal from '../components/modals/SourcesModal';
 
 const Subscription = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('abonnement');
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(true); // Simule un abonnement actif
+  const [showSources, setShowSources] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false); // Simule un abonnement inactif par défaut
+  const [userType, setUserType] = useState('free'); // 'free', 'subscribed', 'cancelled'
   const [showCheckout, setShowCheckout] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' ou 'yearly'
+  const [showSubscriptionCheckout, setShowSubscriptionCheckout] = useState(false);
   const [invoices, setInvoices] = useState([
     { date: '15/08/2024', number: 'F093746199', total: '8,00 €' },
     { date: '15/07/2024', number: 'F273407179', total: '8,00 €' },
@@ -36,6 +42,7 @@ const Subscription = () => {
   const handleDownloadInvoice = (invoiceNumber) => {
     // Simulation du téléchargement
     console.log(`Téléchargement de la facture ${invoiceNumber}`);
+    alert(`Le PDF de la facture ${invoiceNumber} va être téléchargé dans quelques instants.`);
     // Ici vous pourriez implémenter la logique de téléchargement réel
   };
 
@@ -63,6 +70,7 @@ const Subscription = () => {
   const handleCancelSubscription = () => {
     if (confirm('Êtes-vous sûr de vouloir annuler votre abonnement ? Vous perdrez l\'accès à toutes les fonctionnalités premium.')) {
       setHasActiveSubscription(false);
+      setUserType('cancelled');
       alert('Votre abonnement a été annulé. Il restera actif jusqu\'à la fin de la période de facturation.');
     }
   };
@@ -70,6 +78,20 @@ const Subscription = () => {
   const handleReactivateSubscription = () => {
     setHasActiveSubscription(true);
     alert('Votre abonnement a été réactivé !');
+  };
+
+  const handleSubscribe = (cycle) => {
+    setBillingCycle(cycle);
+    setShowSubscriptionCheckout(true);
+  };
+
+  const handleSubscriptionPayment = () => {
+    const price = billingCycle === 'monthly' ? '8,00' : '72,00';
+    addNewInvoice(price);
+    setHasActiveSubscription(true);
+    setUserType('subscribed');
+    setShowSubscriptionCheckout(false);
+    alert(`Abonnement ${billingCycle === 'monthly' ? 'mensuel' : 'annuel'} souscrit avec succès !`);
   };
 
   const generateInvoiceNumber = () => {
@@ -89,7 +111,7 @@ const Subscription = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <Header />
+      <Header onSourcesClick={() => setShowSources(true)} />
       
       {/* Navigation par onglets */}
       <div className="px-32 py-6">
@@ -99,7 +121,17 @@ const Subscription = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'profil') {
+                    navigate('/profil');
+                  } else if (tab.id === 'stockage') {
+                    navigate('/stockage');
+                  } else if (tab.id === 'confidentialite') {
+                    navigate('/confidentialite');
+                  } else {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 className={`flex items-center space-x-2 pb-4 px-2 transition-colors ${
                   activeTab === tab.id
                     ? 'text-golden border-b-2 border-golden'
@@ -127,110 +159,135 @@ const Subscription = () => {
               <div className="p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-golden rounded-full flex items-center justify-center">
-                      <Star className="text-dark" size={24} />
-                    </div>
                   <div>
-                    <h3 className="text-xl font-bold text-golden">Abonnement MJ</h3>
+                     <h3 className="text-xl font-bold text-golden">
+                       {userType === 'free' ? 'Plan Gratuit' : 'Abonnement MJ'}
+                     </h3>
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setBillingCycle('monthly')}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            billingCycle === 'monthly'
-                              ? 'bg-golden text-dark'
-                              : 'bg-white/20 text-golden hover:bg-white/30'
-                          }`}
-                        >
-                          Mensuel
-                        </button>
-                        <button
-                          onClick={() => setBillingCycle('yearly')}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            billingCycle === 'yearly'
-                              ? 'bg-golden text-dark'
-                              : 'bg-white/20 text-golden hover:bg-white/30'
-                          }`}
-                        >
-                          Annuel
-                        </button>
+                         {userType === 'subscribed' && (
+                           <div className="flex items-center space-x-2">
+                             <span className="px-3 py-1 rounded-lg text-sm font-medium bg-golden text-dark">
+                               {billingCycle === 'monthly' ? 'Mensuel' : 'Annuel'}
+                             </span>
+                           </div>
+                         )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-primary-blue font-semibold">
-                          {billingCycle === 'monthly' ? '8,00 € / mois' : '72,00 € / an'}
-                        </p>
-                        {billingCycle === 'yearly' && (
-                          <p className="text-green-600 text-xs font-medium">-25% de réduction</p>
-                        )}
-                      </div>
+                       {userType !== 'free' && (
+                         <div className="text-right">
+                           <p className="text-primary-blue font-semibold">
+                             {billingCycle === 'monthly' ? '8,00 € / mois' : '72,00 € / an'}
+                           </p>
+                           {billingCycle === 'yearly' && (
+                             <p className="text-golden text-xs font-medium">-25% de réduction</p>
+                           )}
+                         </div>
+                       )}
                     </div>
                   </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {hasActiveSubscription ? (
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        Actif
-                      </span>
-                    ) : (
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        Annulé
-                      </span>
-                    )}
-                  </div>
+                   <div className="flex items-center space-x-2">
+                     {userType === 'free' ? (
+                       <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                         Gratuit
+                       </span>
+                     ) : userType === 'subscribed' ? (
+                       <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                         Actif
+                       </span>
+                     ) : (
+                       <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                         Annulé
+                       </span>
+                     )}
+                   </div>
                 </div>
                 
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-golden rounded-full"></div>
-                    <span className="text-golden">Campagnes illimitées</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-golden rounded-full"></div>
-                    <span className="text-golden">Accès assistant MJ IA illimité</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-golden rounded-full"></div>
-                    <span className="text-golden">Stockage 1 Go inclus</span>
-                  </div>
-                </div>
+                 <div className="space-y-3 mb-6">
+                   {userType === 'free' ? (
+                     <>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">1 campagne gratuite</span>
+                       </div>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">100 Mo de stockage de sources</span>
+                       </div>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">Nombre de messages limité à LoreI</span>
+                       </div>
+                     </>
+                   ) : (
+                     <>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">Campagnes illimitées</span>
+                       </div>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">Accès assistant MJ IA illimité</span>
+                       </div>
+                       <div className="flex items-center space-x-3">
+                         <div className="w-2 h-2 bg-golden rounded-full"></div>
+                         <span className="text-golden">Stockage 1 Go inclus</span>
+                       </div>
+                     </>
+                   )}
+                 </div>
 
-                {/* Boutons de gestion d'abonnement */}
-                <div className="flex space-x-3">
-                  {hasActiveSubscription ? (
-                    <button
-                      onClick={handleCancelSubscription}
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                    >
-                      Annuler l'abonnement
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleReactivateSubscription}
-                      className="bg-golden hover:bg-golden/80 text-dark px-4 py-2 rounded-lg transition-colors font-medium"
-                    >
-                      Réactiver l'abonnement
-                    </button>
-                  )}
-                </div>
+                 {/* Boutons de gestion d'abonnement */}
+                 <div className="flex flex-col space-y-3">
+                   {userType === 'subscribed' ? (
+                     <button
+                       onClick={handleCancelSubscription}
+                       className="bg-red-400 hover:bg-red-500 text-white px-3 py-1.5 rounded text-sm transition-colors"
+                     >
+                       Annuler l'abonnement
+                     </button>
+                   ) : userType === 'cancelled' ? (
+                     <button
+                       onClick={() => {
+                         setUserType('subscribed');
+                         setHasActiveSubscription(true);
+                         alert('Votre abonnement a été réactivé !');
+                       }}
+                       className="bg-golden hover:bg-golden/80 text-dark px-4 py-2 rounded-lg transition-colors font-medium"
+                     >
+                       Réactiver l'abonnement
+                     </button>
+                   ) : (
+                     <div className="space-y-3">
+                       <div className="text-sm text-golden/80 mb-2">Choisissez votre abonnement :</div>
+                       <div className="flex space-x-3">
+                         <button
+                           onClick={() => handleSubscribe('monthly')}
+                           className="flex-1 bg-golden hover:bg-golden/80 text-dark px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2"
+                         >
+                           <span>Souscrire - Mensuel</span>
+                           <span className="text-sm">8,00 € / mois</span>
+                         </button>
+                         <button
+                           onClick={() => handleSubscribe('yearly')}
+                           className="flex-1 bg-golden hover:bg-golden/80 text-dark px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2"
+                         >
+                           <span>Souscrire - Annuel</span>
+                           <span className="text-sm">72,00 € / an</span>
+                         </button>
+                       </div>
+                       <div className="text-xs text-golden text-center">
+                         Économisez 25% avec l'abonnement annuel !
+                       </div>
+                     </div>
+                   )}
+                 </div>
               </div>
 
               {/* Services supplémentaires */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-golden">Services supplémentaires</h3>
-                  <button
-                    onClick={() => {
-                      // Ajouter quelques services de test au panier
-                      setCart([
-                        { id: 1, name: 'Ajout de campagne', price: '1,90 € / campagne' },
-                        { id: 2, name: 'Kit de démarrage', price: '2,90 €' }
-                      ]);
-                      setShowCheckout(true);
-                    }}
-                    className="bg-primary-blue hover:bg-primary-blue/80 text-white px-3 py-1 rounded-lg text-sm font-medium"
-                  >
-                    Test Paiement
-                  </button>
                 </div>
                 <div className="space-y-3">
                   {additionalServices.map((service, index) => (
@@ -483,6 +540,136 @@ const Subscription = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de paiement pour l'abonnement */}
+      {showSubscriptionCheckout && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Finaliser votre abonnement</h2>
+                <p className="text-gray-500 text-sm mt-1">Récapitulatif et paiement</p>
+              </div>
+              <button
+                onClick={() => setShowSubscriptionCheckout(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Récapitulatif de l'abonnement */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Abonnement sélectionné</h3>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-gray-900 font-medium text-sm">Abonnement MJ - {billingCycle === 'monthly' ? 'Mensuel' : 'Annuel'}</span>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {billingCycle === 'monthly' ? 'Renouvellement mensuel' : 'Renouvellement annuel avec 25% de réduction'}
+                    </div>
+                  </div>
+                  <span className="text-primary-blue font-semibold text-sm">
+                    {billingCycle === 'monthly' ? '8,00 € / mois' : '72,00 € / an'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="border-t border-gray-200 pt-4 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium">Total</span>
+                <span className="text-primary-blue font-bold text-lg">
+                  {billingCycle === 'monthly' ? '8,00 €' : '72,00 €'}
+                </span>
+              </div>
+            </div>
+
+            {/* Informations de paiement */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Informations de paiement</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">Méthode de paiement</label>
+                  <select className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-golden focus:ring-1 focus:ring-golden transition-colors">
+                    <option>Carte de crédit</option>
+                    <option>PayPal</option>
+                    <option>Virement bancaire</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">Numéro de carte</label>
+                    <input
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-golden focus:ring-1 focus:ring-golden transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">Date d'expiration</label>
+                    <input
+                      type="text"
+                      placeholder="MM/AA"
+                      className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-golden focus:ring-1 focus:ring-golden transition-colors"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">CVV</label>
+                    <input
+                      type="text"
+                      placeholder="123"
+                      className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-golden focus:ring-1 focus:ring-golden transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">Nom sur la carte</label>
+                    <input
+                      type="text"
+                      placeholder="Jean Dupont"
+                      className="w-full p-3 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-golden focus:ring-1 focus:ring-golden transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Conditions et boutons */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-start space-x-3 mb-4">
+                <input type="checkbox" className="mt-1 accent-golden" />
+                <span className="text-gray-600 text-sm">
+                  J'accepte les <a href="#" className="text-golden hover:underline">Conditions Générales de Vente</a> et la <a href="#" className="text-golden hover:underline">Politique de Confidentialité</a>
+                </span>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowSubscriptionCheckout(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg transition-colors font-medium text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSubscriptionPayment}
+                  className="flex-1 bg-golden hover:bg-golden/90 text-dark px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 text-sm"
+                >
+                  <span>Payer {billingCycle === 'monthly' ? '8,00 €' : '72,00 €'}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Sources */}
+      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
     </div>
   );
 };
