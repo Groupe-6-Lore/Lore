@@ -1,26 +1,57 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const HistoryModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
+  const navigate = useNavigate();
 
   // Données d'exemple pour l'historique des parties
-  const gameHistory = [
-    { id: 1, date: '01 / 01 / 23', title: 'Titre de la partie' },
-    { id: 2, date: '15 / 12 / 22', title: 'Titre de la partie' },
-    { id: 3, date: '28 / 11 / 22', title: 'Titre de la partie' },
-    { id: 4, date: '10 / 11 / 22', title: 'Titre de la partie' },
-    { id: 5, date: '25 / 10 / 22', title: 'Titre de la partie' },
-    { id: 6, date: '08 / 10 / 22', title: 'Titre de la partie' },
-    { id: 7, date: '20 / 09 / 22', title: 'Titre de la partie' },
-    { id: 8, date: '05 / 09 / 22', title: 'Titre de la partie' },
-    { id: 9, date: '18 / 08 / 22', title: 'Titre de la partie' },
-    { id: 10, date: '02 / 08 / 22', title: 'Titre de la partie' }
+  const baseHistory = [
+    { id: 1, date: '01 / 01 / 23' },
+    { id: 2, date: '15 / 12 / 22' },
+    { id: 3, date: '28 / 11 / 22' },
+    { id: 4, date: '10 / 11 / 22' },
+    { id: 5, date: '25 / 10 / 22' },
+    { id: 6, date: '08 / 10 / 22' },
+    { id: 7, date: '20 / 09 / 22' },
+    { id: 8, date: '05 / 09 / 22' },
+    { id: 9, date: '18 / 08 / 22' },
+    { id: 10, date: '02 / 08 / 22' }
   ];
 
-  const handleGameClick = (game) => {
-    // Fonctionnalité future : navigation vers le détail de la partie
-    console.log('Clic sur la partie:', game);
+  const sampleTitles = [
+    "La Relique d'Émeraude",
+    'La Tombe Oubliée',
+    'Le Pacte des Ombres',
+    'La Forteresse de Givre',
+    'Les Sables du Temps',
+    'Le Phare des Brumes',
+    'Les Lames du Destin',
+    'La Marche des Titans',
+    'Le Voile Cramoisi',
+    'L’Écho des Ruines'
+  ];
+
+  const formatDate = (raw) => {
+    // Accepte des formats "dd / mm / yy" et renvoie "dd/mm/yyyy"
+    const parts = raw.replaceAll(' ', '').split('/');
+    if (parts.length !== 3) return raw;
+    const [dd, mm, yy] = parts;
+    const yyyy = yy.length === 2 ? `20${yy}` : yy;
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const gameHistory = baseHistory.map((g, idx) => ({
+    id: g.id,
+    date: formatDate(g.date),
+    title: sampleTitles[idx % sampleTitles.length]
+  }));
+
+  const handleTitleClick = (game) => {
+    // Navigation vers le dashboard de la campagne sélectionnée
+    navigate(`/campaigns/${game.id}`);
+    onClose?.();
   };
 
   return (
@@ -49,16 +80,17 @@ const HistoryModal = ({ isOpen, onClose }) => {
             {gameHistory.map((game) => (
               <div
                 key={game.id}
-                onClick={() => handleGameClick(game)}
                 className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-black/5 cursor-pointer transition-colors"
               >
                 <span className="text-sm text-gray-700 font-mono min-w-[80px]">
                   {game.date}
                 </span>
-                <span className="text-gray-400">...</span>
-                <span className="text-sm text-gray-800 flex-1">
+                <button
+                  onClick={() => handleTitleClick(game)}
+                  className="text-sm text-golden hover:text-golden/80 text-left flex-1"
+                >
                   {game.title}
-                </span>
+                </button>
               </div>
             ))}
           </div>
@@ -72,4 +104,5 @@ const HistoryModal = ({ isOpen, onClose }) => {
 };
 
 export default HistoryModal;
+
 

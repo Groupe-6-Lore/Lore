@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const AuthPage = () => {
@@ -18,6 +19,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
 
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -46,9 +48,19 @@ const AuthPage = () => {
           username: formData.username,
           domain: formData.domain
         });
+        
+        // Redirection vers la page de sélection de campagnes après inscription réussie
+        setTimeout(() => {
+          navigate('/campaigns');
+        }, 200);
       } else {
         // Appel signIn pour la connexion
         await signIn(formData.email, formData.password);
+        
+        // Redirection vers la page de sélection de campagnes après connexion réussie
+        setTimeout(() => {
+          navigate('/campaigns');
+        }, 200);
       }
     } catch (error) {
       console.error('Erreur d\'authentification:', error);
