@@ -209,7 +209,7 @@ const ChatbotPanel = ({ campaign, universe, rules }) => {
         {/* Bouton fermer aligné avec le titre */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute top-12 right-32 w-6 h-6 transition-colors z-20 flex items-center justify-center"
+          className="absolute top-12 right-24 w-6 h-6 transition-colors z-20 flex items-center justify-center"
           style={{color: '#E9BD72'}}
         >
           <X size={16} />
@@ -231,7 +231,7 @@ const ChatbotPanel = ({ campaign, universe, rules }) => {
         </div>
 
         {/* Zone de messages - Style Templates */}
-        <div className="flex-1 overflow-y-auto space-y-2 mb-3 pl-16 pr-4">
+        <div className="flex-1 overflow-y-auto space-y-2 mb-3 pl-16 pr-16">
           {messages.map((message) => (
             <div
               key={message.id}

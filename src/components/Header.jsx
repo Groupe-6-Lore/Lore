@@ -15,7 +15,8 @@ const Header = ({
   showPlayersButton = true,
   additionalButtons = [],
   className = "",
-  onSourcesClick = null // Callback for Sources button click
+  onSourcesClick = null, // Callback for Sources button click
+  onPlayersClick = null // Callback for Players button click
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -108,7 +109,10 @@ const Header = ({
         
         {/* Bouton Joueurs hexagonal vert */}
         {showPlayersButton && (
-          <button className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
+          <button 
+            className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors"
+            onClick={onPlayersClick}
+          >
             <Users size={20} />
           </button>
         )}
