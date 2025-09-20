@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import TemplateTab from './TemplateTab';
-import { ArrowLeft, Copy, Edit, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Copy, Edit, ChevronRight, Package, Sword, Shield, Heart } from 'lucide-react';
 
 const ConsultationTemplatePanel = ({ 
   template, 
@@ -22,22 +22,67 @@ const ConsultationTemplatePanel = ({
     onBack();
   };
 
-  // Données de démonstration basées sur l'image
-  const templateData = {
-    id: template?.id || 'bataille-arcanix',
-    name: template?.name || 'Bataille d\'Arcanix',
-    category: template?.category || 'quete-principale',
-    subcategory: template?.subcategory || 'cite-arcanix',
-    location: 'Arcanix',
-    sponsor: 'Nom du personnage',
-    tags: [
-      { name: 'Quête Principale', color: 'bg-primary-blue' },
-      { name: 'Ville', color: 'bg-primary-blue' },
-      { name: 'Magie', color: 'bg-primary-blue' },
-      { name: 'Alliés', color: 'bg-primary-blue' }
-    ],
-    image: '/images/templates/arcanix-castle.jpg', // Image du château
-    description: `Arcanix, la cité des mages, se dresse majestueusement sur les dernières collines embrumées de l'Est. Accrochée aux falaises comme un joyau précieux, elle brille de mille arcanes scintillantes qui dansent dans l'air du crépuscule.
+  // Données spécifiques selon le type de template
+  const getTemplateData = () => {
+    if (template?.id === 'marchand') {
+      return {
+        id: 'marchand',
+        name: 'Rencontre avec un marchand',
+        category: 'modeles-simples',
+        location: 'Marché local',
+        npc: 'Marcus le Marchand',
+        tags: [
+          { name: 'Marchand', color: 'bg-blue-600' },
+          { name: 'Commerce', color: 'bg-green-600' },
+          { name: 'Social', color: 'bg-purple-600' }
+        ],
+        image: '/images/templates/merchant.jpg',
+        description: 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+        inventory: [
+          { id: 1, name: 'Potion de soins mineure', price: 25 },
+          { id: 2, name: 'Parchemin de bouclier', price: 50 },
+          { id: 3, name: 'Pierre de sort', price: 100 },
+          { id: 4, name: 'Corde de soie', price: 10 },
+          { id: 5, name: 'Torche éternelle', price: 15 }
+        ]
+      };
+    } else if (template?.id === 'combat-simple') {
+      return {
+        id: 'combat-simple',
+        name: 'Combat simple',
+        category: 'modeles-simples',
+        location: 'Route forestière',
+        difficulty: 'Facile',
+        rewards: '2d6 pièces d\'or, potion de soins mineure',
+        tags: [
+          { name: 'Combat', color: 'bg-red-600' },
+          { name: 'Brigands', color: 'bg-orange-600' },
+          { name: 'Route', color: 'bg-yellow-600' }
+        ],
+        image: '/images/templates/combat.jpg',
+        description: 'Une embuscade tendue par des brigands sur la route forestière. Les bandits, motivés par la cupidité, attaquent sans pitié avec leurs armes de fortune. Un combat rapide mais intense s\'engage.',
+        enemies: [
+          { name: 'Bandit', hp: 15, ac: 12, attack: '+3', damage: '1d6+1' },
+          { name: 'Chef bandit', hp: 25, ac: 14, attack: '+5', damage: '1d8+2' }
+        ]
+      };
+    } else {
+      // Template par défaut (Bataille d'Arcanix)
+      return {
+        id: template?.id || 'bataille-arcanix',
+        name: template?.name || 'Bataille d\'Arcanix',
+        category: template?.category || 'quete-principale',
+        subcategory: template?.subcategory || 'cite-arcanix',
+        location: 'Arcanix',
+        sponsor: 'Nom du personnage',
+        tags: [
+          { name: 'Quête Principale', color: 'bg-primary-blue' },
+          { name: 'Ville', color: 'bg-primary-blue' },
+          { name: 'Magie', color: 'bg-primary-blue' },
+          { name: 'Alliés', color: 'bg-primary-blue' }
+        ],
+        image: '/images/templates/arcanix-castle.jpg',
+        description: `Arcanix, la cité des mages, se dresse majestueusement sur les dernières collines embrumées de l'Est. Accrochée aux falaises comme un joyau précieux, elle brille de mille arcanes scintillantes qui dansent dans l'air du crépuscule.
 
 Ses tours élancées, serties de runes lumineuses, percent les nuages bas et projettent des ombres mystérieuses sur les ponts de pierre suspendus qui relient les différents quartiers de la cité. Chaque pierre de ses murailles raconte une histoire millénaire, chaque fenêtre éclairée révèle un secret magique.
 
@@ -46,7 +91,11 @@ Au cœur de la cité, l'Académie des Mages domine l'horizon de sa silhouette im
 Les rues pavées d'Arcanix bruissent d'activité magique. Les marchands vendent des ingrédients rares, les apprentis s'entraînent dans les cours intérieures, et les maîtres mages débattent de théories complexes dans les tavernes enfumées.
 
 C'est ici que se jouera le destin de nombreux aventuriers, dans cette cité où la magie coule dans les veines mêmes de la pierre.`
+      };
+    }
   };
+
+  const templateData = getTemplateData();
 
 
   const handleCopyLink = () => {
@@ -96,13 +145,45 @@ C'est ici que se jouera le destin de nombreux aventuriers, dans cette cité où 
                 <span className="text-[#552E1A]">{templateData.location}</span>
               </div>
 
-              {/* Commanditaire */}
-              <div>
-                <label className="block text-[#552E1A] font-bold mb-1 eagle-lake-font">
-                  Commanditaire
-                </label>
-                <span className="text-[#552E1A]">{templateData.sponsor}</span>
-              </div>
+              {/* PNJ (pour marchand) */}
+              {templateData.npc && (
+                <div>
+                  <label className="block text-[#552E1A] font-bold mb-1 eagle-lake-font">
+                    PNJ
+                  </label>
+                  <span className="text-[#552E1A]">{templateData.npc}</span>
+                </div>
+              )}
+
+              {/* Difficulté (pour combat) */}
+              {templateData.difficulty && (
+                <div>
+                  <label className="block text-[#552E1A] font-bold mb-1 eagle-lake-font">
+                    Difficulté
+                  </label>
+                  <span className="text-[#552E1A]">{templateData.difficulty}</span>
+                </div>
+              )}
+
+              {/* Récompenses (pour combat) */}
+              {templateData.rewards && (
+                <div>
+                  <label className="block text-[#552E1A] font-bold mb-1 eagle-lake-font">
+                    Récompenses
+                  </label>
+                  <span className="text-[#552E1A]">{templateData.rewards}</span>
+                </div>
+              )}
+
+              {/* Commanditaire (pour quêtes) */}
+              {templateData.sponsor && (
+                <div>
+                  <label className="block text-[#552E1A] font-bold mb-1 eagle-lake-font">
+                    Commanditaire
+                  </label>
+                  <span className="text-[#552E1A]">{templateData.sponsor}</span>
+                </div>
+              )}
 
               {/* Tags */}
               <div>
@@ -159,6 +240,82 @@ C'est ici que se jouera le destin de nombreux aventuriers, dans cette cité où 
               </div>
             </div>
           </div>
+
+          {/* Section inventaire du marchand */}
+          {templateData.inventory && (
+            <div className="mb-8">
+              <label className="block text-[#552E1A] font-bold mb-3 eagle-lake-font flex items-center gap-2">
+                <Package size={20} />
+                Inventaire du marchand
+              </label>
+              <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4">
+                <div className="space-y-2">
+                  {templateData.inventory.map((item, index) => (
+                    <div key={item.id} className="flex items-center gap-3 p-2 bg-white/50 rounded">
+                      <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                        {index + 1}
+                      </div>
+                      <div className="text-[#552E1A] font-medium flex-1">
+                        {item.name}
+                      </div>
+                      <div className="text-[#552E1A]/80">
+                        {item.price} PO
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#552E1A]/20">
+                  <div className="text-sm text-[#552E1A]/80 font-semibold text-right">
+                    Total: {templateData.inventory.reduce((sum, item) => sum + item.price, 0)} pièces d'or
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section ennemis du combat */}
+          {templateData.enemies && (
+            <div className="mb-8">
+              <label className="block text-[#552E1A] font-bold mb-3 eagle-lake-font flex items-center gap-2">
+                <Sword size={20} />
+                Ennemis
+              </label>
+              <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4">
+                <div className="space-y-3">
+                  {templateData.enemies.map((enemy, index) => (
+                    <div key={index} className="grid grid-cols-5 gap-3 p-3 bg-white/50 rounded">
+                      <div>
+                        <label className="block text-[#552E1A] text-sm font-medium mb-1">Nom</label>
+                        <div className="text-[#552E1A] font-semibold">{enemy.name}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] text-sm font-medium mb-1 flex items-center gap-1">
+                          <Heart size={12} />
+                          PV
+                        </label>
+                        <div className="text-[#552E1A]">{enemy.hp}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] text-sm font-medium mb-1 flex items-center gap-1">
+                          <Shield size={12} />
+                          CA
+                        </label>
+                        <div className="text-[#552E1A]">{enemy.ac}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] text-sm font-medium mb-1">Attaque</label>
+                        <div className="text-[#552E1A]">{enemy.attack}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[#552E1A] text-sm font-medium mb-1">Dégâts</label>
+                        <div className="text-[#552E1A]">{enemy.damage}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Boutons d'action */}
           <div className="flex justify-end gap-4">

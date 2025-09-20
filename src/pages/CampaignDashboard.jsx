@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Edit,
   Settings,
   Bell,
   GripVertical,
@@ -60,7 +61,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Composant pour les lignes de texte draggables - Style Notion
-const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, onEdit, onDelete, isEditing, onContentChange, onAddNewLine, onMoveToSection }) => {
+const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, onEdit, onDelete, isEditing, onContentChange, onAddNewLine, onMoveToSection, onSlashCommand }) => {
   const {
     attributes,
     listeners,
@@ -81,7 +82,13 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
 
   const handleClick = () => {
     if (isLink && linkUrl) {
-      window.open(linkUrl, '_blank');
+      if (linkUrl.startsWith('/templates/')) {
+        // Navigation vers les templates
+        window.location.href = linkUrl;
+      } else {
+        // Ouverture dans un nouvel onglet pour les autres liens
+        window.open(linkUrl, '_blank');
+      }
     }
   };
 
@@ -238,6 +245,13 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
                 e.preventDefault();
                 onDelete && onDelete(id);
               }
+              // Gestion de la commande /
+              if (e.key === '/' && e.target.textContent === '') {
+                e.preventDefault();
+                if (onSlashCommand) {
+                  onSlashCommand(e, id);
+                }
+              }
             }}
             onClick={isLink ? handleClick : undefined}
           >
@@ -276,6 +290,13 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
               if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
                 e.preventDefault();
                 onDelete && onDelete(id);
+              }
+              // Gestion de la commande /
+              if (e.key === '/' && e.target.textContent === '') {
+                e.preventDefault();
+                if (onSlashCommand) {
+                  onSlashCommand(e, id);
+                }
               }
             }}
             onClick={isLink ? handleClick : undefined}
@@ -316,6 +337,13 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
                 e.preventDefault();
                 onDelete && onDelete(id);
               }
+              // Gestion de la commande /
+              if (e.key === '/' && e.target.textContent === '') {
+                e.preventDefault();
+                if (onSlashCommand) {
+                  onSlashCommand(e, id);
+                }
+              }
             }}
             onClick={isLink ? handleClick : undefined}
           >
@@ -323,6 +351,367 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
             {content}
           </div>
         )
+      ) : type === 'quest-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer l'aperçu"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+            <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
+            
+            <div className="space-y-4">
+              {(() => {
+                // Extraire les données de la quête depuis le contenu
+                const questDataMatch = content.match(/APERÇU_QUÊTE:(.+)/);
+                if (!questDataMatch) return null;
+                
+                try {
+                  const storedQuestData = JSON.parse(questDataMatch[1]);
+                  
+                  // Récupérer les données actuelles depuis les templates pour la synchronisation
+                  const templateCategories = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+                  let currentQuestData = storedQuestData;
+                  
+                  // Chercher la quête correspondante dans les templates pour la synchronisation
+                  templateCategories.forEach(category => {
+                    if (category.quests && category.quests.length > 0) {
+                      category.quests.forEach(quest => {
+                        if (quest.title === storedQuestData.title) {
+                          currentQuestData = quest;
+                        }
+                      });
+                    }
+                  });
+                  
+                  const questData = currentQuestData;
+                  
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) >= 
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.total, 0) ? 'bg-green-500' :
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) > 0 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}></div>
+                          <span className="text-white font-medium">{questData?.title}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-white">
+                            {questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) || 0}/
+                            {questData?.subQuests?.reduce((sum, sub) => sum + sub.total, 0) || 0}
+                          </span>
+                          <ChevronRight size={16} className="text-white" />
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-600 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) >= 
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.total, 0) ? 'bg-green-500' :
+                            questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) > 0 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`} 
+                          style={{ 
+                            width: `${questData?.subQuests ? 
+                              (questData.subQuests.reduce((sum, sub) => sum + sub.current, 0) / 
+                               questData.subQuests.reduce((sum, sub) => sum + sub.total, 0)) * 100 : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                      
+                      {/* Sous-quêtes */}
+                      {questData?.subQuests && questData.subQuests.map((subQuest, subIndex) => (
+                        <div key={subIndex} className="ml-6 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-2 h-2 rounded-full ${
+                                subQuest.current >= subQuest.total ? 'bg-green-400' :
+                                subQuest.current > 0 ? 'bg-yellow-400' : 'bg-red-400'
+                              }`}></div>
+                              <span className="text-white text-sm">{subQuest.name}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-white text-sm">{subQuest.current}/{subQuest.total}</span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full ${
+                                subQuest.current >= subQuest.total ? 'bg-green-400' :
+                                subQuest.current > 0 ? 'bg-yellow-400' : 'bg-red-400'
+                              }`} 
+                              style={{ width: `${(subQuest.current / subQuest.total) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                } catch (error) {
+                  console.error('Erreur parsing quest data:', error);
+                  return <div className="text-red-400">Erreur d'affichage de la quête</div>;
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      ) : type === 'merchant-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer l'aperçu"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+            <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Template Marchand</h3>
+            
+            <div className="space-y-4">
+              {(() => {
+                // Extraire les données du template depuis le contenu
+                const templateDataMatch = content.match(/APERÇU_MARCHAND:(.+)/);
+                if (!templateDataMatch) return null;
+                
+                try {
+                  const templateData = JSON.parse(templateDataMatch[1]);
+                  
+                  return (
+                    <div key={templateData.id} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-md font-semibold text-light eagle-lake-font">
+                          {templateData.name}
+                        </h4>
+                        <div className="text-sm text-light/80">
+                          {templateData.location}
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <div className="text-sm text-light/80 mb-2">
+                          PNJ: {templateData.npc}
+                        </div>
+                        <div className="text-sm text-light leading-relaxed">
+                          {templateData.description}
+                        </div>
+                      </div>
+                      
+                      {/* Inventaire */}
+                      {templateData.inventory && templateData.inventory.length > 0 && (
+                        <div className="space-y-2">
+                          <h5 className="text-sm font-medium text-light flex items-center gap-2">
+                            <Package size={16} />
+                            Inventaire ({templateData.inventory.length} objets)
+                          </h5>
+                          <div className="grid grid-cols-2 gap-2">
+                            {templateData.inventory.slice(0, 4).map((item, index) => (
+                              <div key={item.id} className="bg-slate-600/20 rounded p-2 text-xs">
+                                <div className="text-light font-medium">{item.name}</div>
+                                <div className="text-light/70">{item.price} PO</div>
+                              </div>
+                            ))}
+                            {templateData.inventory.length > 4 && (
+                              <div className="bg-slate-600/20 rounded p-2 text-xs text-light/70 flex items-center justify-center">
+                                +{templateData.inventory.length - 4} autres...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                } catch (error) {
+                  console.error('Erreur lors du parsing des données du template:', error);
+                  return <div className="text-red-400">Erreur lors du chargement du template</div>;
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      ) : type === 'combat-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer l'aperçu"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+            <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Template Combat</h3>
+            
+            <div className="space-y-4">
+              {(() => {
+                // Extraire les données du template depuis le contenu
+                const templateDataMatch = content.match(/APERÇU_COMBAT:(.+)/);
+                if (!templateDataMatch) return null;
+                
+                try {
+                  const templateData = JSON.parse(templateDataMatch[1]);
+                  
+                  return (
+                    <div key={templateData.id} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-md font-semibold text-light eagle-lake-font">
+                          {templateData.name}
+                        </h4>
+                        <div className="text-sm text-light/80">
+                          {templateData.difficulty}
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <div className="text-sm text-light/80 mb-2">
+                          Lieu: {templateData.location}
+                        </div>
+                        <div className="text-sm text-light/80 mb-2">
+                          Récompenses: {templateData.rewards}
+                        </div>
+                        <div className="text-sm text-light leading-relaxed">
+                          {templateData.description}
+                        </div>
+                      </div>
+                      
+                      {/* Ennemis */}
+                      {templateData.enemies && templateData.enemies.length > 0 && (
+                        <div className="space-y-2">
+                          <h5 className="text-sm font-medium text-light flex items-center gap-2">
+                            <Sword size={16} />
+                            Ennemis ({templateData.enemies.length})
+                          </h5>
+                          <div className="space-y-1">
+                            {templateData.enemies.map((enemy, index) => (
+                              <div key={index} className="bg-slate-600/20 rounded p-2 text-xs">
+                                <div className="text-light font-medium">{enemy.name}</div>
+                                <div className="text-light/70">
+                                  PV: {enemy.hp} | CA: {enemy.ac} | Att: {enemy.attack} | Dég: {enemy.damage}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                } catch (error) {
+                  console.error('Erreur lors du parsing des données du template:', error);
+                  return <div className="text-red-400">Erreur lors du chargement du template</div>;
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      ) : type === 'page' ? (
+        <div 
+          className="leading-relaxed pl-8 text-light cursor-text my-4 p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          onBlur={(e) => {
+            if (onContentChange) {
+              onContentChange(id, e.target.textContent);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (onAddNewLine) {
+                const newLineId = Date.now();
+                const newLine = {
+                  id: newLineId,
+                  content: '',
+                  section: section,
+                  type: 'text',
+                  isLink: false,
+                  isHeading: false
+                };
+                onAddNewLine(newLine, id);
+              }
+            }
+            if (e.key === 'Escape') {
+              e.target.blur();
+            }
+            if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+              e.preventDefault();
+              onDelete && onDelete(id);
+            }
+            // Gestion de la commande /
+            if (e.key === '/' && e.target.textContent === '') {
+              e.preventDefault();
+              if (onSlashCommand) {
+                onSlashCommand(e, id);
+              }
+            }
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-golden">📄</span>
+            <span className="text-golden font-medium">Page</span>
+            <button
+              onClick={() => navigateToPage(id)}
+              className="ml-auto px-3 py-1 bg-golden/20 hover:bg-golden/30 text-golden rounded-md text-sm transition-colors"
+            >
+              Ouvrir
+            </button>
+          </div>
+          {content}
+        </div>
+      ) : type === 'table' ? (
+        <div className="pl-8 my-4">
+          <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-golden">📊</span>
+              <span className="text-golden font-medium">Tableau</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <tbody>
+                  {Array.from({ length: rows || 3 }).map((_, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {Array.from({ length: cols || 3 }).map((_, colIndex) => (
+                        <td 
+                          key={colIndex}
+                          className="border border-white/20 p-2 min-w-[100px]"
+                          contentEditable={true}
+                          suppressContentEditableWarning={true}
+                          onBlur={(e) => {
+                            if (onContentChange) {
+                              // Mettre à jour les données du tableau
+                              const newData = [...(data || [])];
+                              if (!newData[rowIndex]) newData[rowIndex] = [];
+                              newData[rowIndex][colIndex] = e.target.textContent;
+                              onContentChange(id, JSON.stringify({ rows, cols, data: newData }));
+                            }
+                          }}
+                        >
+                          {data && data[rowIndex] && data[rowIndex][colIndex] ? data[rowIndex][colIndex] : ''}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       ) : type === 'separator' ? (
         <div 
           className="leading-relaxed pl-8 text-light cursor-text my-8"
@@ -404,13 +793,40 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
           }}
           onClick={isLink ? handleClick : undefined}
           dangerouslySetInnerHTML={{ 
-            __html: content.split(/(\*\*.*?\*\*)/).map((part, index) => {
+            __html: (() => {
+              // Récupérer les liens stockés
+              const storedLinks = JSON.parse(localStorage.getItem('lore-dashboard-links') || '[]');
+              
+              // Traiter le contenu avec les liens stockés et le markdown
+              let processedContent = content
+                .split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*)/)
+                .map((part, index) => {
+                  // Gérer les liens markdown [texte](url)
+                  if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
+                    const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                    if (match) {
+                      const [, text, url] = match;
+                      return `<a href="${url}" target="_blank" class="text-golden hover:text-golden/80 cursor-pointer underline font-semibold" key="${index}">${text}</a>`;
+                    }
+                  }
+                  // Gérer le texte en gras **texte**
             if (part.startsWith('**') && part.endsWith('**')) {
               const text = part.slice(2, -2);
-                return `<strong key="${index}" class="text-golden cursor-pointer hover:text-golden/80">${text}</strong>`;
+                    return `<strong key="${index}" class="text-golden">${text}</strong>`;
             }
             return part;
-            }).join('')
+                }).join('');
+              
+              // Appliquer les liens stockés
+              storedLinks.forEach(linkInfo => {
+                if (processedContent.includes(linkInfo.text)) {
+                  const linkHtml = `<a href="${linkInfo.url}" target="_blank" class="text-golden hover:text-golden/80 cursor-pointer underline font-semibold">${linkInfo.text}</a>`;
+                  processedContent = processedContent.replace(linkInfo.text, linkHtml);
+                }
+              });
+              
+              return processedContent;
+            })()
           }}
         />
       )}
@@ -489,35 +905,8 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
   );
 };
 
-// Composant pour les zones de drop entre les éléments
-const DropZone = ({ id, isActive, onTemplateDrop, targetIndex }) => {
-  return (
-    <motion.div
-      className={`h-2 transition-all duration-200 ${
-        isActive 
-          ? 'bg-blue-500/50 border-2 border-dashed border-blue-500' 
-          : 'bg-transparent hover:bg-gray-300/20'
-      }`}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => onTemplateDrop && onTemplateDrop(e, targetIndex)}
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ 
-        height: isActive ? 8 : 2, 
-        opacity: isActive ? 1 : 0.3 
-      }}
-      whileHover={{ 
-        height: 6, 
-        opacity: 0.8,
-        backgroundColor: 'rgba(59, 130, 246, 0.3)'
-      }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-    />
-  );
-};
-
-
-// Composant pour la card quêtes draggable
-const DraggableQuestCard = ({ campaign, onShowContextMenu, id, onEdit, onDelete, isEditing }) => {
+// Composant pour la card marchand intégrée dans le flux TextLines
+const MerchantCardTextLine = ({ id, campaign, merchantInventory, onShowContextMenu, onPaste, onEdit, onDelete, isEditing, ...inventoryProps }) => {
   const {
     attributes,
     listeners,
@@ -537,7 +926,7 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id, onEdit, onDelete,
     <div 
       ref={setNodeRef}
       style={style}
-      className="group relative bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl max-w-sm"
+      className="group relative bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl my-4"
     >
       {/* Drag Handle */}
       <div 
@@ -553,7 +942,7 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id, onEdit, onDelete,
       {/* Bouton + */}
       <div 
         className="absolute left-10 top-2 w-6 h-6 flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 z-10 bg-blue-100/80 hover:bg-blue-200/90 rounded"
-        onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'quest-card')}
+        onClick={(e) => onShowContextMenu && onShowContextMenu(e, 'merchant-card')}
       >
         <Plus size={14} className="text-blue-600 hover:text-blue-800 transition-colors duration-150" />
       </div>
@@ -582,57 +971,215 @@ const DraggableQuestCard = ({ campaign, onShowContextMenu, id, onEdit, onDelete,
         </button>
       </div>
 
-      <h3 className="text-lg font-bold text-light eagle-lake-font mb-4">Quêtes</h3>
+      <h3 
+        className="text-xl font-bold text-light eagle-lake-font mb-4 cursor-pointer hover:text-golden transition-colors"
+        onClick={() => {
+          // Créer un template "Rencontre avec un marchand" basé sur les données actuelles
+          const merchantTemplate = {
+            id: `merchant-${Date.now()}`,
+            name: campaign?.rencontre.title || 'Rencontre avec un marchand',
+            category: 'modeles-simples',
+            description: campaign?.rencontre.content || 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+            location: 'Marché local',
+            npc: campaign?.rencontre.npc || 'Marcus le Marchand',
+            inventory: merchantInventory || [],
+            tags: [
+              { name: 'Marchand', color: 'bg-blue-600' },
+              { name: 'Commerce', color: 'bg-green-600' },
+              { name: 'Social', color: 'bg-purple-600' }
+            ]
+          };
+          
+          // Sauvegarder le template dans localStorage
+          const existingTemplates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+          const updatedTemplates = [...existingTemplates, merchantTemplate];
+          localStorage.setItem('lore-templates-data', JSON.stringify(updatedTemplates));
+          
+          // Afficher une notification
+          toast.success(`Template "${merchantTemplate.name}" créé avec succès !`);
+        }}
+        title="Cliquer pour créer un template"
+      >
+        {campaign?.rencontre.title}
+      </h3>
       
-      <div className="space-y-4">
-        {/* Quête majeure */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span className="text-white font-medium">Major quest</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-white">50%</span>
-              <ChevronRight size={16} className="text-white" />
-            </div>
-          </div>
-          <div className="w-full bg-gray-600 rounded-full h-2">
-            <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-          </div>
+      <div className="space-y-4" onPaste={onPaste}>
+        <p className="text-light leading-relaxed">{campaign?.rencontre.content}</p>
+        <div className="text-sm text-light/80 font-semibold">
+          PNJ: {campaign?.rencontre.npc}
         </div>
 
-        {/* Quêtes mineures */}
-        {campaign?.quests?.map((quest, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  quest.status === 'completed' ? 'bg-green-500' :
-                  quest.status === 'in_progress' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
-                <span className="text-white font-medium">{quest.name}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-white">{quest.completed}/{quest.total}</span>
-                <ChevronRight size={16} className="text-white" />
-              </div>
-            </div>
-            <div className="w-full bg-gray-600 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full ${
-                  quest.status === 'completed' ? 'bg-green-500' :
-                  quest.status === 'in_progress' ? 'bg-yellow-500' : 'bg-red-500'
-                }`} 
-                style={{ width: `${(quest.completed / quest.total) * 100}%` }}
-              ></div>
+        {/* Tableau d'inventaire - Style Notion */}
+        <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold text-light flex items-center">
+              <Package size={16} className="mr-2" />
+              Inventaire du marchand
+            </h4>
+            <div className="text-sm text-light/80 font-semibold">
+              Total: {inventoryProps.editingTotal ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={inventoryProps.totalValue}
+                    onChange={(e) => inventoryProps.setTotalValue(parseInt(e.target.value) || 0)}
+                    className="w-20 px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                    autoFocus
+                  />
+                  <span>pièces d'or</span>
+                  <button
+                    onClick={inventoryProps.handleSaveTotal}
+                    className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                    title="Sauvegarder"
+                  >
+                    <CheckCircle size={14} />
+                  </button>
+                  <button
+                    onClick={inventoryProps.handleCancelTotalEdit}
+                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    title="Annuler"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={inventoryProps.handleEditTotal}
+                  className="hover:text-light transition-colors"
+                >
+                  {inventoryProps.getTotalValue()} pièces d'or
+                </button>
+              )}
             </div>
           </div>
-        ))}
+
+          <div className="space-y-2">
+            {merchantInventory.map((item, index) => (
+              <div key={item.id} className="flex items-center gap-3 p-2 bg-white/5 rounded">
+                <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                  {index + 1}
+                </div>
+                <div className="text-light font-medium">
+                  {inventoryProps.editingTableField === `${item.id}-name` ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={inventoryProps.editingTableValue}
+                        onChange={(e) => inventoryProps.setEditingTableValue(e.target.value)}
+                        className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => inventoryProps.handleSaveTableField(item.id, 'name')}
+                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        title="Sauvegarder"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={inventoryProps.handleCancelTableEdit}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                        title="Annuler"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => inventoryProps.handleEditTableField(item.id, 'name', item.name)}
+                      className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                    >
+                      {item.name}
+                    </button>
+                  )}
+                </div>
+                <div className="text-light/80">
+                  {inventoryProps.editingTableField === `${item.id}-price` ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={inventoryProps.editingTableValue}
+                        onChange={(e) => inventoryProps.setEditingTableValue(e.target.value)}
+                        className="w-full px-2 py-1 text-sm bg-white/20 border border-light/30 rounded text-light placeholder-light/50 focus:outline-none focus:border-golden"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => inventoryProps.handleSaveTableField(item.id, 'price')}
+                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        title="Sauvegarder"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={inventoryProps.handleCancelTableEdit}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                        title="Annuler"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => inventoryProps.handleEditTableField(item.id, 'price', item.price)}
+                      className="w-full text-left hover:bg-light/10 p-1 rounded transition-colors"
+                    >
+                      {item.price} PO
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => inventoryProps.handleDeleteItem(item.id)}
+                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={inventoryProps.handleAddItem}
+            className="w-full mt-4 bg-golden hover:bg-golden/80 text-dark-blue py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold"
+          >
+            <Plus size={16} />
+            <span>Ajouter un objet</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+
+// Composant pour les zones de drop entre les éléments
+const DropZone = ({ id, isActive, onTemplateDrop, targetIndex }) => {
+  return (
+    <motion.div
+      className={`h-2 transition-all duration-200 ${
+        isActive 
+          ? 'bg-blue-500/50 border-2 border-dashed border-blue-500' 
+          : 'bg-transparent hover:bg-gray-300/20'
+      }`}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => onTemplateDrop && onTemplateDrop(e, targetIndex)}
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ 
+        height: isActive ? 8 : 2, 
+        opacity: isActive ? 1 : 0.3 
+      }}
+      whileHover={{ 
+        height: 6, 
+        opacity: 0.8,
+        backgroundColor: 'rgba(59, 130, 246, 0.3)'
+      }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    />
+  );
+};
+
+
 
 // Composant pour la card marchand draggable
 const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu, onPaste, id, onEdit, onDelete, isEditing, ...inventoryProps }) => {
@@ -700,7 +1247,37 @@ const DraggableMerchantCard = ({ campaign, merchantInventory, onShowContextMenu,
         </button>
       </div>
 
-      <h3 className="text-xl font-bold text-light eagle-lake-font mb-4">{campaign?.rencontre.title}</h3>
+      <h3 
+        className="text-xl font-bold text-light eagle-lake-font mb-4 cursor-pointer hover:text-golden transition-colors"
+        onClick={() => {
+          // Créer un template "Rencontre avec un marchand" basé sur les données actuelles
+          const merchantTemplate = {
+            id: `merchant-${Date.now()}`,
+            name: campaign?.rencontre.title || 'Rencontre avec un marchand',
+            category: 'modeles-simples',
+            description: campaign?.rencontre.content || 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+            location: 'Marché local',
+            npc: campaign?.rencontre.npc || 'Marcus le Marchand',
+            inventory: merchantInventory || [],
+            tags: [
+              { name: 'Marchand', color: 'bg-blue-600' },
+              { name: 'Commerce', color: 'bg-green-600' },
+              { name: 'Social', color: 'bg-purple-600' }
+            ]
+          };
+          
+          // Sauvegarder le template dans localStorage
+          const existingTemplates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+          const updatedTemplates = [...existingTemplates, merchantTemplate];
+          localStorage.setItem('lore-templates-data', JSON.stringify(updatedTemplates));
+          
+          // Afficher une notification
+          toast.success(`Template "${merchantTemplate.name}" créé avec succès !`);
+        }}
+        title="Cliquer pour créer un template"
+      >
+        {campaign?.rencontre.title}
+      </h3>
       
       <div className="space-y-4" onPaste={onPaste}>
         <p className="text-light leading-relaxed">{campaign?.rencontre.content}</p>
@@ -1345,7 +1922,33 @@ const CampaignDashboard = () => {
     { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' },
     
     // Séparateur
-    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '', category: 'Formatage' }
+    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '', category: 'Formatage' },
+    
+    // Actions de copier-coller
+    { id: 'context-copy', type: 'copy', name: 'Copier', icon: '📋', description: 'Copier ce bloc', content: '', category: 'Actions' },
+    { id: 'context-paste', type: 'paste', name: 'Coller', icon: '📄', description: 'Coller un bloc', content: '', category: 'Actions' }
+  ]);
+
+  // Éléments du menu d'insertion rapide (commande /)
+  const [slashMenuItems] = useState([
+    // Blocs de base
+    { id: 'slash-text', type: 'text', name: 'Texte', icon: '📝', description: 'Bloc de texte simple', content: '', category: 'Blocs' },
+    { id: 'slash-heading1', type: 'heading1', name: 'Titre 1', icon: '📰', description: 'Titre principal', content: 'Titre principal', category: 'Blocs' },
+    { id: 'slash-heading2', type: 'heading2', name: 'Titre 2', icon: '📄', description: 'Sous-titre', content: 'Sous-titre', category: 'Blocs' },
+    { id: 'slash-heading3', type: 'heading3', name: 'Titre 3', icon: '📋', description: 'Titre de section', content: 'Titre de section', category: 'Blocs' },
+    
+    // Formatage
+    { id: 'slash-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '', category: 'Formatage' },
+    { id: 'slash-table', type: 'table', name: 'Tableau', icon: '📊', description: 'Tableau avec colonnes', content: '', category: 'Formatage' },
+    
+    // Pages et navigation
+    { id: 'slash-page', type: 'page', name: 'Nouvelle page', icon: '📄', description: 'Créer une nouvelle page', content: 'Nouvelle page', category: 'Pages' },
+    { id: 'slash-link', type: 'link', name: 'Lien', icon: '🔗', description: 'Lien vers une page', content: 'Lien vers ', category: 'Pages' },
+    
+    // Événements
+    { id: 'slash-encounter', type: 'encounter', name: 'Rencontre', icon: '⚔️', description: 'Événement de combat', content: 'Rencontre : ', category: 'Événements' },
+    { id: 'slash-trap', type: 'trap', name: 'Piège', icon: '🕳️', description: 'Danger caché', content: 'Piège : ', category: 'Événements' },
+    { id: 'slash-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' }
   ]);
 
   // États pour l'IA et l'automatisation
@@ -1365,9 +1968,56 @@ const CampaignDashboard = () => {
   const [editingLines, setEditingLines] = useState({});
   const [editingCards, setEditingCards] = useState({});
 
+  // États pour le copier-coller intelligent
+  const [copiedBlock, setCopiedBlock] = useState(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+
+  // États pour le menu d'insertion rapide
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 });
+  const [slashMenuTarget, setSlashMenuTarget] = useState(null);
+  const [slashMenuSearch, setSlashMenuSearch] = useState('');
+  const [selectedSlashMenuItem, setSelectedSlashMenuItem] = useState(0);
+
+  // États pour la navigation entre pages
+  const [currentPage, setCurrentPage] = useState(null);
+  const [pageHistory, setPageHistory] = useState([]);
+
   // Données de campagne selon l'ID
   useEffect(() => {
     const getCampaignData = (id) => {
+      // Récupérer les données des templates depuis localStorage
+      const templateCategories = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+      
+      // Convertir les données des templates en format dashboard
+      const convertTemplateQuestsToDashboard = (categories) => {
+        const dashboardQuests = [];
+        
+        categories.forEach(category => {
+          if (category.quests && category.quests.length > 0) {
+            category.quests.forEach(quest => {
+              // Calculer le progrès total de la quête
+              const totalProgress = quest.subQuests ? 
+                quest.subQuests.reduce((sum, sub) => sum + sub.total, 0) : 0;
+              const currentProgress = quest.subQuests ? 
+                quest.subQuests.reduce((sum, sub) => sum + sub.current, 0) : 0;
+              
+              dashboardQuests.push({
+                type: 'major',
+                name: quest.title,
+                completed: currentProgress,
+                total: totalProgress,
+                status: currentProgress >= totalProgress ? 'completed' : 
+                       currentProgress > 0 ? 'in_progress' : 'not_started',
+                subQuests: quest.subQuests || []
+              });
+            });
+          }
+        });
+        
+        return dashboardQuests;
+      };
+      
       const campaigns = {
         1: {
           id: 1,
@@ -1377,16 +2027,10 @@ const CampaignDashboard = () => {
       queteMajeure: 'Récupérer la Flamme Éternelle',
       rencontre: {
         title: 'Rencontre avec un marchand',
-        content: 'Un marchand mystérieux propose des objets magiques aux héros dans les ruines anciennes.',
+        content: 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
         npc: 'Marcus le Marchand'
       },
-      quests: [
-        { type: 'major', name: 'Major quest', completed: 1, total: 2, status: 'in_progress' },
-        { type: 'minor', name: 'Minor quest', completed: 5, total: 5, status: 'completed' },
-        { type: 'minor', name: 'Minor quest', completed: 4, total: 4, status: 'completed' },
-        { type: 'minor', name: 'Minor quest', completed: 2, total: 4, status: 'in_progress' },
-        { type: 'minor', name: 'Minor quest', completed: 0, total: 1, status: 'not_started' }
-      ]
+      quests: convertTemplateQuestsToDashboard(templateCategories)
         },
         2: {
           id: 2,
@@ -1567,6 +2211,85 @@ const CampaignDashboard = () => {
     const mockCampaign = getCampaignData(parseInt(campaignId));
     setCampaign(mockCampaign);
     setLoading(false);
+  }, [campaignId]);
+
+  // Écouter les changements dans les données des templates pour mettre à jour le dashboard
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (campaignId) {
+        const getCampaignData = (id) => {
+          // Récupérer les données des templates depuis localStorage
+          const templateCategories = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+          
+          // Convertir les données des templates en format dashboard
+          const convertTemplateQuestsToDashboard = (categories) => {
+            const dashboardQuests = [];
+            
+            categories.forEach(category => {
+              if (category.quests && category.quests.length > 0) {
+                category.quests.forEach(quest => {
+                  // Calculer le progrès total de la quête
+                  const totalProgress = quest.subQuests ? 
+                    quest.subQuests.reduce((sum, sub) => sum + sub.total, 0) : 0;
+                  const currentProgress = quest.subQuests ? 
+                    quest.subQuests.reduce((sum, sub) => sum + sub.current, 0) : 0;
+                  
+                  dashboardQuests.push({
+                    type: 'major',
+                    name: quest.title,
+                    completed: currentProgress,
+                    total: totalProgress,
+                    status: currentProgress >= totalProgress ? 'completed' : 
+                           currentProgress > 0 ? 'in_progress' : 'not_started',
+                    subQuests: quest.subQuests || []
+                  });
+                });
+              }
+            });
+            
+            return dashboardQuests;
+          };
+          
+          const campaigns = {
+            1: {
+              id: 1,
+              title: 'Les Gardiens de la Flamme Éternelle',
+              universe: 'Royaume de Cendres',
+              game_system: 'D&D 5e',
+              queteMajeure: 'Récupérer la Flamme Éternelle',
+              rencontre: {
+                title: 'Rencontre avec un marchand',
+                content: 'Un marchand mystérieux propose des objets magiques aux héros dans les ruines anciennes.',
+                npc: 'Marcus le Marchand'
+              },
+              quests: convertTemplateQuestsToDashboard(templateCategories)
+            }
+          };
+          
+          return campaigns[id] || campaigns[1];
+        };
+
+        const updatedCampaign = getCampaignData(parseInt(campaignId));
+        setCampaign(updatedCampaign);
+      }
+    };
+
+    // Écouter les changements dans localStorage
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Écouter les changements dans la même fenêtre (pour les modifications locales)
+    const interval = setInterval(() => {
+      const currentData = localStorage.getItem('lore-quests-categories');
+      if (currentData !== (window.lastQuestData || '')) {
+        window.lastQuestData = currentData;
+        handleStorageChange();
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [campaignId]);
 
   // Initialiser les textLines selon la campagne
@@ -1825,29 +2548,38 @@ const CampaignDashboard = () => {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (active.id !== over?.id && over) {
-      setTextLines((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        
-        if (oldIndex !== -1 && newIndex !== -1) {
-          const newItems = [...items];
-          const [movedItem] = newItems.splice(oldIndex, 1);
+      // Vérifier si c'est une carte (merchant-card)
+      if (active.id === 'merchant-card') {
+        // Pour les cartes, elles se placent selon le drop
+        // On ne fait que changer leur position visuelle dans le flux
+        console.log(`Carte ${active.id} déplacée vers ${over.id}`);
+        // Les cartes peuvent être déplacées visuellement mais restent dans le flux
+      } else {
+        // Pour les textLines, gérer le réordonnancement complet avec changement de section
+        setTextLines((items) => {
+          const oldIndex = items.findIndex(item => item.id === active.id);
+          const newIndex = items.findIndex(item => item.id === over.id);
           
-          // Déterminer la nouvelle section basée sur la position
-          const targetSection = determineSectionFromIndex(newIndex, items);
-          movedItem.section = targetSection;
-          
-          // Insérer à la nouvelle position
-          if (oldIndex < newIndex) {
-            newItems.splice(newIndex - 1, 0, movedItem);
-          } else {
-            newItems.splice(newIndex, 0, movedItem);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const newItems = [...items];
+            const [movedItem] = newItems.splice(oldIndex, 1);
+            
+            // Déterminer la nouvelle section basée sur la position
+            const targetSection = determineSectionFromIndex(newIndex, items);
+            movedItem.section = targetSection;
+            
+            // Insérer à la nouvelle position
+            if (oldIndex < newIndex) {
+              newItems.splice(newIndex - 1, 0, movedItem);
+            } else {
+              newItems.splice(newIndex, 0, movedItem);
+            }
+            
+            return newItems;
           }
-          
-          return newItems;
-        }
-        return items;
-      });
+          return items;
+        });
+      }
     }
     setActiveId(null);
     setDraggedItem(null);
@@ -2050,13 +2782,139 @@ const CampaignDashboard = () => {
         linkUrl: pastedText
       };
       
-      setTextLines((items) => {
-        const newItems = [...items];
-        newItems.push(newLine);
-        return newItems;
+      // Ajouter la ligne à la fin
+      setTextLines(prev => [...prev, newLine]);
+      toast.success(`Lien vers ${type} ajouté !`);
+      return;
+    }
+    
+    // Détecter si c'est un nom de quête copié depuis les templates
+    const questNames = ['Libérer les otages alliés', 'Libérer les chasseurs de la forêt écarlate', 'Sauver les mages d\'Arkanix'];
+    const isQuestName = questNames.some(questName => pastedText.trim() === questName);
+    
+    if (isQuestName) {
+      e.preventDefault();
+      
+      // Récupérer les données de la quête depuis les templates
+      const templateCategories = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+      let questData = null;
+      
+      templateCategories.forEach(category => {
+        if (category.quests && category.quests.length > 0) {
+          category.quests.forEach(quest => {
+            if (quest.title === pastedText) {
+              questData = quest;
+            }
+          });
+        }
       });
       
-      toast.success(`Lien ${type} ajouté avec succès !`);
+      if (questData) {
+        // Créer un aperçu de quête comme dans le dashboard
+        const newLine = {
+          id: `quest-preview-${Date.now()}`,
+          content: `APERÇU_QUÊTE:${JSON.stringify(questData)}`,
+          section: 'debut',
+          type: 'quest-preview',
+          isLink: false,
+          questData: questData
+        };
+        
+        // Ajouter la ligne à la fin
+        setTextLines(prev => {
+          const newLines = [...prev, newLine];
+          console.log('Aperçu de quête ajouté:', newLine);
+          return newLines;
+        });
+        toast.success(`Aperçu de la quête "${pastedText}" ajouté !`);
+        return;
+      }
+    }
+    
+    // Détecter si c'est un nom de template marchand
+    const merchantNames = ['Rencontre avec un marchand', 'Nouvelle rencontre'];
+    const isMerchantName = merchantNames.some(merchantName => pastedText.trim() === merchantName);
+    
+    if (isMerchantName) {
+      e.preventDefault();
+      
+      // Créer les données du template marchand
+      const merchantTemplate = {
+        id: 'marchand',
+        name: 'Rencontre avec un marchand',
+        category: 'modeles-simples',
+        location: 'Marché local',
+        npc: 'Marcus le Marchand',
+        description: 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+        inventory: [
+          { id: 1, name: 'Potion de soins mineure', price: 25 },
+          { id: 2, name: 'Parchemin de bouclier', price: 50 },
+          { id: 3, name: 'Pierre de sort', price: 100 },
+          { id: 4, name: 'Corde de soie', price: 10 },
+          { id: 5, name: 'Torche éternelle', price: 15 }
+        ],
+        tags: [
+          { name: 'Marchand', color: 'bg-blue-600' },
+          { name: 'Commerce', color: 'bg-green-600' },
+          { name: 'Social', color: 'bg-purple-600' }
+        ]
+      };
+      
+      // Créer un aperçu de template marchand
+      const newLine = {
+        id: `merchant-preview-${Date.now()}`,
+        content: `APERÇU_MARCHAND:${JSON.stringify(merchantTemplate)}`,
+        section: 'debut',
+        type: 'merchant-preview',
+        isLink: false,
+        templateData: merchantTemplate
+      };
+      
+      setTextLines(prev => [...prev, newLine]);
+      toast.success(`Aperçu du template "${merchantTemplate.name}" ajouté !`);
+      return;
+    }
+    
+    // Détecter si c'est un nom de template combat
+    const combatNames = ['Combat simple'];
+    const isCombatName = combatNames.some(combatName => pastedText.trim() === combatName);
+    
+    if (isCombatName) {
+      e.preventDefault();
+      
+      // Créer les données du template combat
+      const combatTemplate = {
+        id: 'combat-simple',
+        name: 'Combat simple',
+        category: 'modeles-simples',
+        location: 'Route forestière',
+        difficulty: 'Facile',
+        rewards: '2d6 pièces d\'or, potion de soins mineure',
+        description: 'Une embuscade tendue par des brigands sur la route forestière. Les bandits, motivés par la cupidité, attaquent sans pitié avec leurs armes de fortune. Un combat rapide mais intense s\'engage.',
+        enemies: [
+          { name: 'Bandit', hp: 15, ac: 12, attack: '+3', damage: '1d6+1' },
+          { name: 'Chef bandit', hp: 25, ac: 14, attack: '+5', damage: '1d8+2' }
+        ],
+        tags: [
+          { name: 'Combat', color: 'bg-red-600' },
+          { name: 'Brigands', color: 'bg-orange-600' },
+          { name: 'Route', color: 'bg-yellow-600' }
+        ]
+      };
+      
+      // Créer un aperçu de template combat
+      const newLine = {
+        id: `combat-preview-${Date.now()}`,
+        content: `APERÇU_COMBAT:${JSON.stringify(combatTemplate)}`,
+        section: 'debut',
+        type: 'combat-preview',
+        isLink: false,
+        templateData: combatTemplate
+      };
+      
+      setTextLines(prev => [...prev, newLine]);
+      toast.success(`Aperçu du template "${combatTemplate.name}" ajouté !`);
+      return;
     }
   };
 
@@ -2245,6 +3103,15 @@ const CampaignDashboard = () => {
           template: true,
           isSeparator: true
         };
+      } else if (type === 'copy') {
+        copyBlock(contextMenuTarget);
+        handleCloseContextMenu();
+        return;
+      } else if (type === 'paste') {
+        const targetIndex = textLines.findIndex(item => item.id === contextMenuTarget);
+        pasteBlock(targetIndex + 1);
+        handleCloseContextMenu();
+        return;
       } else {
         newLine = {
           id: `context-${Date.now()}`,
@@ -2294,7 +3161,7 @@ const CampaignDashboard = () => {
     toast.success(`Élément déplacé vers le ${direction === 'up' ? 'haut' : 'bas'}`);
   };
 
-  // Fermer les suggestions avec Échap uniquement
+  // Gestion des raccourcis clavier (Ctrl+C, Ctrl+V, Échap)
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Échap : Fermer les suggestions et le menu contextuel
@@ -2302,11 +3169,57 @@ const CampaignDashboard = () => {
         closeSuggestions();
         handleCloseContextMenu();
       }
+      
+      // Ctrl+C : Copier le bloc sélectionné
+      if (e.ctrlKey && e.key === 'c' && !e.target.contentEditable) {
+        e.preventDefault();
+        const selectedElement = document.querySelector('.text-line.selected');
+        if (selectedElement) {
+          const blockId = selectedElement.dataset.blockId;
+          if (blockId) {
+            copyBlock(parseInt(blockId));
+          }
+        }
+      }
+      
+      // Ctrl+V : Coller le bloc
+      if (e.ctrlKey && e.key === 'v' && !e.target.contentEditable) {
+        e.preventDefault();
+        const targetIndex = textLines.length; // Coller à la fin par défaut
+        pasteBlock(targetIndex);
+      }
+      
+      // Gestion du menu d'insertion rapide
+      if (showSlashMenu) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedSlashMenuItem(prev => Math.min(prev + 1, filteredSlashItems.length - 1));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedSlashMenuItem(prev => Math.max(prev - 1, 0));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (filteredSlashItems[selectedSlashMenuItem]) {
+            handleSlashMenuSelect(filteredSlashItems[selectedSlashMenuItem]);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setShowSlashMenu(false);
+        } else if (e.key.length === 1) {
+          // Ajouter le caractère à la recherche
+          setSlashMenuSearch(prev => prev + e.key);
+          setSelectedSlashMenuItem(0);
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          setSlashMenuSearch(prev => prev.slice(0, -1));
+          setSelectedSlashMenuItem(0);
+        }
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [textLines, copiedBlock, showSlashMenu, selectedSlashMenuItem]);
 
   // Fermer le menu contextuel quand on clique ailleurs
   useEffect(() => {
@@ -2334,6 +3247,32 @@ const CampaignDashboard = () => {
     }
   }, [textLines, campaignId]);
 
+  // Mettre à jour les aperçus de quêtes quand les données des templates changent
+  useEffect(() => {
+    const updateQuestPreviews = () => {
+      setTextLines(prev => {
+        return prev.map(line => {
+          if (line.type === 'quest-preview') {
+            // Forcer la mise à jour en modifiant légèrement le contenu
+            return { ...line, lastUpdate: Date.now() };
+          }
+          return line;
+        });
+      });
+    };
+
+    // Écouter les changements dans localStorage pour les templates
+    const interval = setInterval(() => {
+      const currentData = localStorage.getItem('lore-quests-categories');
+      if (currentData !== (window.lastQuestTemplateData || '')) {
+        window.lastQuestTemplateData = currentData;
+        updateQuestPreviews();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Fonction pour réinitialiser le contenu d'une campagne
   const resetCampaignContent = () => {
     if (campaignId) {
@@ -2343,6 +3282,206 @@ const CampaignDashboard = () => {
       toast.success('Contenu de la campagne réinitialisé !');
     }
   };
+
+  // Fonctions pour le copier-coller intelligent
+  const copyBlock = (blockId) => {
+    const block = textLines.find(line => line.id === blockId);
+    if (block) {
+      setCopiedBlock(block);
+      setShowCopyNotification(true);
+      setTimeout(() => setShowCopyNotification(false), 2000);
+      
+      // Copier dans le presse-papier du navigateur
+      navigator.clipboard.writeText(JSON.stringify(block)).catch(err => {
+        console.error('Erreur lors de la copie:', err);
+      });
+      
+      toast.success('Bloc copié !');
+    }
+  };
+
+  const pasteBlock = (targetIndex) => {
+    if (copiedBlock) {
+      const newBlock = {
+        ...copiedBlock,
+        id: Date.now(), // Nouvel ID unique
+        content: copiedBlock.content
+      };
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        newItems.splice(targetIndex, 0, newBlock);
+        return newItems;
+      });
+      
+      toast.success('Bloc collé !');
+    } else {
+      // Essayer de coller depuis le presse-papier
+      navigator.clipboard.readText().then(text => {
+        try {
+          const block = JSON.parse(text);
+          const newBlock = {
+            ...block,
+            id: Date.now(),
+            content: block.content
+          };
+          
+          setTextLines((items) => {
+            const newItems = [...items];
+            newItems.splice(targetIndex, 0, newBlock);
+            return newItems;
+          });
+          
+          toast.success('Bloc collé depuis le presse-papier !');
+        } catch (error) {
+          // Coller comme texte simple
+          const newBlock = {
+            id: Date.now(),
+            content: text,
+            section: 'situation',
+            type: 'text',
+            isLink: false,
+            isHeading: false
+          };
+          
+          setTextLines((items) => {
+            const newItems = [...items];
+            newItems.splice(targetIndex, 0, newBlock);
+            return newItems;
+          });
+          
+          toast.success('Texte collé !');
+        }
+      }).catch(err => {
+        console.error('Erreur lors du collage:', err);
+        toast.error('Erreur lors du collage');
+      });
+    }
+  };
+
+  // Fonctions pour le menu d'insertion rapide
+  const handleSlashCommand = (e, blockId) => {
+    if (e.key === '/' && e.target.textContent === '') {
+      e.preventDefault();
+      setSlashMenuTarget(blockId);
+      setSlashMenuPosition({ x: e.clientX, y: e.clientY });
+      setShowSlashMenu(true);
+      setSlashMenuSearch('');
+      setSelectedSlashMenuItem(0);
+    }
+  };
+
+  const handleSlashMenuSelect = (item) => {
+    if (item.type === 'table') {
+      createTable(3, 3, slashMenuTarget);
+    } else if (item.type === 'page') {
+      createNewPage(item.content, slashMenuTarget);
+    } else {
+      // Créer un bloc normal
+      const newLine = {
+        id: Date.now(),
+        content: item.content,
+        section: 'situation',
+        type: item.type,
+        isLink: item.type === 'link',
+        isHeading: item.type.startsWith('heading'),
+        isSeparator: item.type === 'separator'
+      };
+      
+      setTextLines((items) => {
+        const newItems = [...items];
+        const targetIndex = items.findIndex(item => item.id === slashMenuTarget);
+        if (targetIndex !== -1) {
+          newItems.splice(targetIndex + 1, 0, newLine);
+        } else {
+          newItems.push(newLine);
+        }
+        return newItems;
+      });
+    }
+    
+    setShowSlashMenu(false);
+    toast.success(`${item.name} ajouté !`);
+  };
+
+  const createTable = (rows, cols, targetId) => {
+    const table = {
+      id: Date.now(),
+      type: 'table',
+      content: '',
+      rows: rows,
+      cols: cols,
+      data: Array(rows).fill().map(() => Array(cols).fill('')),
+      section: 'situation'
+    };
+    
+    setTextLines((items) => {
+      const newItems = [...items];
+      const targetIndex = items.findIndex(item => item.id === targetId);
+      if (targetIndex !== -1) {
+        newItems.splice(targetIndex + 1, 0, table);
+      } else {
+        newItems.push(table);
+      }
+      return newItems;
+    });
+  };
+
+  const createNewPage = (title, targetId) => {
+    const newPage = {
+      id: Date.now(),
+      type: 'page',
+      content: title,
+      isPage: true,
+      children: [],
+      section: 'situation'
+    };
+    
+    setTextLines((items) => {
+      const newItems = [...items];
+      const targetIndex = items.findIndex(item => item.id === targetId);
+      if (targetIndex !== -1) {
+        newItems.splice(targetIndex + 1, 0, newPage);
+      } else {
+        newItems.push(newPage);
+      }
+      return newItems;
+    });
+  };
+
+  // Fonctions de navigation entre pages
+  const navigateToPage = (pageId) => {
+    const page = textLines.find(line => line.id === pageId && line.type === 'page');
+    if (page) {
+      // Sauvegarder la page actuelle dans l'historique
+      if (currentPage) {
+        setPageHistory(prev => [...prev, currentPage]);
+      }
+      setCurrentPage(page);
+      toast.success(`Navigation vers: ${page.content}`);
+    }
+  };
+
+  const goBackToMainPage = () => {
+    if (pageHistory.length > 0) {
+      const previousPage = pageHistory[pageHistory.length - 1];
+      setPageHistory(prev => prev.slice(0, -1));
+      setCurrentPage(previousPage);
+    } else {
+      setCurrentPage(null);
+    }
+  };
+
+  const goToMainDashboard = () => {
+    setCurrentPage(null);
+    setPageHistory([]);
+  };
+
+  // Filtrer les éléments du menu d'insertion rapide
+  const filteredSlashItems = slashMenuItems.filter(item => 
+    item.name.toLowerCase().includes(slashMenuSearch.toLowerCase()) ||
+    item.description.toLowerCase().includes(slashMenuSearch.toLowerCase())
+  );
 
   // Charger les notifications au montage du composant
   useEffect(() => {
@@ -2384,6 +3523,26 @@ const CampaignDashboard = () => {
         <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
         <div className="flex items-center space-x-6">
+          {/* Navigation des pages */}
+          {currentPage && (
+            <div className="flex items-center space-x-2 text-golden">
+              <button
+                onClick={goToMainDashboard}
+                className="hover:text-golden/80 transition-colors"
+              >
+                Dashboard
+              </button>
+              <span>/</span>
+              <span>{currentPage.content}</span>
+              <button
+                onClick={goBackToMainPage}
+                className="ml-2 px-2 py-1 bg-golden/20 hover:bg-golden/30 rounded text-sm transition-colors"
+              >
+                ← Retour
+              </button>
+            </div>
+          )}
+          
           {/* Bouton Sources hexagonal bleu */}
           <button onClick={() => setShowSources(true)} className="relative">
             <div className="w-12 h-12 bg-blue-500 transform rotate-45 rounded-sm flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
@@ -2609,12 +3768,12 @@ const CampaignDashboard = () => {
                       <div className="space-y-1">
                         {/* Zone de drop au début */}
                         <DropZone 
-                        id="drop-start-all" 
+          id="drop-start-all"
                           isActive={false}
                           onTemplateDrop={handleTemplateDrop}
                           targetIndex={0}
                         />
-                      {textLines.map((line, index) => (
+        {(currentPage ? [currentPage] : textLines).map((line, index) => (
                            <React.Fragment key={line.id}>
                              <SortableTextLine
                                id={line.id}
@@ -2632,6 +3791,7 @@ const CampaignDashboard = () => {
                                onContentChange={handleContentChange}
                             onAddNewLine={handleAddNewLine}
                             onMoveToSection={handleMoveLineToSection}
+                            onSlashCommand={handleSlashCommand}
                              />
                           {index < textLines.length - 1 && (
                                <DropZone 
@@ -2645,15 +3805,98 @@ const CampaignDashboard = () => {
                          ))}
                         {/* Zone de drop à la fin */}
                         <DropZone 
-                        id="drop-end-all" 
+        id="drop-end-all" 
                           isActive={false}
                           onTemplateDrop={handleTemplateDrop}
                           targetIndex={textLines.length}
                         />
+                        
+                        
+                        {/* Carte marchand intégrée dans le flux */}
+                        <MerchantCardTextLine
+                          id="merchant-card"
+                          campaign={campaign}
+                          merchantInventory={merchantInventory}
+                          onShowContextMenu={handleShowContextMenu}
+                          onPaste={handlePaste}
+                          onEdit={handleEditCard}
+                          onDelete={handleDeleteCard}
+                          isEditing={editingCards['merchant-card']}
+                          editingTotal={editingTotal}
+                          totalValue={totalValue}
+                          setTotalValue={setTotalValue}
+                          handleSaveTotal={handleSaveTotal}
+                          handleCancelTotalEdit={handleCancelTotalEdit}
+                          handleEditTotal={handleEditTotal}
+                          getTotalValue={getTotalValue}
+                          editingTableField={editingTableField}
+                          editingTableValue={editingTableValue}
+                          setEditingTableValue={setEditingTableValue}
+                          handleSaveTableField={handleSaveTableField}
+                          handleCancelTableEdit={handleCancelTableEdit}
+                          handleEditTableField={handleEditTableField}
+                          handleDeleteItem={handleDeleteItem}
+                          handleAddItem={handleAddItem}
+                        />
+                      </div>
                     </div>
                   </div>
+</SortableContext>
+
+{/* Notification de copie */}
+{showCopyNotification && (
+  <div className="fixed top-4 right-4 bg-golden text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
+    <span>📋</span>
+    <span>Bloc copié !</span>
+  </div>
+)}
+
+{/* Menu d'insertion rapide */}
+{showSlashMenu && (
+  <div 
+    className="fixed bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-w-sm w-full"
+    style={{ 
+      left: Math.min(slashMenuPosition.x, window.innerWidth - 320),
+      top: Math.min(slashMenuPosition.y, window.innerHeight - 400)
+    }}
+  >
+    <div className="p-3 border-b border-gray-100">
+      <input
+        type="text"
+        placeholder="Rechercher..."
+        value={slashMenuSearch}
+        onChange={(e) => setSlashMenuSearch(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-golden"
+        autoFocus
+                        />
+                      </div>
+    <div className="max-h-80 overflow-y-auto">
+      {filteredSlashItems.map((item, index) => (
+        <div
+          key={item.id}
+          className={`px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-gray-50 ${
+            index === selectedSlashMenuItem ? 'bg-golden/10 border-r-2 border-golden' : ''
+          }`}
+          onClick={() => handleSlashMenuSelect(item)}
+        >
+          <span className="text-lg">{item.icon}</span>
+          <div className="flex-1">
+            <div className="font-medium text-gray-900">{item.name}</div>
+            <div className="text-sm text-gray-500">{item.description}</div>
+                    </div>
+          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+            {item.category}
+          </span>
+                  </div>
+      ))}
+      {filteredSlashItems.length === 0 && (
+        <div className="px-4 py-3 text-gray-500 text-center">
+          Aucun élément trouvé
                 </div>
-              </SortableContext>
+      )}
+    </div>
+  </div>
+)}
               
                <DragOverlay>
                  {draggedItem ? (
@@ -2676,34 +3919,6 @@ const CampaignDashboard = () => {
                  </button>
                </div>
 
-               {/* Cartes et templates - Style Notion */}
-               <div className="pl-8 space-y-4">
-                 <DraggableMerchantCard
-                   id="merchant-card"
-                   campaign={campaign}
-                   merchantInventory={merchantInventory}
-                   onShowContextMenu={handleShowContextMenu}
-                   onPaste={handlePaste}
-                   onEdit={handleEditCard}
-                   onDelete={handleDeleteCard}
-                   isEditing={editingCards['merchant-card']}
-                   editingTotal={editingTotal}
-                   totalValue={totalValue}
-                   setTotalValue={setTotalValue}
-                   handleSaveTotal={handleSaveTotal}
-                   handleCancelTotalEdit={handleCancelTotalEdit}
-                   handleEditTotal={handleEditTotal}
-                   getTotalValue={getTotalValue}
-                   editingTableField={editingTableField}
-                   editingTableValue={editingTableValue}
-                   setEditingTableValue={setEditingTableValue}
-                   handleSaveTableField={handleSaveTableField}
-                   handleCancelTableEdit={handleCancelTableEdit}
-                   handleEditTableField={handleEditTableField}
-                   handleDeleteItem={handleDeleteItem}
-                   handleAddItem={handleAddItem}
-                 />
-               </div>
 
             </DndContext>
 
@@ -2747,15 +3962,6 @@ const CampaignDashboard = () => {
               </div>
             </div>
 
-            {/* Card Quêtes */}
-            <DraggableQuestCard
-              id="quest-card"
-              campaign={campaign}
-              onShowContextMenu={handleShowContextMenu}
-              onEdit={handleEditCard}
-              onDelete={handleDeleteCard}
-              isEditing={editingCards['quest-card']}
-            />
 
           </div>
         </div>

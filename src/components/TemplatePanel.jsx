@@ -25,6 +25,92 @@ const TemplatePanel = () => {
   const [currentView, setCurrentView] = useState('templates'); // 'templates', 'new-event', ou 'consultation'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const panelRef = useRef(null);
+
+  // États pour le menu d'insertion rapide avec /
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 });
+  const [slashMenuSearch, setSlashMenuSearch] = useState('');
+  const [selectedSlashMenuItem, setSelectedSlashMenuItem] = useState(0);
+
+  // États pour les notifications toast
+  const [toast, setToast] = useState(null);
+
+  // États pour le formulaire de nouvelle quête
+  const [newQuestTitle, setNewQuestTitle] = useState('');
+  const [newQuestCategory, setNewQuestCategory] = useState('');
+  const [newQuestLocation, setNewQuestLocation] = useState('');
+  const [newQuestStartPoint, setNewQuestStartPoint] = useState('');
+  const [newQuestDestination, setNewQuestDestination] = useState('');
+  const [newQuestSponsor, setNewQuestSponsor] = useState('');
+  const [newQuestRewards, setNewQuestRewards] = useState('');
+  const [newQuestDescription, setNewQuestDescription] = useState('');
+  
+  // États pour l'édition des quêtes
+  const [editingQuestTitle, setEditingQuestTitle] = useState(null);
+  const [editingQuestCount, setEditingQuestCount] = useState(null);
+
+  // États pour l'édition du template marchand
+  const [editingMerchantTemplate, setEditingMerchantTemplate] = useState(null);
+  const [merchantTemplateData, setMerchantTemplateData] = useState({
+    title: 'Nouvelle rencontre',
+    content: 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+    npc: 'Marcus le Marchand',
+    location: 'Marché local',
+    inventory: []
+  });
+
+  // États pour la gestion de l'inventaire du marchand
+  const [editingInventoryItem, setEditingInventoryItem] = useState(null);
+  const [newInventoryItem, setNewInventoryItem] = useState({ name: '', price: 0 });
+
+  // États pour l'édition du template combat simple
+  const [editingCombatTemplate, setEditingCombatTemplate] = useState(null);
+  const [combatTemplateData, setCombatTemplateData] = useState({
+    title: 'Combat simple',
+    content: 'Une embuscade tendue par des brigands sur la route forestière. Les bandits, motivés par la cupidité, attaquent sans pitié avec leurs armes de fortune. Un combat rapide mais intense s\'engage.',
+    enemies: [
+      { name: 'Bandit', hp: 15, ac: 12, attack: '+3', damage: '1d6+1' },
+      { name: 'Chef bandit', hp: 25, ac: 14, attack: '+5', damage: '1d8+2' }
+    ],
+    location: 'Route forestière',
+    difficulty: 'Facile',
+    rewards: '2d6 pièces d\'or, potion de soins mineure'
+  });
+
+  // Fonction pour afficher une notification toast
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Fonction pour gérer la sélection et copie automatique
+  const handleLineSelection = (elementType, elementId, elementName) => {
+    // Copier automatiquement l'élément sélectionné
+    copyElementLink(elementType, elementId, elementName);
+  };
+
+  // Éléments du menu d'insertion rapide pour le panel templates
+  const slashMenuItems = [
+    // Templates de base
+    { id: 'slash-character', type: 'character', name: 'Personnage', icon: '👤', description: 'Créer un nouveau personnage', category: 'Templates' },
+    { id: 'slash-object', type: 'object', name: 'Objet', icon: '⚔️', description: 'Créer un nouvel objet', category: 'Templates' },
+    { id: 'slash-location', type: 'location', name: 'Lieu', icon: '🏰', description: 'Créer un nouveau lieu', category: 'Templates' },
+    { id: 'slash-quest', type: 'quest', name: 'Quête', icon: '📜', description: 'Créer une nouvelle quête', category: 'Templates' },
+    
+    // Événements
+    { id: 'slash-encounter', type: 'encounter', name: 'Rencontre', icon: '⚔️', description: 'Événement de combat', category: 'Événements' },
+    { id: 'slash-trap', type: 'trap', name: 'Piège', icon: '🕳️', description: 'Danger caché', category: 'Événements' },
+    { id: 'slash-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', category: 'Événements' },
+    
+    // Navigation
+    { id: 'slash-consultation', type: 'consultation', name: 'Consultation', icon: '📖', description: 'Ouvrir la consultation', category: 'Navigation' },
+    { id: 'slash-new-event', type: 'new-event', name: 'Nouvel événement', icon: '➕', description: 'Créer un nouvel événement', category: 'Navigation' },
+    { id: 'slash-page', type: 'page', name: 'Page', icon: '📄', description: 'Insérer une mention de page', category: 'Navigation' },
+    
+    // Actions
+    { id: 'slash-copy', type: 'copy', name: 'Copier', icon: '📋', description: 'Copier un élément', category: 'Actions' },
+    { id: 'slash-paste', type: 'paste', name: 'Coller', icon: '📄', description: 'Coller un élément copié', category: 'Actions' }
+  ];
   
   // Tags prédéfinis pour les objets (supprimés - seuls les tags personnalisés sont disponibles)
   const objectPredefinedTags = [];
@@ -421,14 +507,239 @@ const TemplatePanel = () => {
       };
     }
   }, [isOpen]);
+
+  // Fonctions pour le menu d'insertion rapide
+  const handleSlashCommand = (e) => {
+    if (e.key === '/' && e.target.textContent === '') {
+      e.preventDefault();
+      setSlashMenuPosition({ x: e.clientX, y: e.clientY });
+      setShowSlashMenu(true);
+      setSlashMenuSearch('');
+      setSelectedSlashMenuItem(0);
+    }
+  };
+
+  const handleSlashMenuSelect = (item) => {
+    if (item.type === 'consultation') {
+      // Navigation vers la page de consultation générale selon l'onglet actif
+      if (activeTab === 'characters') {
+        setCharacterCurrentView('consultation');
+      } else if (activeTab === 'objects') {
+        setObjectCurrentView('consultation');
+      } else if (activeTab === 'locations') {
+        setLocationCurrentView('consultation');
+      } else if (activeTab === 'quests') {
+        setQuestCurrentView('consultation');
+      }
+      setShowSlashMenu(false);
+    } else if (item.type === 'new-event') {
+      setCurrentView('new-event');
+      setShowSlashMenu(false);
+    } else if (item.type === 'page') {
+      // Insérer une mention de page dans le textarea
+      insertPageMention();
+      setShowSlashMenu(false);
+    } else if (item.type === 'copy') {
+      // Copier un élément (nécessite une sélection)
+      console.log('Copier un élément - nécessite une sélection');
+      setShowSlashMenu(false);
+    } else if (item.type === 'paste') {
+      // Coller un élément copié
+      pasteElement();
+      setShowSlashMenu(false);
+    } else {
+      // Créer un nouveau template
+      createNewTemplate(item.type);
+      setShowSlashMenu(false);
+    }
+  };
+
+  // Fonction pour insérer une mention de page dans le textarea
+  const insertPageMention = () => {
+    // Trouver le textarea actif
+    const activeTextarea = document.activeElement;
+    if (activeTextarea && activeTextarea.tagName === 'TEXTAREA') {
+      // Insérer une mention de page
+      const pageMention = '[Page: Nom de la page]';
+      const start = activeTextarea.selectionStart;
+      const end = activeTextarea.selectionEnd;
+      const text = activeTextarea.value;
+      const newText = text.substring(0, start) + pageMention + text.substring(end);
+      
+      // Mettre à jour la valeur du textarea
+      activeTextarea.value = newText;
+      
+      // Déclencher l'événement onChange
+      const event = new Event('input', { bubbles: true });
+      activeTextarea.dispatchEvent(event);
+      
+      // Repositionner le curseur après la mention
+      const newPosition = start + pageMention.length;
+      activeTextarea.setSelectionRange(newPosition, newPosition);
+      activeTextarea.focus();
+    }
+  };
+
+  // Fonction pour copier le lien d'un élément
+  const copyElementLink = (elementType, elementId, elementName) => {
+    const link = `${window.location.origin}/templates/${elementType}/${elementId}`;
+    
+    // Stocker l'élément copié pour le système de copier-coller
+    const copiedElement = {
+      type: elementType,
+      id: elementId,
+      name: elementName,
+      link: link
+    };
+    localStorage.setItem('lore-copied-element', JSON.stringify(copiedElement));
+    
+    console.log('=== COPIE DÉBOGAGE ===');
+    console.log('Élément copié:', copiedElement);
+    console.log('Stocké dans localStorage:', localStorage.getItem('lore-copied-element'));
+    
+    // Essayer de copier dans le presse-papier (seulement le nom)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(elementName).then(() => {
+        console.log(`Nom copié dans le presse-papier: ${elementName}`);
+        showToast(`Lien de "${elementName}" copié !`, 'success');
+      }).catch(err => {
+        console.error('Erreur lors de la copie dans le presse-papier:', err);
+        showToast(`Erreur lors de la copie du lien de "${elementName}"`, 'error');
+      });
+    } else {
+      // Fallback si navigator.clipboard n'est pas disponible
+      console.log(`Nom généré: ${elementName}`);
+      showToast(`Lien de "${elementName}" généré (copiez manuellement)`, 'warning');
+    }
+  };
+
+  // Fonction pour coller un élément copié
+  const pasteElement = () => {
+    console.log('=== COLLAGE DÉBOGAGE ===');
+    const copiedElement = localStorage.getItem('lore-copied-element');
+    console.log('Élément copié trouvé:', copiedElement);
+    
+    if (copiedElement) {
+      try {
+        const element = JSON.parse(copiedElement);
+        console.log('Élément parsé:', element);
+        
+        const activeTextarea = document.activeElement;
+        console.log('Textarea actif:', activeTextarea);
+        console.log('Tag du textarea:', activeTextarea?.tagName);
+        
+        if (activeTextarea && activeTextarea.tagName === 'TEXTAREA') {
+          // Insérer directement le nom de l'élément (sans format markdown)
+          const mention = element.name;
+          console.log('Mention à insérer:', mention);
+          
+          const start = activeTextarea.selectionStart;
+          const end = activeTextarea.selectionEnd;
+          const text = activeTextarea.value;
+          const newText = text.substring(0, start) + mention + text.substring(end);
+          
+          console.log('Texte avant:', text);
+          console.log('Texte après:', newText);
+          
+          activeTextarea.value = newText;
+          const event = new Event('input', { bubbles: true });
+          activeTextarea.dispatchEvent(event);
+          
+          const newPosition = start + mention.length;
+          activeTextarea.setSelectionRange(newPosition, newPosition);
+          activeTextarea.focus();
+          
+          // Stocker les informations du lien pour le rendu
+          const linkInfo = {
+            text: element.name,
+            url: element.link,
+            start: start,
+            end: start + mention.length
+          };
+          
+          // Stocker dans localStorage pour le dashboard
+          const existingLinks = JSON.parse(localStorage.getItem('lore-dashboard-links') || '[]');
+          existingLinks.push(linkInfo);
+          localStorage.setItem('lore-dashboard-links', JSON.stringify(existingLinks));
+          
+          console.log('Lien stocké pour le dashboard:', linkInfo);
+          showToast(`Élément "${element.name}" collé !`, 'success');
+        } else {
+          console.log('Aucun textarea actif trouvé');
+          showToast('Veuillez cliquer dans un champ de texte avant de coller.', 'warning');
+        }
+      } catch (error) {
+        console.error('Erreur lors du collage:', error);
+        showToast('Erreur lors du collage de l\'élément.', 'error');
+      }
+    } else {
+      console.log('Aucun élément copié trouvé dans localStorage');
+      showToast('Aucun élément copié trouvé. Copiez d\'abord un élément avec le bouton "Copier le lien".', 'warning');
+    }
+  };
+
+  // Fonction pour naviguer vers une page de consultation (utilisée pour l'insertion via menu /)
+  const navigateToConsultationPage = (pageType, pageId) => {
+    // Cette fonction est utilisée quand on insère une mention de page via le menu /
+    // Par exemple, si on tape "/page" et qu'on sélectionne une page spécifique
+    console.log(`Insertion de page via menu /: ${pageType} - ${pageId}`);
+    // Ici vous pouvez ajouter la logique pour insérer une mention de page dans le textarea
+    // ou créer un lien vers la page de consultation
+  };
+
+  const createNewTemplate = (type) => {
+    // Logique pour créer un nouveau template selon le type
+    console.log(`Création d'un nouveau template de type: ${type}`);
+    // Ici vous pouvez ajouter la logique spécifique pour chaque type de template
+  };
+
+  // Filtrer les éléments du menu d'insertion rapide
+  const filteredSlashItems = slashMenuItems.filter(item => 
+    item.name.toLowerCase().includes(slashMenuSearch.toLowerCase()) ||
+    item.description.toLowerCase().includes(slashMenuSearch.toLowerCase())
+  );
+
+  // Gestion des raccourcis clavier pour le menu d'insertion rapide
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (showSlashMenu) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedSlashMenuItem(prev => Math.min(prev + 1, filteredSlashItems.length - 1));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedSlashMenuItem(prev => Math.max(prev - 1, 0));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (filteredSlashItems[selectedSlashMenuItem]) {
+            handleSlashMenuSelect(filteredSlashItems[selectedSlashMenuItem]);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setShowSlashMenu(false);
+        } else if (e.key.length === 1) {
+          // Ajouter le caractère à la recherche
+          setSlashMenuSearch(prev => prev + e.key);
+          setSelectedSlashMenuItem(0);
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          setSlashMenuSearch(prev => prev.slice(0, -1));
+          setSelectedSlashMenuItem(0);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showSlashMenu, selectedSlashMenuItem, filteredSlashItems]);
   
   const [templates, setTemplates] = useState(() => {
     // Forcer la réinitialisation pour restaurer tous les templates
     localStorage.removeItem('lore-templates-data');
     
     return [
-      { id: 'combat-simple', name: 'Combat simple', category: 'modeles-simples', isEditable: false, isFavorite: false, isArchived: false },
-      { id: 'marchand', name: 'Rencontre avec un\nmarchand', category: 'modeles-simples', isEditable: false, isFavorite: false, isArchived: false },
+      { id: 'combat-simple', name: 'Combat simple', category: 'modeles-simples', isEditable: true, isFavorite: false, isArchived: false },
+      { id: 'marchand', name: 'Rencontre avec un\nmarchand', category: 'modeles-simples', isEditable: true, isFavorite: false, isArchived: false },
       { id: 'bataille-arcanix', name: 'Bataille d\'Arcanix', category: 'quete-principale', subcategory: 'cite-arcanix', isEditable: true, isFavorite: false, isArchived: false },
       { id: 'academie-mages', name: 'Arrivée à l\'Académie des mages', category: 'quete-principale', subcategory: 'cite-arcanix', isEditable: true, isFavorite: false, isArchived: false },
       { id: 'marchand-potions', name: 'Rencontre avec un marchand de potions', category: 'quete-principale', subcategory: 'cite-arcanix', isEditable: true, isFavorite: false, isArchived: false }
@@ -867,7 +1178,6 @@ const TemplatePanel = () => {
   useEffect(() => {
     localStorage.setItem('lore-characters-skills', JSON.stringify(consultationSkills));
   }, [consultationSkills]);
-  const [copyNotification, setCopyNotification] = useState(null);
   
   // État pour les menus contextuels des catégories de templates
   const [openTemplateContextMenu, setOpenTemplateContextMenu] = useState(null);
@@ -1003,12 +1313,10 @@ const TemplatePanel = () => {
     const link = `${window.location.origin}/campaigns/default-campaign/template/${templateId}`;
     try {
       await navigator.clipboard.writeText(link);
-      setCopyNotification('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.');
-      setTimeout(() => setCopyNotification(null), 3000);
+      showToast('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.', 'success');
     } catch (err) {
       console.error('Erreur lors de la copie:', err);
-      setCopyNotification('Erreur lors de la copie du lien.');
-      setTimeout(() => setCopyNotification(null), 3000);
+      showToast('Erreur lors de la copie du lien.', 'error');
     }
   };
 
@@ -1030,6 +1338,124 @@ const TemplatePanel = () => {
   const handleBackToTemplates = () => {
     setCurrentView('templates');
     setSelectedTemplate(null);
+    setEditingMerchantTemplate(null);
+    setEditingCombatTemplate(null);
+  };
+
+  const handleSaveMerchantTemplate = () => {
+    // Sauvegarder les modifications du template marchand
+    const updatedTemplate = {
+      ...editingMerchantTemplate,
+      name: merchantTemplateData.title,
+      description: merchantTemplateData.content,
+      location: merchantTemplateData.location,
+      npc: merchantTemplateData.npc,
+      inventory: merchantTemplateData.inventory,
+      category: 'modeles-simples' // Conserver dans la catégorie modèles simples
+    };
+    
+    setTemplates(prev => prev.map(template => 
+      template.id === 'marchand' ? updatedTemplate : template
+    ));
+    
+    setCurrentView('templates');
+    setEditingMerchantTemplate(null);
+    showToast('Template marchand mis à jour avec succès !');
+  };
+
+  // Fonctions pour la gestion de l'inventaire
+  const handleAddInventoryItem = () => {
+    if (newInventoryItem.name.trim()) {
+      const newItem = {
+        id: `item-${Date.now()}`,
+        name: newInventoryItem.name.trim(),
+        price: newInventoryItem.price || 0
+      };
+      setMerchantTemplateData(prev => ({
+        ...prev,
+        inventory: [...prev.inventory, newItem]
+      }));
+      setNewInventoryItem({ name: '', price: 0 });
+    }
+  };
+
+  const handleDeleteInventoryItem = (itemId) => {
+    setMerchantTemplateData(prev => ({
+      ...prev,
+      inventory: prev.inventory.filter(item => item.id !== itemId)
+    }));
+  };
+
+  const handleEditInventoryItem = (itemId, field, value) => {
+    setMerchantTemplateData(prev => ({
+      ...prev,
+      inventory: prev.inventory.map(item => 
+        item.id === itemId ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const handleCancelMerchantEdit = () => {
+    setCurrentView('templates');
+    setEditingMerchantTemplate(null);
+  };
+
+  const handleSaveCombatTemplate = () => {
+    // Sauvegarder les modifications du template combat
+    const updatedTemplate = {
+      ...editingCombatTemplate,
+      name: combatTemplateData.title,
+      description: combatTemplateData.content,
+      location: combatTemplateData.location,
+      difficulty: combatTemplateData.difficulty,
+      enemies: combatTemplateData.enemies,
+      rewards: combatTemplateData.rewards,
+      category: 'modeles-simples' // Conserver dans la catégorie modèles simples
+    };
+    
+    setTemplates(prev => prev.map(template => 
+      template.id === 'combat-simple' ? updatedTemplate : template
+    ));
+    
+    setCurrentView('templates');
+    setEditingCombatTemplate(null);
+    showToast('Template combat mis à jour avec succès !');
+  };
+
+  const handleCancelCombatEdit = () => {
+    setCurrentView('templates');
+    setEditingCombatTemplate(null);
+  };
+
+  // Fonctions pour la gestion des ennemis
+  const handleAddEnemy = () => {
+    const newEnemy = {
+      name: 'Nouvel ennemi',
+      hp: 10,
+      ac: 10,
+      attack: '+0',
+      damage: '1d4'
+    };
+    setCombatTemplateData(prev => ({
+      ...prev,
+      enemies: [...prev.enemies, newEnemy]
+    }));
+  };
+
+  const handleDeleteEnemy = (index) => {
+    setCombatTemplateData(prev => ({
+      ...prev,
+      enemies: prev.enemies.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleEditEnemy = (index, field, value) => {
+    setCombatTemplateData(prev => ({
+      ...prev,
+      enemies: prev.enemies.map((enemy, i) => 
+        i === index ? { ...enemy, [field]: value } : enemy
+      )
+    }));
   };
 
   const handleConsultTemplate = (template) => {
@@ -1038,10 +1464,19 @@ const TemplatePanel = () => {
   };
 
   const handleEditTemplate = (template) => {
-    // Envoyer vers la page "Nouvel évènement" en mode modification
-    console.log('Modification du template:', template);
-    setSelectedTemplate(template);
-    setCurrentView('new-event');
+    // Si c'est le template marchand, utiliser le formulaire spécifique
+    if (template.id === 'marchand') {
+      setEditingMerchantTemplate(template);
+      setCurrentView('edit-merchant');
+    } else if (template.id === 'combat-simple') {
+      setEditingCombatTemplate(template);
+      setCurrentView('edit-combat');
+    } else {
+      // Envoyer vers la page "Nouvel évènement" en mode modification
+      console.log('Modification du template:', template);
+      setSelectedTemplate(template);
+      setCurrentView('new-event');
+    }
   };
 
   // Fonction pour gérer les actions du menu contextuel des catégories de templates
@@ -1597,12 +2032,6 @@ const TemplatePanel = () => {
             </button>
           </div>
 
-          {/* Notification de copie */}
-          {copyNotification && (
-            <div className="fixed top-4 right-4 z-50 bg-[#552E1A] text-white px-4 py-2 rounded-lg shadow-lg eagle-lake-font text-sm">
-              {copyNotification}
-            </div>
-          )}
         </div>
       )
     },
@@ -1620,19 +2049,6 @@ const TemplatePanel = () => {
         const [questSelectedFilter, setQuestSelectedFilter] = React.useState('aucun');
         const [questSelectedSort, setQuestSelectedSort] = React.useState('aucun');
         
-        // États pour le formulaire de nouvelle quête
-        const [newQuestTitle, setNewQuestTitle] = React.useState('');
-        const [newQuestCategory, setNewQuestCategory] = React.useState('');
-        const [newQuestLocation, setNewQuestLocation] = React.useState('');
-        const [newQuestStartPoint, setNewQuestStartPoint] = React.useState('');
-        const [newQuestDestination, setNewQuestDestination] = React.useState('');
-        const [newQuestSponsor, setNewQuestSponsor] = React.useState('');
-        const [newQuestRewards, setNewQuestRewards] = React.useState('');
-        const [newQuestDescription, setNewQuestDescription] = React.useState('');
-        
-        // États pour l'édition des quêtes
-        const [editingQuestTitle, setEditingQuestTitle] = React.useState(null);
-        const [editingQuestCount, setEditingQuestCount] = React.useState(null);
         const [questTitles, setQuestTitles] = React.useState(() => {
           const saved = localStorage.getItem('lore-quests-titles');
           if (saved) {
@@ -1643,12 +2059,13 @@ const TemplatePanel = () => {
             'liberer-otages': 'Libérer les otages alliés'
           };
         });
+        
+        // États pour les catégories et quêtes dynamiques
         const [questCounts, setQuestCounts] = React.useState({
           'chasseurs': { current: 4, total: 4 },
           'mages': { current: 6, total: 6 }
         });
         
-        // États pour les catégories et quêtes dynamiques
         const [categories, setCategories] = React.useState(() => {
           const saved = localStorage.getItem('lore-quests-categories');
           if (saved) {
@@ -2130,6 +2547,7 @@ const TemplatePanel = () => {
                   <textarea
                     value={newQuestDescription}
                     onChange={(e) => setNewQuestDescription(e.target.value)}
+                    onKeyDown={handleSlashCommand}
                     placeholder="Description..."
                     rows={8}
                     className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg text-[#552E1A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-golden/50 transition-colors resize-none"
@@ -2413,6 +2831,17 @@ const TemplatePanel = () => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    copyElementLink('quest', quest.id, quest.title);
+                                  }}
+                                  className="transition-colors"
+                                  style={{ color: 'rgb(85 46 26 / var(--tw-text-opacity, 1))' }}
+                                  title="Copier le lien"
+                                >
+                                  <Copy size={16} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     toggleQuestDropdown(quest.id);
                                   }}
                                   className="text-[#552E1A] hover:text-black transition-colors"
@@ -2513,7 +2942,8 @@ const TemplatePanel = () => {
                                             ? 'bg-yellow-500'
                                             : 'bg-red-500'
                                         }`}></div>
-                                        {editingObjectiveName === subQuest.id ? (
+                                        <div className="flex-1">
+                                          {editingObjectiveName === subQuest.id ? (
                                           <input
                                             type="text"
                                             defaultValue={subQuest.name}
@@ -2558,6 +2988,15 @@ const TemplatePanel = () => {
                                             {subQuest.name}
                                           </span>
                                         )}
+                                        
+                                        {/* Barre de progression pour la sous-quête */}
+                                        <div className="w-full bg-[#552E1A]/20 rounded-full h-1.5 mt-2">
+                                          <div 
+                                            className={`h-1.5 rounded-full ${getProgressBarColor(subQuest.current, subQuest.total)}`} 
+                                            style={{width: `${(subQuest.current / subQuest.total) * 100}%`}}
+                                          ></div>
+                                        </div>
+                                        </div>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <div className="flex items-center min-w-[50px] justify-end">
@@ -2846,11 +3285,11 @@ const TemplatePanel = () => {
                 {category.isExpanded && (
                   <div className="grid grid-cols-2 gap-4">
                     {category.characters.map(character => (
-                      <div
-                        key={character.id}
-                        onClick={() => openCharacterConsultation(character)}
-                        className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                      >
+                        <div
+                          key={character.id}
+                          onClick={() => openCharacterConsultation(character)}
+                          className="bg-white/70 border border-[#552E1A]/30 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                        >
                         {/* Zone image */}
                         <div className="relative aspect-[4/3] bg-gray-100 border border-[#552E1A]/30 rounded-lg m-2">
                           {/* Zone tags éditables (comme objets) */}
@@ -2887,6 +3326,16 @@ const TemplatePanel = () => {
                         {/* Footer */}
                         <div className="p-3 flex items-center justify-between">
                           <span className="text-left text-[#552E1A] font-medium">{character.name}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyElementLink('character', character.id, character.name);
+                            }}
+                            className="text-golden hover:text-golden/80 transition-colors"
+                            title="Copier le lien"
+                          >
+                            <Copy size={16} />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -2899,16 +3348,25 @@ const TemplatePanel = () => {
             {characterCurrentView === 'consultation' && selectedCharacter && (
               <div className="max-w-7xl">
                 {/* Header avec bouton retour et titre */}
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setCharacterCurrentView('characters')}
+                      className="flex items-center justify-center w-8 h-8 bg-golden rounded-lg hover:bg-golden/80 transition-colors"
+                    >
+                      <ChevronRight size={16} className="text-[#552E1A] rotate-180" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-[#552E1A] eagle-lake-font">
+                      {selectedCharacter.name}
+                    </h1>
+                  </div>
                   <button
-                    onClick={() => setCharacterCurrentView('characters')}
-                    className="flex items-center justify-center w-8 h-8 bg-golden rounded-lg hover:bg-golden/80 transition-colors"
+                    onClick={() => copyElementLink('character', selectedCharacter.id, selectedCharacter.name)}
+                    className="flex items-center gap-2 px-3 py-2 bg-golden/20 hover:bg-golden/30 text-golden rounded-lg transition-colors"
                   >
-                    <ChevronRight size={16} className="text-[#552E1A] rotate-180" />
+                    <Copy size={16} />
+                    <span className="text-sm font-medium">Copier le lien</span>
                   </button>
-                  <h1 className="text-2xl font-bold text-[#552E1A] eagle-lake-font">
-                    {selectedCharacter.name}
-                  </h1>
                 </div>
 
                 {/* Navigation par onglets */}
@@ -3083,12 +3541,10 @@ const TemplatePanel = () => {
                           const link = `${window.location.origin}/campaigns/default-campaign/characters/${selectedCharacter.id}`;
                           try {
                             await navigator.clipboard.writeText(link);
-                            setCopyNotification('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.');
-                            setTimeout(() => setCopyNotification(null), 3000);
+                            showToast('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.', 'success');
                           } catch (err) {
                             console.error('Erreur lors de la copie:', err);
-                            setCopyNotification('Erreur lors de la copie du lien.');
-                            setTimeout(() => setCopyNotification(null), 3000);
+                            showToast('Erreur lors de la copie du lien.', 'error');
                           }
                         }}
                         className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2 h-12 whitespace-nowrap"
@@ -3367,12 +3823,10 @@ const TemplatePanel = () => {
                                 const link = `${window.location.origin}/campaigns/default-campaign/characters/${selectedCharacter?.id || 'unknown'}#inventory-${item.id}`;
                                 try {
                                   await navigator.clipboard.writeText(link);
-                                  setCopyNotification('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.');
-                                  setTimeout(() => setCopyNotification(null), 3000);
+                                  showToast('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.', 'success');
                                 } catch (err) {
                                   console.error('Erreur lors de la copie:', err);
-                                  setCopyNotification('Erreur lors de la copie du lien.');
-                                  setTimeout(() => setCopyNotification(null), 3000);
+                                  showToast('Erreur lors de la copie du lien.', 'error');
                                 }
                               }}
                               className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
@@ -3554,6 +4008,7 @@ const TemplatePanel = () => {
                     <textarea
                       value={newCharacterDescription}
                       onChange={(e) => setNewCharacterDescription(e.target.value)}
+                      onKeyDown={handleSlashCommand}
                       placeholder="Description du personnage..."
                       rows={3}
                       className="w-full bg-transparent text-[#552E1A] resize-none focus:outline-none placeholder-[#552E1A]/60"
@@ -3913,12 +4368,11 @@ const TemplatePanel = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigator.clipboard.writeText(object.name);
-                              setCopyNotification(`"${object.name}" copié !`);
-                              setTimeout(() => setCopyNotification(null), 2000);
+                              copyElementLink('object', object.id, object.name);
+                              showToast(`Lien de "${object.name}" copié !`, 'success');
                             }}
                             className="w-6 h-6 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
-                            title="Copier le nom"
+                            title="Copier le lien"
                           >
                             <Copy size={12} className="text-[#552E1A]" />
                           </button>
@@ -3942,43 +4396,46 @@ const TemplatePanel = () => {
             </button>
           </div>
 
-              {/* Notification de copie */}
-              {copyNotification && (
-                <div className="fixed top-4 right-4 bg-[#552E1A] text-white px-4 py-2 rounded-lg shadow-lg z-50">
-                  {copyNotification}
-                </div>
-              )}
             </>
           ) : objectCurrentView === 'consultation' && selectedObject ? (
             <div className="h-full flex flex-col pt-6 pr-6">
-              {/* Breadcrumb */}
-              <div className="flex items-center gap-2 text-sm text-[#552E1A] mb-4">
-                <button 
-                  onClick={() => setObjectCurrentView('objects')}
-                  className="hover:underline"
+              {/* Breadcrumb et bouton copier */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-sm text-[#552E1A]">
+                  <button 
+                    onClick={() => setObjectCurrentView('objects')}
+                    className="hover:underline"
+                  >
+                    Objets
+                  </button>
+                  <ChevronRight size={14} className="text-[#552E1A]" />
+                  <button 
+                    onClick={() => {
+                      setObjectCurrentView('objects');
+                      // Optionnel: ouvrir automatiquement la catégorie
+                      const category = objectCategories.find(cat => cat.id === selectedObject.categoryId);
+                      if (category) {
+                        setObjectCategories(prev => prev.map(cat => 
+                          cat.id === category.id ? { ...cat, isExpanded: true } : cat
+                        ));
+                      }
+                    }}
+                    className="text-[#552E1A] font-medium hover:underline"
+                  >
+                    {objectCategories.find(cat => cat.id === selectedObject.categoryId)?.title || 'Catégorie'}
+                  </button>
+                  <ChevronRight size={14} className="text-[#552E1A]" />
+                  <span className="text-golden font-medium underline">
+                    {selectedObject.name}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copyElementLink('object', selectedObject.id, selectedObject.name)}
+                  className="flex items-center gap-2 px-3 py-2 bg-golden/20 hover:bg-golden/30 text-golden rounded-lg transition-colors"
                 >
-                  Objets
+                  <Copy size={16} />
+                  <span className="text-sm font-medium">Copier le lien</span>
                 </button>
-                <ChevronRight size={14} className="text-[#552E1A]" />
-                <button 
-                  onClick={() => {
-                    setObjectCurrentView('objects');
-                    // Optionnel: ouvrir automatiquement la catégorie
-                    const category = objectCategories.find(cat => cat.id === selectedObject.categoryId);
-                    if (category) {
-                      setObjectCategories(prev => prev.map(cat => 
-                        cat.id === category.id ? { ...cat, isExpanded: true } : cat
-                      ));
-                    }
-                  }}
-                  className="text-[#552E1A] font-medium hover:underline"
-                >
-                  {objectCategories.find(cat => cat.id === selectedObject.categoryId)?.title || 'Catégorie'}
-                </button>
-                <ChevronRight size={14} className="text-[#552E1A]" />
-                <span className="text-golden font-medium underline">
-                  {selectedObject.name}
-                </span>
               </div>
 
               {/* En-tête avec bouton retour et titre */}
@@ -4095,12 +4552,10 @@ const TemplatePanel = () => {
                         const link = `${window.location.origin}/campaigns/default-campaign/objects/${selectedObject.id}`;
                         try {
                           await navigator.clipboard.writeText(link);
-                          setCopyNotification('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.');
-                          setTimeout(() => setCopyNotification(null), 3000);
+                          showToast('Lien copié ! Vous pouvez maintenant le coller sur le dashboard.', 'success');
                         } catch (err) {
                           console.error('Erreur lors de la copie:', err);
-                          setCopyNotification('Erreur lors de la copie du lien.');
-                          setTimeout(() => setCopyNotification(null), 3000);
+                          showToast('Erreur lors de la copie du lien.', 'error');
                         }
                       }}
                       className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors flex items-center gap-2"
@@ -4286,6 +4741,7 @@ const TemplatePanel = () => {
                       <textarea
                         value={newObjectDescription}
                         onChange={(e) => setNewObjectDescription(e.target.value)}
+                        onKeyDown={handleSlashCommand}
                         placeholder="Description de l'objet..."
                         rows={8}
                         className="w-full bg-transparent text-[#552E1A] resize-none focus:outline-none placeholder-[#552E1A]/60"
@@ -4346,6 +4802,442 @@ const TemplatePanel = () => {
     );
   }
 
+  // Si on est en vue "edit-merchant", afficher le formulaire d'édition du template marchand
+  if (currentView === 'edit-merchant' && editingMerchantTemplate) {
+    return (
+      <TemplateTab
+        isOpen={true}
+        onToggle={() => {}}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        tabs={tabs}
+        backgroundImage="/images/templates/templates-background.svg"
+        closedImage="/images/templates/template-tab-closed.svg"
+        openImage="/images/templates/template-tab-open.svg"
+      >
+        <div className="h-full flex flex-col pt-6 pr-6">
+          {/* Titre avec bouton retour */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={handleBackToTemplates}
+              className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+            >
+              <ArrowLeft size={16} className="text-[#552E1A]" />
+            </button>
+            <h1 className="text-black text-2xl font-bold eagle-lake-font">
+              Modifier le template marchand
+            </h1>
+          </div>
+
+          {/* Formulaire */}
+          <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)] pr-4">
+            <div className="max-w-5xl">
+              {/* Section principale avec image à droite */}
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                {/* Colonne gauche - Champs de saisie */}
+                <div className="space-y-6">
+                  {/* Champ titre */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Titre de la rencontre
+                    </label>
+                    <input
+                      type="text"
+                      value={merchantTemplateData.title}
+                      onChange={(e) => setMerchantTemplateData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Titre de la rencontre"
+                      className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+
+                  {/* Champ PNJ */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Nom du PNJ
+                    </label>
+                    <input
+                      type="text"
+                      value={merchantTemplateData.npc}
+                      onChange={(e) => setMerchantTemplateData(prev => ({ ...prev, npc: e.target.value }))}
+                      placeholder="Nom du marchand"
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+
+                  {/* Champ lieu */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Lieu
+                    </label>
+                    <input
+                      type="text"
+                      value={merchantTemplateData.location}
+                      onChange={(e) => setMerchantTemplateData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Lieu de la rencontre"
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+                </div>
+
+                {/* Colonne droite - Image placeholder */}
+                <div>
+                  <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                    Image de la rencontre
+                  </label>
+                  <div className="relative">
+                    <div className="cursor-pointer block w-full h-48 bg-[#F5F1E8] border-2 border-dashed border-[#552E1A]/30 rounded-lg flex items-center justify-center hover:border-[#552E1A]/50 transition-colors">
+                      <div className="text-center">
+                        <div className="text-[#552E1A]/60 text-sm mb-1">Image du marchand</div>
+                        <div className="text-[#552E1A]/40 text-xs">PNG, JPG, GIF jusqu'à 10MB</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Champ description */}
+              <div className="mb-6">
+                <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                  Description
+                </label>
+                <textarea
+                  value={merchantTemplateData.content}
+                  onChange={(e) => setMerchantTemplateData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Description de la rencontre avec le marchand..."
+                  rows={4}
+                  className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60 resize-none"
+                />
+              </div>
+
+              {/* Section inventaire */}
+              <div className="mb-6">
+                <label className="block text-[#552E1A] font-medium mb-3 eagle-lake-font">
+                  Inventaire du marchand
+                </label>
+                
+                {/* Liste des objets existants */}
+                <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 mb-4">
+                  {merchantTemplateData.inventory.length > 0 ? (
+                    <div className="space-y-2">
+                      {merchantTemplateData.inventory.map((item, index) => (
+                        <div key={item.id} className="flex items-center gap-3 p-2 bg-white/50 rounded">
+                          <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={item.name}
+                              onChange={(e) => handleEditInventoryItem(item.id, 'name', e.target.value)}
+                              className="w-full bg-transparent text-[#552E1A] font-medium border-none focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={item.price}
+                              onChange={(e) => handleEditInventoryItem(item.id, 'price', parseInt(e.target.value) || 0)}
+                              className="w-20 bg-transparent text-[#552E1A] border-none focus:outline-none text-right"
+                            />
+                            <span className="text-[#552E1A]/80 text-sm">PO</span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteInventoryItem(item.id)}
+                            className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                            title="Supprimer"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-[#552E1A]/60 py-4">
+                      Aucun objet dans l'inventaire
+                    </div>
+                  )}
+                </div>
+
+                {/* Formulaire d'ajout d'objet */}
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newInventoryItem.name}
+                    onChange={(e) => setNewInventoryItem(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Nom de l'objet"
+                    className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                  />
+                  <input
+                    type="number"
+                    value={newInventoryItem.price}
+                    onChange={(e) => setNewInventoryItem(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                    placeholder="Prix"
+                    className="w-24 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                  />
+                  <span className="flex items-center text-[#552E1A]/80 text-sm">PO</span>
+                  <button
+                    onClick={handleAddInventoryItem}
+                    disabled={!newInventoryItem.name.trim()}
+                    className="bg-golden text-[#552E1A] px-4 py-2 rounded-lg font-medium hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={handleCancelMerchantEdit}
+                  className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSaveMerchantTemplate}
+                  className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
+                >
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </TemplateTab>
+    );
+  }
+
+  // Si on est en vue "edit-combat", afficher le formulaire d'édition du template combat
+  if (currentView === 'edit-combat' && editingCombatTemplate) {
+    return (
+      <TemplateTab
+        isOpen={true}
+        onToggle={() => {}}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        tabs={tabs}
+        backgroundImage="/images/templates/templates-background.svg"
+        closedImage="/images/templates/template-tab-closed.svg"
+        openImage="/images/templates/template-tab-open.svg"
+      >
+        <div className="h-full flex flex-col pt-6 pr-6">
+          {/* Titre avec bouton retour */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={handleBackToTemplates}
+              className="w-8 h-8 bg-golden rounded flex items-center justify-center hover:bg-golden/80 transition-colors"
+            >
+              <ArrowLeft size={16} className="text-[#552E1A]" />
+            </button>
+            <h1 className="text-black text-2xl font-bold eagle-lake-font">
+              Modifier le template combat
+            </h1>
+          </div>
+
+          {/* Formulaire */}
+          <div className="flex-1 overflow-y-auto pb-12 max-h-[calc(100vh-300px)] pr-4">
+            <div className="max-w-5xl">
+              {/* Section principale avec image à droite */}
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                {/* Colonne gauche - Champs de saisie */}
+                <div className="space-y-6">
+                  {/* Champ titre */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Titre du combat
+                    </label>
+                    <input
+                      type="text"
+                      value={combatTemplateData.title}
+                      onChange={(e) => setCombatTemplateData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Titre du combat"
+                      className="flex-1 bg-[#F5F1E8] text-[#552E1A] px-4 py-2 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+
+                  {/* Champ lieu */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Lieu
+                    </label>
+                    <input
+                      type="text"
+                      value={combatTemplateData.location}
+                      onChange={(e) => setCombatTemplateData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Lieu du combat"
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+
+                  {/* Champ difficulté */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Difficulté
+                    </label>
+                    <select
+                      value={combatTemplateData.difficulty}
+                      onChange={(e) => setCombatTemplateData(prev => ({ ...prev, difficulty: e.target.value }))}
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50"
+                    >
+                      <option value="Facile">Facile</option>
+                      <option value="Moyen">Moyen</option>
+                      <option value="Difficile">Difficile</option>
+                      <option value="Très difficile">Très difficile</option>
+                    </select>
+                  </div>
+
+                  {/* Champ récompenses */}
+                  <div>
+                    <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                      Récompenses
+                    </label>
+                    <input
+                      type="text"
+                      value={combatTemplateData.rewards}
+                      onChange={(e) => setCombatTemplateData(prev => ({ ...prev, rewards: e.target.value }))}
+                      placeholder="Récompenses du combat"
+                      className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60"
+                    />
+                  </div>
+                </div>
+
+                {/* Colonne droite - Image placeholder */}
+                <div>
+                  <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                    Image du combat
+                  </label>
+                  <div className="relative">
+                    <div className="cursor-pointer block w-full h-48 bg-[#F5F1E8] border-2 border-dashed border-[#552E1A]/30 rounded-lg flex items-center justify-center hover:border-[#552E1A]/50 transition-colors">
+                      <div className="text-center">
+                        <div className="text-[#552E1A]/60 text-sm mb-1">Image du combat</div>
+                        <div className="text-[#552E1A]/40 text-xs">PNG, JPG, GIF jusqu'à 10MB</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Champ description */}
+              <div className="mb-6">
+                <label className="block text-[#552E1A] font-medium mb-2 eagle-lake-font">
+                  Description
+                </label>
+                <textarea
+                  value={combatTemplateData.content}
+                  onChange={(e) => setCombatTemplateData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Description du combat..."
+                  rows={4}
+                  className="w-full bg-[#F5F1E8] text-[#552E1A] px-4 py-3 rounded-lg border border-[#552E1A]/20 focus:outline-none focus:ring-2 focus:ring-golden/50 placeholder-[#552E1A]/60 resize-none"
+                />
+              </div>
+
+              {/* Section ennemis */}
+              <div className="mb-6">
+                <label className="block text-[#552E1A] font-medium mb-3 eagle-lake-font">
+                  Ennemis
+                </label>
+                
+                {/* Liste des ennemis existants */}
+                <div className="bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg p-4 mb-4">
+                  {combatTemplateData.enemies.length > 0 ? (
+                    <div className="space-y-3">
+                      {combatTemplateData.enemies.map((enemy, index) => (
+                        <div key={index} className="grid grid-cols-5 gap-3 p-3 bg-white/50 rounded">
+                          <div>
+                            <label className="block text-[#552E1A] text-sm font-medium mb-1">Nom</label>
+                            <input
+                              type="text"
+                              value={enemy.name}
+                              onChange={(e) => handleEditEnemy(index, 'name', e.target.value)}
+                              className="w-full bg-transparent text-[#552E1A] border-none focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] text-sm font-medium mb-1">PV</label>
+                            <input
+                              type="number"
+                              value={enemy.hp}
+                              onChange={(e) => handleEditEnemy(index, 'hp', parseInt(e.target.value) || 0)}
+                              className="w-full bg-transparent text-[#552E1A] border-none focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] text-sm font-medium mb-1">CA</label>
+                            <input
+                              type="number"
+                              value={enemy.ac}
+                              onChange={(e) => handleEditEnemy(index, 'ac', parseInt(e.target.value) || 0)}
+                              className="w-full bg-transparent text-[#552E1A] border-none focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[#552E1A] text-sm font-medium mb-1">Attaque</label>
+                            <input
+                              type="text"
+                              value={enemy.attack}
+                              onChange={(e) => handleEditEnemy(index, 'attack', e.target.value)}
+                              className="w-full bg-transparent text-[#552E1A] border-none focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex items-end gap-2">
+                            <div className="flex-1">
+                              <label className="block text-[#552E1A] text-sm font-medium mb-1">Dégâts</label>
+                              <input
+                                type="text"
+                                value={enemy.damage}
+                                onChange={(e) => handleEditEnemy(index, 'damage', e.target.value)}
+                                className="w-full bg-transparent text-[#552E1A] border-none focus:outline-none"
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleDeleteEnemy(index)}
+                              className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                              title="Supprimer"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-[#552E1A]/60 py-4">
+                      Aucun ennemi défini
+                    </div>
+                  )}
+                </div>
+
+                {/* Bouton d'ajout d'ennemi */}
+                <button
+                  onClick={handleAddEnemy}
+                  className="bg-golden text-[#552E1A] px-4 py-2 rounded-lg font-medium hover:bg-golden/80 transition-colors"
+                >
+                  Ajouter un ennemi
+                </button>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={handleCancelCombatEdit}
+                  className="bg-[#F5F1E8] text-[#552E1A] px-6 py-3 rounded-lg border border-[#552E1A]/20 hover:bg-[#E8E0D0] transition-colors font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSaveCombatTemplate}
+                  className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
+                >
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </TemplateTab>
+    );
+  }
+
 
   // Sinon, afficher la vue templates normale
   return (
@@ -4361,6 +5253,81 @@ const TemplatePanel = () => {
       panelRef={panelRef}
     >
       {activeTabData?.content}
+      
+      {/* Menu d'insertion rapide */}
+      {showSlashMenu && (
+        <div 
+          className="fixed bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-w-sm w-full"
+          style={{ 
+            left: Math.min(slashMenuPosition.x, window.innerWidth - 320),
+            top: Math.min(slashMenuPosition.y, window.innerHeight - 400)
+          }}
+        >
+          <div className="p-3 border-b border-gray-100">
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={slashMenuSearch}
+              onChange={(e) => setSlashMenuSearch(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-golden"
+              autoFocus
+            />
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {filteredSlashItems.map((item, index) => (
+              <div
+                key={item.id}
+                className={`px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-gray-50 ${
+                  index === selectedSlashMenuItem ? 'bg-golden/10 border-r-2 border-golden' : ''
+                }`}
+                onClick={() => handleSlashMenuSelect(item)}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{item.name}</div>
+                  <div className="text-sm text-gray-500">{item.description}</div>
+                </div>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                  {item.category}
+                </span>
+              </div>
+            ))}
+            {filteredSlashItems.length === 0 && (
+              <div className="px-4 py-3 text-gray-500 text-center">
+                Aucun élément trouvé
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[10000] animate-in slide-in-from-top-2 duration-300">
+          <div className={`px-4 py-3 rounded-lg shadow-lg border flex items-center gap-3 max-w-sm ${
+            toast.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : toast.type === 'error'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              toast.type === 'success' 
+                ? 'bg-green-500' 
+                : toast.type === 'error'
+                ? 'bg-red-500'
+                : 'bg-yellow-500'
+            }`}></div>
+            <span className="text-sm font-medium">{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-auto text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </TemplateTab>
   );
 };
