@@ -59,8 +59,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Composant pour les lignes de texte draggables
-const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, onEdit, onDelete, isEditing, onContentChange }) => {
+// Composant pour les lignes de texte draggables - Style Notion
+const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onShowContextMenu, type, isHeading, onEdit, onDelete, isEditing, onContentChange, onAddNewLine, onMoveToSection }) => {
   const {
     attributes,
     listeners,
@@ -69,6 +69,9 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
     transition,
     isDragging,
   } = useSortable({ id });
+
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -82,6 +85,12 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
     }
   };
 
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setShowContextMenu(true);
+  };
+
   const handlePlusClick = (e) => {
     e.stopPropagation();
     if (onShowContextMenu) {
@@ -89,12 +98,51 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
     }
   };
 
+  const handleEdit = () => {
+    setShowContextMenu(false);
+    // L'édition se fait maintenant directement avec contentEditable
+    // Pas besoin d'appeler onEdit
+  };
+
+  const handleDelete = () => {
+    setShowContextMenu(false);
+    onDelete && onDelete(id);
+  };
+
+  const handleDuplicate = () => {
+    setShowContextMenu(false);
+    // Logique de duplication
+    console.log('Dupliquer ligne:', id);
+  };
+
+  const handleMoveToSection = (newSection) => {
+    setShowContextMenu(false);
+    if (onMoveToSection) {
+      onMoveToSection(id, newSection);
+    }
+  };
+
+  // Fermer le menu contextuel en cliquant ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showContextMenu) {
+        setShowContextMenu(false);
+      }
+    };
+
+    if (showContextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showContextMenu]);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className="group relative"
       onPaste={onPaste}
+      onContextMenu={handleContextMenu}
     >
       {/* Drag Handle - Visible pendant le drag */}
       <div 
@@ -115,124 +163,326 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
         <Plus size={12} className="text-gray-600 hover:text-gray-800 transition-colors duration-150" />
       </div>
 
-      {/* Boutons d'édition et suppression - Visible au survol */}
-      <div className="absolute right-[-60px] top-1 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit && onEdit(id, true);
-          }}
-          className="w-4 h-4 flex items-center justify-center bg-blue-100/80 hover:bg-blue-200/90 rounded-sm transition-colors"
-          title="Éditer"
-        >
-          <Edit2 size={10} className="text-blue-600 hover:text-blue-800" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete && onDelete(id);
-          }}
-          className="w-4 h-4 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded-sm transition-colors"
-          title="Supprimer"
-        >
-          <X size={10} className="text-red-600 hover:text-red-800" />
-        </button>
-      </div>
 
-      {/* Contenu */}
-      {isEditing ? (
-        <div className="pl-8 space-y-2">
-          <textarea
-            value={content}
-            onChange={(e) => onContentChange && onContentChange(id, e.target.value)}
-            className="w-full p-2 border border-gray-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-900"
-            rows={3}
-            autoFocus
-            placeholder="Tapez votre contenu..."
-          />
-          {isLink && (
-            <div className="space-y-2">
-              <label className="text-sm text-gray-600">URL du lien :</label>
-              <input
-                type="url"
-                value={linkUrl || ''}
-                onChange={(e) => onContentChange && onContentChange(id, content, e.target.value)}
-                className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white text-gray-900"
-                placeholder="https://..."
-              />
-            </div>
-          )}
-          <div className="flex space-x-2">
-            <button
-              onClick={() => onEdit && onEdit(id, false)}
-              className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-            >
-              ✓ Sauvegarder
-            </button>
-            <button
-              onClick={() => onDelete && onDelete(id)}
-              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
-            >
-              ✕ Supprimer
-            </button>
-          </div>
-        </div>
-      ) : isHeading ? (
+      {/* Contenu - Édition inline Notion-like */}
+      {isHeading ? (
         type === 'heading1' ? (
           <h1 
-            className={`leading-relaxed pl-8 text-3xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
-            onClick={handleClick}
+            className={`leading-relaxed pl-8 text-3xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'cursor-text'} transition-colors`}
+            contentEditable={!isLink}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => {
+              if (!isLink && onContentChange) {
+                onContentChange(id, e.target.textContent);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (onAddNewLine) {
+                  const newLineId = Date.now();
+                  const newLine = {
+                    id: newLineId,
+                    content: '',
+                    section: section,
+                    type: 'text',
+                    isLink: false,
+                    isHeading: false
+                  };
+                  onAddNewLine(newLine, id);
+                }
+              }
+              if (e.key === 'Escape') {
+                e.target.blur();
+              }
+              if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+                e.preventDefault();
+            onDelete && onDelete(id);
+              }
+            }}
+            onClick={isLink ? handleClick : undefined}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
             {content}
           </h1>
         ) : type === 'heading2' ? (
           <h2 
-            className={`leading-relaxed pl-8 text-2xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
-            onClick={handleClick}
+            className={`leading-relaxed pl-8 text-2xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'cursor-text'} transition-colors`}
+            contentEditable={!isLink}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => {
+              if (!isLink && onContentChange) {
+                onContentChange(id, e.target.textContent);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (onAddNewLine) {
+                  const newLineId = Date.now();
+                  const newLine = {
+                    id: newLineId,
+                    content: '',
+                    section: section,
+                    type: 'text',
+                    isLink: false,
+                    isHeading: false
+                  };
+                  onAddNewLine(newLine, id);
+                }
+              }
+              if (e.key === 'Escape') {
+                e.target.blur();
+              }
+              if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+                e.preventDefault();
+                onDelete && onDelete(id);
+              }
+            }}
+            onClick={isLink ? handleClick : undefined}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
             {content}
           </h2>
         ) : type === 'heading3' ? (
           <h3 
-            className={`leading-relaxed pl-8 text-xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
-            onClick={handleClick}
+            className={`leading-relaxed pl-8 text-xl font-bold text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'cursor-text'} transition-colors`}
+            contentEditable={!isLink}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => {
+              if (!isLink && onContentChange) {
+                onContentChange(id, e.target.textContent);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (onAddNewLine) {
+                  const newLineId = Date.now();
+                  const newLine = {
+                    id: newLineId,
+                    content: '',
+                    section: section,
+                    type: 'text',
+                    isLink: false,
+                    isHeading: false
+                  };
+                  onAddNewLine(newLine, id);
+                }
+              }
+              if (e.key === 'Escape') {
+                e.target.blur();
+              }
+              if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+                e.preventDefault();
+                onDelete && onDelete(id);
+              }
+            }}
+            onClick={isLink ? handleClick : undefined}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
             {content}
           </h3>
         ) : (
           <div 
-            className={`leading-relaxed pl-8 text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : ''}`}
-            onClick={handleClick}
+            className={`leading-relaxed pl-8 text-light ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'cursor-text'} transition-colors`}
+            contentEditable={!isLink}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => {
+              if (!isLink && onContentChange) {
+                onContentChange(id, e.target.textContent);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (onAddNewLine) {
+                  const newLineId = Date.now();
+                  const newLine = {
+                    id: newLineId,
+                    content: '',
+                    section: section,
+                    type: 'text',
+                    isLink: false,
+                    isHeading: false
+                  };
+                  onAddNewLine(newLine, id);
+                }
+              }
+              if (e.key === 'Escape') {
+                e.target.blur();
+              }
+              if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+                e.preventDefault();
+                onDelete && onDelete(id);
+              }
+            }}
+            onClick={isLink ? handleClick : undefined}
           >
             {isLink && <Link size={14} className="inline mr-2" />}
             {content}
           </div>
         )
       ) : type === 'separator' ? (
-        <div className="flex items-center my-4 pl-8">
-          <div className="flex-1 h-px bg-light/30"></div>
-          <span className="px-3 text-light/60 text-sm">---</span>
-          <div className="flex-1 h-px bg-light/30"></div>
+        <div 
+          className="leading-relaxed pl-8 text-light cursor-text my-8"
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          onBlur={(e) => {
+            if (onContentChange) {
+              onContentChange(id, e.target.textContent);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (onAddNewLine) {
+                const newLineId = Date.now();
+                const newLine = {
+                  id: newLineId,
+                  content: '',
+                  section: section,
+                  type: 'text',
+                  isLink: false,
+                  isHeading: false
+                };
+                onAddNewLine(newLine, id);
+              }
+            }
+            if (e.key === 'Escape') {
+              e.target.blur();
+            }
+            if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+              e.preventDefault();
+              onDelete && onDelete(id);
+            }
+          }}
+          style={{
+            minHeight: '2px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            paddingBottom: '8px',
+            marginBottom: '16px',
+            color: 'transparent',
+            caretColor: 'white'
+          }}
+        >
+          &nbsp;
         </div>
       ) : (
         <div 
-          className={`leading-relaxed pl-8 ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'text-light'}`}
-          onClick={handleClick}
-        >
-          {content.split(/(\*\*.*?\*\*)/).map((part, index) => {
+          className={`leading-relaxed pl-8 ${isLink ? 'text-golden hover:text-golden/80 cursor-pointer underline' : 'text-light cursor-text'} transition-colors`}
+          contentEditable={!isLink}
+          suppressContentEditableWarning={true}
+          onBlur={(e) => {
+            if (!isLink && onContentChange) {
+              onContentChange(id, e.target.textContent);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (onAddNewLine) {
+                const newLineId = Date.now();
+                const newLine = {
+                  id: newLineId,
+                  content: '',
+                  section: section,
+                  type: 'text',
+                  isLink: false,
+                  isHeading: false
+                };
+                onAddNewLine(newLine, id);
+              }
+            }
+            if (e.key === 'Escape') {
+              e.target.blur();
+            }
+            if (e.key === 'Backspace' && e.target.textContent.trim() === '') {
+              e.preventDefault();
+              onDelete && onDelete(id);
+            }
+          }}
+          onClick={isLink ? handleClick : undefined}
+          dangerouslySetInnerHTML={{ 
+            __html: content.split(/(\*\*.*?\*\*)/).map((part, index) => {
             if (part.startsWith('**') && part.endsWith('**')) {
               const text = part.slice(2, -2);
-              return (
-                <strong key={index} className="text-golden cursor-pointer hover:text-golden/80">
-                  {text}
-                </strong>
-              );
+                return `<strong key="${index}" class="text-golden cursor-pointer hover:text-golden/80">${text}</strong>`;
             }
             return part;
-          })}
+            }).join('')
+          }}
+        />
+      )}
+
+      {/* Menu contextuel Notion-like */}
+      {showContextMenu && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-[10000] min-w-[200px]"
+          style={{
+            left: contextMenuPosition.x,
+            top: contextMenuPosition.y,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleEdit}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+          >
+            <Edit size={14} />
+            <span>Modifier</span>
+          </button>
+          <button
+            onClick={handleDuplicate}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+          >
+            <Copy size={14} />
+            <span>Dupliquer</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowContextMenu(false);
+              // Créer un séparateur après cette ligne
+              const newSeparator = {
+                id: `separator-${Date.now()}`,
+                content: '---',
+                section: section,
+                type: 'separator',
+                isSeparator: true
+              };
+              if (onAddNewLine) {
+                onAddNewLine(newSeparator, id);
+              }
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+          >
+            <span className="text-lg">---</span>
+            <span>Ajouter un séparateur</span>
+          </button>
+          <div className="border-t border-gray-100 my-1"></div>
+          <div className="px-4 py-1 text-xs text-gray-500 font-medium">Déplacer vers</div>
+          <button
+            onClick={() => handleMoveToSection('situation')}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+            disabled={section === 'situation'}
+          >
+            Situation initiale
+          </button>
+          <button
+            onClick={() => handleMoveToSection('debut')}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+            disabled={section === 'debut'}
+          >
+            Début de la partie
+          </button>
+          <div className="border-t border-gray-100 my-1"></div>
+          <button
+            onClick={handleDelete}
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+          >
+            <Trash2 size={14} />
+            <span>{type === 'separator' ? 'Supprimer le séparateur' : 'Supprimer'}</span>
+          </button>
         </div>
       )}
     </div>
@@ -730,7 +980,7 @@ const CampaignDashboard = () => {
 
   // Contenu des textes selon la campagne
   const getTextContent = (campaignId) => {
-    const textContents = {
+    const baseTextContents = {
       1: [
     {
       id: 'line-1',
@@ -1024,7 +1274,42 @@ const CampaignDashboard = () => {
       ]
     };
     
-    return textContents[campaignId] || textContents[1];
+    const baseContent = baseTextContents[campaignId] || baseTextContents[1];
+    
+    // Ajouter automatiquement les titres de sections
+    const contentWithSections = [];
+    let hasSituationTitle = false;
+    let hasDebutTitle = false;
+    
+    baseContent.forEach((line, index) => {
+      // Ajouter le titre "Situation initiale" avant la première ligne de situation
+      if (line.section === 'situation' && !hasSituationTitle) {
+        contentWithSections.push({
+          id: 'section-situation',
+          content: 'Situation initiale',
+          section: 'situation',
+          type: 'heading2',
+          isHeading: true
+        });
+        hasSituationTitle = true;
+      }
+      
+      // Ajouter le titre "Début de la partie" avant la première ligne de début
+      if (line.section === 'debut' && !hasDebutTitle) {
+        contentWithSections.push({
+          id: 'section-debut',
+          content: 'Début de la partie',
+          section: 'debut',
+          type: 'heading2',
+          isHeading: true
+        });
+        hasDebutTitle = true;
+      }
+      
+      contentWithSections.push(line);
+    });
+    
+    return contentWithSections;
   };
 
   // Templates disponibles avec catégories (5 catégories principales)
@@ -1060,7 +1345,7 @@ const CampaignDashboard = () => {
     { id: 'context-puzzle', type: 'puzzle', name: 'Énigme', icon: '🧩', description: 'Défi intellectuel', content: 'Énigme : ', category: 'Événements' },
     
     // Séparateur
-    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '---', category: 'Formatage' }
+    { id: 'context-separator', type: 'separator', name: 'Séparateur', icon: '---', description: 'Ligne de séparation', content: '', category: 'Formatage' }
   ]);
 
   // États pour l'IA et l'automatisation
@@ -1287,8 +1572,24 @@ const CampaignDashboard = () => {
   // Initialiser les textLines selon la campagne
   useEffect(() => {
     if (campaignId) {
-      const campaignTexts = getTextContent(parseInt(campaignId));
-      setTextLines(campaignTexts);
+      // Essayer de charger les textLines sauvegardées
+      const savedTextLines = localStorage.getItem(`lore_campaign_${campaignId}_textLines`);
+      
+      if (savedTextLines) {
+        try {
+          const parsedTextLines = JSON.parse(savedTextLines);
+          setTextLines(parsedTextLines);
+        } catch (error) {
+          console.error('Erreur lors du chargement des textLines sauvegardées:', error);
+          // Fallback vers le contenu par défaut
+          const campaignTexts = getTextContent(parseInt(campaignId));
+          setTextLines(campaignTexts);
+        }
+      } else {
+        // Pas de sauvegarde, utiliser le contenu par défaut
+        const campaignTexts = getTextContent(parseInt(campaignId));
+        setTextLines(campaignTexts);
+      }
     }
   }, [campaignId]);
 
@@ -1529,9 +1830,12 @@ const CampaignDashboard = () => {
         const newIndex = items.findIndex(item => item.id === over.id);
         
         if (oldIndex !== -1 && newIndex !== -1) {
-          // Logique pour drop entre les éléments
           const newItems = [...items];
           const [movedItem] = newItems.splice(oldIndex, 1);
+          
+          // Déterminer la nouvelle section basée sur la position
+          const targetSection = determineSectionFromIndex(newIndex, items);
+          movedItem.section = targetSection;
           
           // Insérer à la nouvelle position
           if (oldIndex < newIndex) {
@@ -1547,6 +1851,23 @@ const CampaignDashboard = () => {
     }
     setActiveId(null);
     setDraggedItem(null);
+  };
+
+  // Fonction pour déterminer la section basée sur l'index
+  const determineSectionFromIndex = (index, items) => {
+    const situationCount = items.filter(item => item.section === 'situation').length;
+    return index <= situationCount ? 'situation' : 'debut';
+  };
+
+  // Fonction pour déplacer une ligne vers une autre section
+  const handleMoveLineToSection = (lineId, newSection) => {
+    setTextLines((items) => {
+      return items.map(item => 
+        item.id === lineId 
+          ? { ...item, section: newSection }
+          : item
+      );
+    });
   };
 
   // Fonction pour gérer le drop des templates
@@ -1805,6 +2126,19 @@ const CampaignDashboard = () => {
     ));
   };
 
+  const handleAddNewLine = (newLine, afterId) => {
+    setTextLines(prev => {
+      const index = prev.findIndex(line => line.id === afterId);
+      if (index === -1) return [...prev, newLine];
+      return [...prev.slice(0, index + 1), newLine, ...prev.slice(index + 1)];
+    });
+    // Mettre la nouvelle ligne en mode édition
+    setEditingLines(prev => ({
+      ...prev,
+      [newLine.id]: true
+    }));
+  };
+
   const handleLinkUrlChange = (id, newLinkUrl) => {
     setTextLines(prev => prev.map(line => 
       line.id === id ? { ...line, linkUrl: newLinkUrl } : line
@@ -1905,7 +2239,7 @@ const CampaignDashboard = () => {
       } else if (type === 'separator') {
         newLine = {
           id: `context-${Date.now()}`,
-          content: '---',
+          content: '',
           section: 'situation',
           type: 'separator',
           template: true,
@@ -1992,6 +2326,23 @@ const CampaignDashboard = () => {
   useEffect(() => {
     updateDynamicImage();
   }, [textLines]);
+
+  // Sauvegarder automatiquement les textLines dans localStorage
+  useEffect(() => {
+    if (campaignId && textLines.length > 0) {
+      localStorage.setItem(`lore_campaign_${campaignId}_textLines`, JSON.stringify(textLines));
+    }
+  }, [textLines, campaignId]);
+
+  // Fonction pour réinitialiser le contenu d'une campagne
+  const resetCampaignContent = () => {
+    if (campaignId) {
+      const defaultContent = getTextContent(parseInt(campaignId));
+      setTextLines(defaultContent);
+      localStorage.removeItem(`lore_campaign_${campaignId}_textLines`);
+      toast.success('Contenu de la campagne réinitialisé !');
+    }
+  };
 
   // Charger les notifications au montage du composant
   useEffect(() => {
@@ -2253,19 +2604,17 @@ const CampaignDashboard = () => {
             >
                <SortableContext items={[...textLines.map(line => line.id), 'merchant-card']} strategy={verticalListSortingStrategy}>
                 <div className="space-y-12">
-                  {/* Section Situation initiale */}
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-light calligraphy-font italic">Situation initiale</h3>
+                  {/* Toutes les lignes dans un contexte unifié - Style Notion */}
                     <div className="pl-8">
                       <div className="space-y-1">
                         {/* Zone de drop au début */}
                         <DropZone 
-                          id="drop-start-situation" 
+                        id="drop-start-all" 
                           isActive={false}
                           onTemplateDrop={handleTemplateDrop}
                           targetIndex={0}
                         />
-                         {textLines.filter(line => line.section === 'situation').map((line, index, array) => (
+                      {textLines.map((line, index) => (
                            <React.Fragment key={line.id}>
                              <SortableTextLine
                                id={line.id}
@@ -2281,75 +2630,26 @@ const CampaignDashboard = () => {
                                onDelete={handleDeleteLine}
                                isEditing={editingLines[line.id]}
                                onContentChange={handleContentChange}
+                            onAddNewLine={handleAddNewLine}
+                            onMoveToSection={handleMoveLineToSection}
                              />
-                             {index < array.length - 1 && (
+                          {index < textLines.length - 1 && (
                                <DropZone 
                                  id={`drop-${line.id}`} 
                                  isActive={activeId === line.id}
                                  onTemplateDrop={handleTemplateDrop}
-                                 targetIndex={textLines.findIndex(l => l.id === line.id) + 1}
+                                 targetIndex={index + 1}
                                />
                              )}
                            </React.Fragment>
                          ))}
                         {/* Zone de drop à la fin */}
                         <DropZone 
-                          id="drop-end-situation" 
+                        id="drop-end-all" 
                           isActive={false}
                           onTemplateDrop={handleTemplateDrop}
                           targetIndex={textLines.length}
                         />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section Début de la partie */}
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-light calligraphy-font italic">Début de la partie</h3>
-                    <div className="pl-8">
-                      <div className="space-y-1">
-                        {/* Zone de drop au début */}
-                        <DropZone 
-                          id="drop-start-debut" 
-                          isActive={false}
-                          onTemplateDrop={handleTemplateDrop}
-                          targetIndex={textLines.filter(line => line.section === 'situation').length}
-                        />
-                         {textLines.filter(line => line.section === 'debut').map((line, index, array) => (
-                           <React.Fragment key={line.id}>
-                             <SortableTextLine
-                               id={line.id}
-                               content={line.content}
-                               section={line.section}
-                               isLink={line.isLink}
-                               linkUrl={line.linkUrl}
-                               onPaste={handlePaste}
-                               onShowContextMenu={handleShowContextMenu}
-                               type={line.type}
-                               isHeading={line.isHeading}
-                               onEdit={handleEditLine}
-                               onDelete={handleDeleteLine}
-                               isEditing={editingLines[line.id]}
-                               onContentChange={handleContentChange}
-                             />
-                             {index < array.length - 1 && (
-                               <DropZone 
-                                 id={`drop-${line.id}`} 
-                                 isActive={activeId === line.id}
-                                 onTemplateDrop={handleTemplateDrop}
-                                 targetIndex={textLines.findIndex(l => l.id === line.id) + 1}
-                               />
-                             )}
-                           </React.Fragment>
-                         ))}
-                        {/* Zone de drop à la fin */}
-                        <DropZone 
-                          id="drop-end-debut" 
-                          isActive={false}
-                          onTemplateDrop={handleTemplateDrop}
-                          targetIndex={textLines.length}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
