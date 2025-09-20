@@ -407,8 +407,78 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-white">
-                            {questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) || 0}/
-                            {questData?.subQuests?.reduce((sum, sub) => sum + sub.total, 0) || 0}
+                            <span 
+                              className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={(e) => {
+                                if (onContentChange) {
+                                  const newCurrent = parseInt(e.target.textContent) || 0;
+                                  const updatedQuestData = { ...questData };
+                                  if (updatedQuestData.subQuests) {
+                                    // Répartir le nouveau total proportionnellement sur les sous-quêtes
+                                    const currentTotal = updatedQuestData.subQuests.reduce((sum, sub) => sum + sub.current, 0);
+                                    const ratio = currentTotal > 0 ? newCurrent / currentTotal : 1;
+                                    
+                                    updatedQuestData.subQuests = updatedQuestData.subQuests.map(sub => ({
+                                      ...sub,
+                                      current: Math.round(sub.current * ratio)
+                                    }));
+                                    
+                                    const newContent = `APERÇU_QUÊTE:${JSON.stringify(updatedQuestData)}`;
+                                    onContentChange(id, newContent);
+                                  }
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  e.target.blur();
+                                }
+                                if (e.key === 'Escape') {
+                                  e.target.blur();
+                                }
+                              }}
+                              title="Cliquer pour éditer le total actuel"
+                            >
+                              {questData?.subQuests?.reduce((sum, sub) => sum + sub.current, 0) || 0}
+                            </span>/
+                            <span 
+                              className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={(e) => {
+                                if (onContentChange) {
+                                  const newTotal = parseInt(e.target.textContent) || 0;
+                                  const updatedQuestData = { ...questData };
+                                  if (updatedQuestData.subQuests) {
+                                    // Répartir le nouveau total proportionnellement sur les sous-quêtes
+                                    const currentTotal = updatedQuestData.subQuests.reduce((sum, sub) => sum + sub.total, 0);
+                                    const ratio = currentTotal > 0 ? newTotal / currentTotal : 1;
+                                    
+                                    updatedQuestData.subQuests = updatedQuestData.subQuests.map(sub => ({
+                                      ...sub,
+                                      total: Math.round(sub.total * ratio)
+                                    }));
+                                    
+                                    const newContent = `APERÇU_QUÊTE:${JSON.stringify(updatedQuestData)}`;
+                                    onContentChange(id, newContent);
+                                  }
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  e.target.blur();
+                                }
+                                if (e.key === 'Escape') {
+                                  e.target.blur();
+                                }
+                              }}
+                              title="Cliquer pour éditer le total maximum"
+                            >
+                              {questData?.subQuests?.reduce((sum, sub) => sum + sub.total, 0) || 0}
+                            </span>
                           </span>
                           <ChevronRight size={16} className="text-white" />
                         </div>
@@ -440,7 +510,72 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
                               <span className="text-white text-sm">{subQuest.name}</span>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <span className="text-white text-sm">{subQuest.current}/{subQuest.total}</span>
+                              <span className="text-white text-sm">
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newCurrent = parseInt(e.target.textContent) || 0;
+                                      const updatedQuestData = { ...questData };
+                                      if (updatedQuestData.subQuests) {
+                                        updatedQuestData.subQuests[subIndex] = {
+                                          ...updatedQuestData.subQuests[subIndex],
+                                          current: newCurrent
+                                        };
+                                        
+                                        const newContent = `APERÇU_QUÊTE:${JSON.stringify(updatedQuestData)}`;
+                                        onContentChange(id, newContent);
+                                      }
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le progrès actuel"
+                                >
+                                  {subQuest.current}
+                                </span>/
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newTotal = parseInt(e.target.textContent) || 0;
+                                      const updatedQuestData = { ...questData };
+                                      if (updatedQuestData.subQuests) {
+                                        updatedQuestData.subQuests[subIndex] = {
+                                          ...updatedQuestData.subQuests[subIndex],
+                                          total: newTotal
+                                        };
+                                        
+                                        const newContent = `APERÇU_QUÊTE:${JSON.stringify(updatedQuestData)}`;
+                                        onContentChange(id, newContent);
+                                      }
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le total maximum"
+                                >
+                                  {subQuest.total}
+                                </span>
+                              </span>
                             </div>
                           </div>
                           <div className="w-full bg-gray-700 rounded-full h-1.5">
@@ -618,6 +753,979 @@ const SortableTextLine = ({ id, content, section, isLink, linkUrl, onPaste, onSh
                 }
               })()}
             </div>
+          </div>
+        </div>
+      ) : type === 'merchant-card-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer la card"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+
+            {(() => {
+              // Extraire les données du template depuis le contenu
+              const templateDataMatch = content.match(/MERCHANT_CARD:(.+)/);
+              if (!templateDataMatch) {
+                console.error('Aucune donnée MERCHANT_CARD trouvée dans le contenu:', content);
+                return <div className="text-red-400">Erreur: Données de la card marchand manquantes</div>;
+              }
+              
+              try {
+                const templateData = JSON.parse(templateDataMatch[1]);
+                
+                // Vérifier que les données sont valides
+                if (!templateData) {
+                  console.error('Template data is null or undefined:', templateData);
+                  return <div className="text-red-400">Erreur: Données de template manquantes</div>;
+                }
+                
+                if (!templateData.inventory) {
+                  console.error('Inventory is missing:', templateData);
+                  return <div className="text-red-400">Erreur: Inventaire manquant</div>;
+                }
+                
+                if (!Array.isArray(templateData.inventory)) {
+                  console.error('Inventory is not an array:', templateData.inventory);
+                  return <div className="text-red-400">Erreur: Inventaire invalide (pas un tableau)</div>;
+                }
+                
+                // Vérifier que chaque objet de l'inventaire a les bonnes propriétés
+                const invalidItems = templateData.inventory.filter(item => 
+                  !item.id || !item.name || typeof item.price !== 'number'
+                );
+                
+                if (invalidItems.length > 0) {
+                  console.error('Items invalides dans l\'inventaire:', invalidItems);
+                  return <div className="text-red-400">Erreur: Objets d'inventaire invalides</div>;
+                }
+                
+                return (
+                  <div>
+                    <h3 
+                      className="text-xl font-bold text-light eagle-lake-font mb-4 cursor-pointer hover:text-golden transition-colors"
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={(e) => {
+                        if (onContentChange) {
+                          const newName = e.target.textContent;
+                          const updatedTemplateData = { ...templateData, name: newName };
+                          const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                          onContentChange(id, newContent);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                        if (e.key === 'Escape') {
+                          e.target.blur();
+                        }
+                      }}
+                      title="Cliquer pour éditer le titre"
+                    >
+                      {templateData.name}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <p 
+                        className="text-light leading-relaxed cursor-text hover:bg-white/5 p-2 rounded transition-colors"
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => {
+                          if (onContentChange) {
+                            const newDescription = e.target.textContent;
+                            const updatedTemplateData = { ...templateData, description: newDescription };
+                            const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                            onContentChange(id, newContent);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                          if (e.key === 'Escape') {
+                            e.target.blur();
+                          }
+                        }}
+                        title="Cliquer pour éditer la description"
+                      >
+                        {templateData.description}
+                      </p>
+                      
+                      <div className="text-sm text-light/80 font-semibold">
+                        PNJ: <span 
+                          className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                          contentEditable={true}
+                          suppressContentEditableWarning={true}
+                          onBlur={(e) => {
+                            if (onContentChange) {
+                              const newNpc = e.target.textContent;
+                              const updatedTemplateData = { ...templateData, npc: newNpc };
+                              const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                              onContentChange(id, newContent);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.target.blur();
+                            }
+                            if (e.key === 'Escape') {
+                              e.target.blur();
+                            }
+                          }}
+                          title="Cliquer pour éditer le PNJ"
+                        >
+                          {templateData.npc}
+                        </span>
+                      </div>
+
+                      {/* Tableau d'inventaire - Style Notion */}
+                      <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-lg font-semibold text-light flex items-center">
+                            <Package size={16} className="mr-2" />
+                            Inventaire du marchand
+                          </h4>
+                          <div className="text-sm text-light/80 font-semibold">
+                            Total: <span 
+                              className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={(e) => {
+                                if (onContentChange) {
+                                  const newTotal = parseInt(e.target.textContent) || 0;
+                                  // Répartir le nouveau total proportionnellement sur les objets
+                                  const currentTotal = templateData.inventory.reduce((sum, item) => sum + item.price, 0);
+                                  const ratio = currentTotal > 0 ? newTotal / currentTotal : 1;
+                                  
+                                  const updatedInventory = templateData.inventory.map(item => ({
+                                    ...item,
+                                    price: Math.round(item.price * ratio)
+                                  }));
+                                  
+                                  const updatedTemplateData = { ...templateData, inventory: updatedInventory };
+                                  const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                  onContentChange(id, newContent);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  e.target.blur();
+                                }
+                                if (e.key === 'Escape') {
+                                  e.target.blur();
+                                }
+                              }}
+                              title="Cliquer pour éditer le total"
+                            >
+                              {templateData.inventory.reduce((sum, item) => sum + item.price, 0)}
+                            </span> pièces d'or
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          {templateData.inventory.map((item, index) => (
+                            <div key={item.id} className="flex items-center gap-3 p-2 bg-white/5 rounded">
+                              <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                                {index + 1}
+                              </div>
+                              <div className="text-light font-medium flex-1">
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newName = e.target.textContent;
+                                      const updatedInventory = templateData.inventory.map(invItem => 
+                                        invItem.id === item.id ? { ...invItem, name: newName } : invItem
+                                      );
+                                      const updatedTemplateData = { ...templateData, inventory: updatedInventory };
+                                      const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le nom de l'objet"
+                                >
+                                  {item.name}
+                                </span>
+                              </div>
+                              <div className="text-light/80">
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newPrice = parseInt(e.target.textContent) || 0;
+                                      const updatedInventory = templateData.inventory.map(invItem => 
+                                        invItem.id === item.id ? { ...invItem, price: newPrice } : invItem
+                                      );
+                                      const updatedTemplateData = { ...templateData, inventory: updatedInventory };
+                                      const newContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le prix"
+                                >
+                                  {item.price}
+                                </span> PO
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } catch (error) {
+                console.error('Erreur lors du parsing des données du template:', error);
+                return <div className="text-red-400">Erreur lors du chargement du template</div>;
+              }
+            })()}
+          </div>
+        </div>
+      ) : type === 'combat-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer la card"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+            {(() => {
+              // Extraire les données du template depuis le contenu
+              const templateDataMatch = content.match(/APERÇU_COMBAT:(.+)/);
+              if (!templateDataMatch) {
+                console.error('Aucune donnée APERÇU_COMBAT trouvée dans le contenu:', content);
+                return <div className="text-red-400">Erreur: Données de la card combat manquantes</div>;
+              }
+              
+              try {
+                const templateData = JSON.parse(templateDataMatch[1]);
+                
+                // Vérifier que les données sont valides
+                if (!templateData) {
+                  console.error('Template data is null or undefined:', templateData);
+                  return <div className="text-red-400">Erreur: Données de template manquantes</div>;
+                }
+                
+                if (!templateData.enemies) {
+                  console.error('Enemies is missing:', templateData);
+                  return <div className="text-red-400">Erreur: Ennemis manquants</div>;
+                }
+                
+                if (!Array.isArray(templateData.enemies)) {
+                  console.error('Enemies is not an array:', templateData.enemies);
+                  return <div className="text-red-400">Erreur: Ennemis invalides (pas un tableau)</div>;
+                }
+                
+                return (
+                  <div>
+                    <h3 
+                      className="text-xl font-bold text-light eagle-lake-font mb-4 cursor-pointer hover:text-golden transition-colors"
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={(e) => {
+                        if (onContentChange) {
+                          const newName = e.target.textContent;
+                          const updatedTemplateData = { ...templateData, name: newName };
+                          const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                          onContentChange(id, newContent);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                        if (e.key === 'Escape') {
+                          e.target.blur();
+                        }
+                      }}
+                      title="Cliquer pour éditer le titre"
+                    >
+                      {templateData.name}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <p 
+                        className="text-light leading-relaxed cursor-text hover:bg-white/5 p-2 rounded transition-colors"
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => {
+                          if (onContentChange) {
+                            const newDescription = e.target.textContent;
+                            const updatedTemplateData = { ...templateData, description: newDescription };
+                            const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                            onContentChange(id, newContent);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                          if (e.key === 'Escape') {
+                            e.target.blur();
+                          }
+                        }}
+                        title="Cliquer pour éditer la description"
+                      >
+                        {templateData.description}
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="text-light/80 font-semibold">
+                          Lieu: <span 
+                            className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => {
+                              if (onContentChange) {
+                                const newLocation = e.target.textContent;
+                                const updatedTemplateData = { ...templateData, location: newLocation };
+                                const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                onContentChange(id, newContent);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.target.blur();
+                              }
+                              if (e.key === 'Escape') {
+                                e.target.blur();
+                              }
+                            }}
+                            title="Cliquer pour éditer le lieu"
+                          >
+                            {templateData.location}
+                          </span>
+                        </div>
+                        
+                        <div className="text-light/80 font-semibold">
+                          Difficulté: <span 
+                            className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => {
+                              if (onContentChange) {
+                                const newDifficulty = e.target.textContent;
+                                const updatedTemplateData = { ...templateData, difficulty: newDifficulty };
+                                const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                onContentChange(id, newContent);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.target.blur();
+                              }
+                              if (e.key === 'Escape') {
+                                e.target.blur();
+                              }
+                            }}
+                            title="Cliquer pour éditer la difficulté"
+                          >
+                            {templateData.difficulty}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-light/80 font-semibold">
+                        Récompenses: <span 
+                          className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                          contentEditable={true}
+                          suppressContentEditableWarning={true}
+                          onBlur={(e) => {
+                            if (onContentChange) {
+                              const newRewards = e.target.textContent;
+                              const updatedTemplateData = { ...templateData, rewards: newRewards };
+                              const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                              onContentChange(id, newContent);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.target.blur();
+                            }
+                            if (e.key === 'Escape') {
+                              e.target.blur();
+                            }
+                          }}
+                          title="Cliquer pour éditer les récompenses"
+                        >
+                          {templateData.rewards}
+                        </span>
+                      </div>
+
+                      {/* Tableau des ennemis - Style Notion */}
+                      <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-lg font-semibold text-light flex items-center">
+                            <Target size={16} className="mr-2" />
+                            Ennemis
+                          </h4>
+                        </div>
+
+                        <div className="space-y-2">
+                          {templateData.enemies.map((enemy, index) => (
+                            <div key={index} className="flex items-center gap-3 p-2 bg-white/5 rounded">
+                              <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                                {index + 1}
+                              </div>
+                              <div className="text-light font-medium flex-1">
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newName = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, name: newName } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le nom de l'ennemi"
+                                >
+                                  {enemy.name}
+                                </span>
+                              </div>
+                              <div className="text-light/80 text-sm space-x-2">
+                                <span>PV: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newHp = parseInt(e.target.textContent) || 0;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, hp: newHp } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer les PV"
+                                >
+                                  {enemy.hp}
+                                </span></span>
+                                <span>CA: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newAc = parseInt(e.target.textContent) || 0;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, ac: newAc } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer la CA"
+                                >
+                                  {enemy.ac}
+                                </span></span>
+                                <span>Att: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newAttack = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, attack: newAttack } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer l'attaque"
+                                >
+                                  {enemy.attack}
+                                </span></span>
+                                <span>Dég: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newDamage = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, damage: newDamage } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer les dégâts"
+                                >
+                                  {enemy.damage}
+                                </span></span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } catch (error) {
+                console.error('Erreur lors du parsing des données du template:', error);
+                return <div className="text-red-400">Erreur lors du chargement du template</div>;
+              }
+            })()}
+          </div>
+        </div>
+      ) : type === 'combat-card-preview' ? (
+        <div className="pl-8 my-4 group relative">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-2xl">
+            {/* Bouton de suppression */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100/80 hover:bg-red-200/90 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              title="Supprimer la card"
+            >
+              <X size={14} className="text-red-600 hover:text-red-800" />
+            </button>
+            
+            {(() => {
+              // Extraire les données du template depuis le contenu
+              const templateDataMatch = content.match(/COMBAT_CARD:(.+)/);
+              if (!templateDataMatch) {
+                console.error('Aucune donnée COMBAT_CARD trouvée dans le contenu:', content);
+                return <div className="text-red-400">Erreur: Données de la card combat manquantes</div>;
+              }
+              
+              try {
+                const templateData = JSON.parse(templateDataMatch[1]);
+                
+                // Vérifier que les données sont valides
+                if (!templateData) {
+                  console.error('Template data is null or undefined:', templateData);
+                  return <div className="text-red-400">Erreur: Données de template manquantes</div>;
+                }
+                
+                if (!templateData.enemies) {
+                  console.error('Enemies is missing:', templateData);
+                  return <div className="text-red-400">Erreur: Ennemis manquants</div>;
+                }
+                
+                if (!Array.isArray(templateData.enemies)) {
+                  console.error('Enemies is not an array:', templateData.enemies);
+                  return <div className="text-red-400">Erreur: Ennemis invalides (pas un tableau)</div>;
+                }
+                
+                return (
+                  <div>
+                    <h3 
+                      className="text-xl font-bold text-light eagle-lake-font mb-4 cursor-pointer hover:text-golden transition-colors"
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={(e) => {
+                        if (onContentChange) {
+                          const newName = e.target.textContent;
+                          const updatedTemplateData = { ...templateData, name: newName };
+                          const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                          onContentChange(id, newContent);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                        if (e.key === 'Escape') {
+                          e.target.blur();
+                        }
+                      }}
+                      title="Cliquer pour éditer le titre"
+                    >
+                      {templateData.name}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <p 
+                        className="text-light leading-relaxed cursor-text hover:bg-white/5 p-2 rounded transition-colors"
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => {
+                          if (onContentChange) {
+                            const newDescription = e.target.textContent;
+                            const updatedTemplateData = { ...templateData, description: newDescription };
+                            const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                            onContentChange(id, newContent);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                          if (e.key === 'Escape') {
+                            e.target.blur();
+                          }
+                        }}
+                        title="Cliquer pour éditer la description"
+                      >
+                        {templateData.description}
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="text-light/80 font-semibold">
+                          Lieu: <span 
+                            className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => {
+                              if (onContentChange) {
+                                const newLocation = e.target.textContent;
+                                const updatedTemplateData = { ...templateData, location: newLocation };
+                                const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                onContentChange(id, newContent);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.target.blur();
+                              }
+                              if (e.key === 'Escape') {
+                                e.target.blur();
+                              }
+                            }}
+                            title="Cliquer pour éditer le lieu"
+                          >
+                            {templateData.location}
+                          </span>
+                        </div>
+                        
+                        <div className="text-light/80 font-semibold">
+                          Difficulté: <span 
+                            className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => {
+                              if (onContentChange) {
+                                const newDifficulty = e.target.textContent;
+                                const updatedTemplateData = { ...templateData, difficulty: newDifficulty };
+                                const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                onContentChange(id, newContent);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.target.blur();
+                              }
+                              if (e.key === 'Escape') {
+                                e.target.blur();
+                              }
+                            }}
+                            title="Cliquer pour éditer la difficulté"
+                          >
+                            {templateData.difficulty}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-light/80 font-semibold">
+                        Récompenses: <span 
+                          className="cursor-text hover:bg-white/5 p-1 rounded transition-colors"
+                          contentEditable={true}
+                          suppressContentEditableWarning={true}
+                          onBlur={(e) => {
+                            if (onContentChange) {
+                              const newRewards = e.target.textContent;
+                              const updatedTemplateData = { ...templateData, rewards: newRewards };
+                              const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                              onContentChange(id, newContent);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.target.blur();
+                            }
+                            if (e.key === 'Escape') {
+                              e.target.blur();
+                            }
+                          }}
+                          title="Cliquer pour éditer les récompenses"
+                        >
+                          {templateData.rewards}
+                        </span>
+                      </div>
+
+                      {/* Tableau des ennemis - Style Notion */}
+                      <div className="bg-white/10 rounded-lg p-4 border border-light/20">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-lg font-semibold text-light flex items-center">
+                            <Target size={16} className="mr-2" />
+                            Ennemis
+                          </h4>
+                        </div>
+
+                        <div className="space-y-2">
+                          {templateData.enemies.map((enemy, index) => (
+                            <div key={index} className="flex items-center gap-3 p-2 bg-white/5 rounded">
+                              <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center text-xs text-white font-bold">
+                                {index + 1}
+                              </div>
+                              <div className="text-light font-medium flex-1">
+                                <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newName = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, name: newName } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer le nom de l'ennemi"
+                                >
+                                  {enemy.name}
+                                </span>
+                              </div>
+                              <div className="text-light/80 text-sm space-x-2">
+                                <span>PV: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newHp = parseInt(e.target.textContent) || 0;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, hp: newHp } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer les PV"
+                                >
+                                  {enemy.hp}
+                                </span></span>
+                                <span>CA: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newAc = parseInt(e.target.textContent) || 0;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, ac: newAc } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer la CA"
+                                >
+                                  {enemy.ac}
+                                </span></span>
+                                <span>Att: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newAttack = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, attack: newAttack } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer l'attaque"
+                                >
+                                  {enemy.attack}
+                                </span></span>
+                                <span>Dég: <span 
+                                  className="cursor-text hover:bg-white/10 p-1 rounded transition-colors"
+                                  contentEditable={true}
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    if (onContentChange) {
+                                      const newDamage = e.target.textContent;
+                                      const updatedEnemies = templateData.enemies.map((en, i) => 
+                                        i === index ? { ...en, damage: newDamage } : en
+                                      );
+                                      const updatedTemplateData = { ...templateData, enemies: updatedEnemies };
+                                      const newContent = `COMBAT_CARD:${JSON.stringify(updatedTemplateData)}`;
+                                      onContentChange(id, newContent);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.target.blur();
+                                    }
+                                    if (e.key === 'Escape') {
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  title="Cliquer pour éditer les dégâts"
+                                >
+                                  {enemy.damage}
+                                </span></span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } catch (error) {
+                console.error('Erreur lors du parsing des données du template:', error);
+                return <div className="text-red-400">Erreur lors du chargement du template</div>;
+              }
+            })()}
           </div>
         </div>
       ) : type === 'page' ? (
@@ -1544,6 +2652,8 @@ const CampaignDashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedSessions, setSelectedSessions] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved'
+  const [lastSaveTime, setLastSaveTime] = useState(null);
 
   // États pour le système de mentions dynamiques
   const [currentMentionImage, setCurrentMentionImage] = useState(null);
@@ -2438,6 +3548,37 @@ const CampaignDashboard = () => {
     setEditingTotal(false);
   };
 
+  // Fonction de sauvegarde manuelle
+  const handleManualSave = async () => {
+    setSaveStatus('saving');
+    
+    try {
+      // Sauvegarder les textLines
+      if (campaignId && textLines.length > 0) {
+        localStorage.setItem(`lore_campaign_${campaignId}_textLines`, JSON.stringify(textLines));
+      }
+      
+      // Sauvegarder les templates
+      const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+      localStorage.setItem('lore-templates-data', JSON.stringify(templates));
+      
+      // Sauvegarder les quêtes
+      const quests = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+      localStorage.setItem('lore-quests-categories', JSON.stringify(quests));
+      
+      // Simuler un délai de sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setSaveStatus('saved');
+      setLastSaveTime(new Date());
+      toast.success('Sauvegarde effectuée avec succès !');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      setSaveStatus('unsaved');
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
   // Fonction pour détecter les mentions dans le texte
   const detectMentions = (text) => {
     const mentionRegex = /\*\*([^*]+)\*\*/g;
@@ -2548,13 +3689,6 @@ const CampaignDashboard = () => {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (active.id !== over?.id && over) {
-      // Vérifier si c'est une carte (merchant-card)
-      if (active.id === 'merchant-card') {
-        // Pour les cartes, elles se placent selon le drop
-        // On ne fait que changer leur position visuelle dans le flux
-        console.log(`Carte ${active.id} déplacée vers ${over.id}`);
-        // Les cartes peuvent être déplacées visuellement mais restent dans le flux
-      } else {
         // Pour les textLines, gérer le réordonnancement complet avec changement de section
         setTextLines((items) => {
           const oldIndex = items.findIndex(item => item.id === active.id);
@@ -2579,7 +3713,6 @@ const CampaignDashboard = () => {
           }
           return items;
         });
-      }
     }
     setActiveId(null);
     setDraggedItem(null);
@@ -2788,6 +3921,108 @@ const CampaignDashboard = () => {
       return;
     }
     
+    // Détecter si c'est un lien de consultation de template combat
+    if (pastedText.includes('Combat simple') && pastedText.includes('consultation')) {
+      e.preventDefault();
+      
+      // Créer les données du template combat identiques à la card du dashboard
+      const combatTemplate = {
+        id: 'combat-simple',
+        name: 'Combat simple',
+        category: 'modeles-simples',
+        location: 'Route forestière',
+        difficulty: 'Facile',
+        rewards: '2d6 pièces d\'or, potion de soins mineure',
+        description: 'Une embuscade tendue par des brigands sur la route forestière. Les bandits, motivés par la cupidité, attaquent sans pitié avec leurs armes de fortune. Un combat rapide mais intense s\'engage.',
+        enemies: [
+          { name: 'Bandit', hp: 15, ac: 12, attack: '+3', damage: '1d6+1' },
+          { name: 'Chef bandit', hp: 25, ac: 14, attack: '+5', damage: '1d8+2' }
+        ],
+        tags: [
+          { name: 'Combat', color: 'bg-red-600' },
+          { name: 'Brigands', color: 'bg-orange-600' },
+          { name: 'Route', color: 'bg-yellow-600' }
+        ]
+      };
+      
+      // Vérifier que les données sont valides avant de continuer
+      if (!combatTemplate.enemies || !Array.isArray(combatTemplate.enemies)) {
+        console.error('Données de template combat invalides:', combatTemplate);
+        toast.error('Erreur lors de la création de la card combat');
+        return;
+      }
+      
+      // Créer un aperçu qui ressemble à la card du dashboard
+      const newLine = {
+        id: `combat-card-preview-${Date.now()}`,
+        content: `COMBAT_CARD:${JSON.stringify(combatTemplate)}`,
+        section: 'debut',
+        type: 'combat-card-preview',
+        isLink: false,
+        templateData: combatTemplate
+      };
+      
+      // Debug: Afficher les données créées
+      console.log('Création de la card combat avec les données:', combatTemplate);
+      console.log('Contenu de la ligne:', newLine.content);
+      
+      setTextLines(prev => [...prev, newLine]);
+      toast.success(`Card combat "${combatTemplate.name}" ajoutée !`);
+      return;
+    }
+    
+    // Détecter si c'est un lien de consultation de template marchand
+    if (pastedText.includes('Rencontre avec un marchand') && pastedText.includes('consultation')) {
+      e.preventDefault();
+      
+      // Créer les données du template marchand identiques à la card du dashboard
+      const merchantTemplate = {
+        id: 'marchand',
+        name: 'Rencontre avec un marchand',
+        category: 'modeles-simples',
+        location: 'Marché local',
+        npc: 'Marcus le Marchand',
+        description: 'Un marchand itinérant propose ses marchandises aux aventuriers. Ses étals regorgent d\'objets mystérieux et d\'artefacts anciens, mais attention à ses prix...',
+        inventory: [
+          { id: 1, name: 'Potion de soins mineure', price: 25 },
+          { id: 2, name: 'Parchemin de bouclier', price: 50 },
+          { id: 3, name: 'Pierre de sort', price: 100 },
+          { id: 4, name: 'Corde de soie', price: 10 },
+          { id: 5, name: 'Torche éternelle', price: 15 }
+        ],
+        tags: [
+          { name: 'Marchand', color: 'bg-blue-600' },
+          { name: 'Commerce', color: 'bg-green-600' },
+          { name: 'Social', color: 'bg-purple-600' }
+        ]
+      };
+      
+      // Vérifier que les données sont valides avant de continuer
+      if (!merchantTemplate.inventory || !Array.isArray(merchantTemplate.inventory)) {
+        console.error('Données de template marchand invalides:', merchantTemplate);
+        toast.error('Erreur lors de la création de la card marchand');
+        return;
+      }
+      
+      // Créer un aperçu qui ressemble à la card du dashboard
+      const newLine = {
+        id: `merchant-card-preview-${Date.now()}`,
+        content: `MERCHANT_CARD:${JSON.stringify(merchantTemplate)}`,
+        section: 'debut',
+        type: 'merchant-card-preview',
+        isLink: false,
+        templateData: merchantTemplate
+      };
+      
+      // Debug: Afficher les données créées
+      console.log('Création de la card marchand avec les données:', merchantTemplate);
+      console.log('Contenu de la ligne:', newLine.content);
+      
+      setTextLines(prev => [...prev, newLine]);
+      toast.success(`Card marchand "${merchantTemplate.name}" ajoutée !`);
+      return;
+    }
+    
     // Détecter si c'est un nom de quête copié depuis les templates
     const questNames = ['Libérer les otages alliés', 'Libérer les chasseurs de la forêt écarlate', 'Sauver les mages d\'Arkanix'];
     const isQuestName = questNames.some(questName => pastedText.trim() === questName);
@@ -2975,13 +4210,103 @@ const CampaignDashboard = () => {
   };
 
   const handleContentChange = (id, newContent, newLinkUrl = null) => {
-    setTextLines(prev => prev.map(line => 
-      line.id === id ? { 
-        ...line, 
-        content: newContent,
-        ...(newLinkUrl !== null && { linkUrl: newLinkUrl })
-      } : line
-    ));
+    setTextLines(prev => prev.map(line => {
+      if (line.id === id) {
+        // Si c'est une card marchand, mettre à jour aussi les templates
+        if (line.type === 'merchant-card-preview') {
+          const templateDataMatch = newContent.match(/MERCHANT_CARD:(.+)/);
+          if (templateDataMatch) {
+            try {
+              const templateData = JSON.parse(templateDataMatch[1]);
+              // Vérifier que les données sont valides
+              if (templateData && templateData.inventory && Array.isArray(templateData.inventory)) {
+                // Mettre à jour les templates dans localStorage
+                const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+                const updatedTemplates = templates.map(t => 
+                  (t.id === 'marchand' || t.name === 'Rencontre avec un marchand') ? templateData : t
+                );
+                localStorage.setItem('lore-templates-data', JSON.stringify(updatedTemplates));
+                
+                // Mettre à jour aussi la card marchand du dashboard
+                setMerchantInventory(templateData.inventory);
+              }
+            } catch (error) {
+              console.error('Erreur lors de la mise à jour des templates:', error);
+            }
+          }
+        }
+        
+        // Si c'est un aperçu de quête, mettre à jour aussi les templates
+        if (line.type === 'quest-preview') {
+          const questDataMatch = newContent.match(/APERÇU_QUÊTE:(.+)/);
+          if (questDataMatch) {
+            try {
+              const questData = JSON.parse(questDataMatch[1]);
+              // Mettre à jour les quêtes dans localStorage
+              const templateCategories = JSON.parse(localStorage.getItem('lore-quests-categories') || '[]');
+              const updatedCategories = templateCategories.map(category => {
+                if (category.quests && category.quests.length > 0) {
+                  const updatedQuests = category.quests.map(quest => {
+                    if (quest.title === questData.title) {
+                      return questData;
+                    }
+                    return quest;
+                  });
+                  return { ...category, quests: updatedQuests };
+                }
+                return category;
+              });
+              localStorage.setItem('lore-quests-categories', JSON.stringify(updatedCategories));
+            } catch (error) {
+              console.error('Erreur lors de la mise à jour de la quête:', error);
+            }
+          }
+        }
+        
+        // Si c'est un aperçu de combat, mettre à jour aussi les templates
+        if (line.type === 'combat-preview') {
+          const combatDataMatch = newContent.match(/APERÇU_COMBAT:(.+)/);
+          if (combatDataMatch) {
+            try {
+              const combatData = JSON.parse(combatDataMatch[1]);
+              // Mettre à jour les templates dans localStorage
+              const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+              const updatedTemplates = templates.map(t => 
+                (t.id === 'combat-simple' || t.name === 'Combat simple') ? combatData : t
+              );
+              localStorage.setItem('lore-templates-data', JSON.stringify(updatedTemplates));
+            } catch (error) {
+              console.error('Erreur lors de la mise à jour du template combat:', error);
+            }
+          }
+        }
+        
+        // Si c'est une card combat, mettre à jour aussi les templates
+        if (line.type === 'combat-card-preview') {
+          const combatDataMatch = newContent.match(/COMBAT_CARD:(.+)/);
+          if (combatDataMatch) {
+            try {
+              const combatData = JSON.parse(combatDataMatch[1]);
+              // Mettre à jour les templates dans localStorage
+              const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+              const updatedTemplates = templates.map(t => 
+                (t.id === 'combat-simple' || t.name === 'Combat simple') ? combatData : t
+              );
+              localStorage.setItem('lore-templates-data', JSON.stringify(updatedTemplates));
+            } catch (error) {
+              console.error('Erreur lors de la mise à jour du template combat:', error);
+            }
+          }
+        }
+        
+        return { 
+          ...line, 
+          content: newContent,
+          ...(newLinkUrl !== null && { linkUrl: newLinkUrl })
+        };
+      }
+      return line;
+    }));
   };
 
   const handleAddNewLine = (newLine, afterId) => {
@@ -3244,16 +4569,127 @@ const CampaignDashboard = () => {
   useEffect(() => {
     if (campaignId && textLines.length > 0) {
       localStorage.setItem(`lore_campaign_${campaignId}_textLines`, JSON.stringify(textLines));
+      setSaveStatus('saved');
+      setLastSaveTime(new Date());
     }
   }, [textLines, campaignId]);
 
-  // Mettre à jour les aperçus de quêtes quand les données des templates changent
+  // Détecter les changements non sauvegardés
   useEffect(() => {
-    const updateQuestPreviews = () => {
+    if (textLines.length > 0) {
+      setSaveStatus('unsaved');
+    }
+  }, [textLines]);
+
+  // Sauvegarde automatique périodique
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      if (campaignId && textLines.length > 0 && saveStatus === 'unsaved') {
+        localStorage.setItem(`lore_campaign_${campaignId}_textLines`, JSON.stringify(textLines));
+        setSaveStatus('saved');
+        setLastSaveTime(new Date());
+        console.log('Sauvegarde automatique effectuée');
+      }
+    }, 30000); // Sauvegarde automatique toutes les 30 secondes
+
+    return () => clearInterval(autoSaveInterval);
+  }, [campaignId, textLines, saveStatus]);
+
+  // Sauvegarde avant fermeture de la page
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (saveStatus === 'unsaved') {
+        // Sauvegarder immédiatement
+        if (campaignId && textLines.length > 0) {
+          localStorage.setItem(`lore_campaign_${campaignId}_textLines`, JSON.stringify(textLines));
+        }
+        
+        // Avertir l'utilisateur
+        e.preventDefault();
+        e.returnValue = 'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter ?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveStatus, campaignId, textLines]);
+
+  // Mettre à jour les aperçus de quêtes et cartes marchand quand les données des templates changent
+  useEffect(() => {
+    const updatePreviews = () => {
       setTextLines(prev => {
         return prev.map(line => {
           if (line.type === 'quest-preview') {
             // Forcer la mise à jour en modifiant légèrement le contenu
+            return { ...line, lastUpdate: Date.now() };
+          }
+          if (line.type === 'merchant-card-preview') {
+            // Mettre à jour les données de la card marchand depuis les templates
+            const templateDataMatch = line.content.match(/MERCHANT_CARD:(.+)/);
+            if (templateDataMatch) {
+              try {
+                const currentTemplateData = JSON.parse(templateDataMatch[1]);
+                // Récupérer les données mises à jour depuis localStorage
+                const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+                const updatedTemplate = templates.find(t => t.id === 'marchand' || t.name === 'Rencontre avec un marchand');
+                
+                if (updatedTemplate && updatedTemplate.inventory) {
+                  const updatedContent = `MERCHANT_CARD:${JSON.stringify(updatedTemplate)}`;
+                  return { ...line, content: updatedContent, lastUpdate: Date.now() };
+                }
+              } catch (error) {
+                console.error('Erreur lors de la mise à jour de la card marchand:', error);
+                // En cas d'erreur, retourner la ligne sans modification
+                return line;
+              }
+            }
+            return { ...line, lastUpdate: Date.now() };
+          }
+          
+          if (line.type === 'combat-preview') {
+            // Mettre à jour les données de la card combat depuis les templates
+            const templateDataMatch = line.content.match(/APERÇU_COMBAT:(.+)/);
+            if (templateDataMatch) {
+              try {
+                const currentTemplateData = JSON.parse(templateDataMatch[1]);
+                // Récupérer les données mises à jour depuis localStorage
+                const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+                const updatedTemplate = templates.find(t => t.id === 'combat-simple' || t.name === 'Combat simple');
+                
+                if (updatedTemplate && updatedTemplate.enemies) {
+                  const updatedContent = `APERÇU_COMBAT:${JSON.stringify(updatedTemplate)}`;
+                  return { ...line, content: updatedContent, lastUpdate: Date.now() };
+                }
+              } catch (error) {
+                console.error('Erreur lors de la mise à jour de la card combat:', error);
+                // En cas d'erreur, retourner la ligne sans modification
+                return line;
+              }
+            }
+            return { ...line, lastUpdate: Date.now() };
+          }
+          
+          if (line.type === 'combat-card-preview') {
+            // Mettre à jour les données de la card combat depuis les templates
+            const templateDataMatch = line.content.match(/COMBAT_CARD:(.+)/);
+            if (templateDataMatch) {
+              try {
+                const currentTemplateData = JSON.parse(templateDataMatch[1]);
+                // Récupérer les données mises à jour depuis localStorage
+                const templates = JSON.parse(localStorage.getItem('lore-templates-data') || '[]');
+                const updatedTemplate = templates.find(t => t.id === 'combat-simple' || t.name === 'Combat simple');
+                
+                if (updatedTemplate && updatedTemplate.enemies) {
+                  const updatedContent = `COMBAT_CARD:${JSON.stringify(updatedTemplate)}`;
+                  return { ...line, content: updatedContent, lastUpdate: Date.now() };
+                }
+              } catch (error) {
+                console.error('Erreur lors de la mise à jour de la card combat:', error);
+                // En cas d'erreur, retourner la ligne sans modification
+                return line;
+              }
+            }
             return { ...line, lastUpdate: Date.now() };
           }
           return line;
@@ -3263,10 +4699,14 @@ const CampaignDashboard = () => {
 
     // Écouter les changements dans localStorage pour les templates
     const interval = setInterval(() => {
-      const currentData = localStorage.getItem('lore-quests-categories');
-      if (currentData !== (window.lastQuestTemplateData || '')) {
-        window.lastQuestTemplateData = currentData;
-        updateQuestPreviews();
+      const currentQuestData = localStorage.getItem('lore-quests-categories');
+      const currentTemplateData = localStorage.getItem('lore-templates-data');
+      
+      if (currentQuestData !== (window.lastQuestTemplateData || '') || 
+          currentTemplateData !== (window.lastTemplateData || '')) {
+        window.lastQuestTemplateData = currentQuestData;
+        window.lastTemplateData = currentTemplateData;
+        updatePreviews();
       }
     }, 1000);
 
@@ -3523,6 +4963,41 @@ const CampaignDashboard = () => {
         <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
         <div className="flex items-center space-x-6">
+          {/* Indicateur de sauvegarde */}
+          <div className="flex items-center space-x-2">
+            {saveStatus === 'saving' && (
+              <div className="flex items-center space-x-2 text-yellow-400">
+                <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm">Sauvegarde...</span>
+              </div>
+            )}
+            {saveStatus === 'saved' && (
+              <div className="flex items-center space-x-2 text-green-400">
+                <CheckCircle size={16} />
+                <span className="text-sm">
+                  Sauvegardé{lastSaveTime && ` à ${lastSaveTime.toLocaleTimeString()}`}
+                </span>
+              </div>
+            )}
+            {saveStatus === 'unsaved' && (
+              <div className="flex items-center space-x-2 text-red-400">
+                <AlertCircle size={16} />
+                <span className="text-sm">Non sauvegardé</span>
+              </div>
+            )}
+          </div>
+
+          {/* Bouton de sauvegarde manuelle */}
+          <button
+            onClick={handleManualSave}
+            disabled={saveStatus === 'saving'}
+            className="flex items-center space-x-2 px-4 py-2 bg-golden text-[#552E1A] rounded-lg hover:bg-golden/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Sauvegarder manuellement"
+          >
+            <Save size={16} />
+            <span className="text-sm font-medium">Sauvegarder</span>
+          </button>
+
           {/* Navigation des pages */}
           {currentPage && (
             <div className="flex items-center space-x-2 text-golden">
@@ -3761,7 +5236,7 @@ const CampaignDashboard = () => {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
-               <SortableContext items={[...textLines.map(line => line.id), 'merchant-card']} strategy={verticalListSortingStrategy}>
+               <SortableContext items={textLines.map(line => line.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-12">
                   {/* Toutes les lignes dans un contexte unifié - Style Notion */}
                     <div className="pl-8">
@@ -3812,32 +5287,6 @@ const CampaignDashboard = () => {
                         />
                         
                         
-                        {/* Carte marchand intégrée dans le flux */}
-                        <MerchantCardTextLine
-                          id="merchant-card"
-                          campaign={campaign}
-                          merchantInventory={merchantInventory}
-                          onShowContextMenu={handleShowContextMenu}
-                          onPaste={handlePaste}
-                          onEdit={handleEditCard}
-                          onDelete={handleDeleteCard}
-                          isEditing={editingCards['merchant-card']}
-                          editingTotal={editingTotal}
-                          totalValue={totalValue}
-                          setTotalValue={setTotalValue}
-                          handleSaveTotal={handleSaveTotal}
-                          handleCancelTotalEdit={handleCancelTotalEdit}
-                          handleEditTotal={handleEditTotal}
-                          getTotalValue={getTotalValue}
-                          editingTableField={editingTableField}
-                          editingTableValue={editingTableValue}
-                          setEditingTableValue={setEditingTableValue}
-                          handleSaveTableField={handleSaveTableField}
-                          handleCancelTableEdit={handleCancelTableEdit}
-                          handleEditTableField={handleEditTableField}
-                          handleDeleteItem={handleDeleteItem}
-                          handleAddItem={handleAddItem}
-                        />
                       </div>
                     </div>
                   </div>

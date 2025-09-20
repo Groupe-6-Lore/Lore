@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import TemplateTab from './TemplateTab';
 import { ArrowLeft, Copy, Edit, ChevronRight, Package, Sword, Shield, Heart } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const ConsultationTemplatePanel = ({ 
   template, 
@@ -99,8 +100,32 @@ C'est ici que se jouera le destin de nombreux aventuriers, dans cette cité où 
 
 
   const handleCopyLink = () => {
-    // Utiliser la même fonction que dans la page templates
-    onCopyLink();
+    // Si c'est le template marchand, copier un texte spécial pour la détection
+    if (template?.id === 'marchand') {
+      const copyText = 'Rencontre avec un marchand - consultation';
+      navigator.clipboard.writeText(copyText).then(() => {
+        // Afficher une notification de succès
+        console.log('Texte copié pour le template marchand:', copyText);
+        toast.success('Lien copié ! Vous pouvez maintenant le coller dans le dashboard.');
+      }).catch(err => {
+        console.error('Erreur lors de la copie:', err);
+        toast.error('Erreur lors de la copie du lien');
+      });
+    } else if (template?.id === 'combat-simple') {
+      // Si c'est le template combat, copier un texte spécial pour la détection
+      const copyText = 'Combat simple - consultation';
+      navigator.clipboard.writeText(copyText).then(() => {
+        // Afficher une notification de succès
+        console.log('Texte copié pour le template combat:', copyText);
+        toast.success('Lien copié ! Vous pouvez maintenant le coller dans le dashboard.');
+      }).catch(err => {
+        console.error('Erreur lors de la copie:', err);
+        toast.error('Erreur lors de la copie du lien');
+      });
+    } else {
+      // Utiliser la même fonction que dans la page templates pour les autres templates
+      onCopyLink();
+    }
   };
 
   const consultationContent = (
