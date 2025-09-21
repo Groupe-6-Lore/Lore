@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Users, Clock, BookOpen, Settings, Bell } from 'lucide-react';
+import Header from '../components/Header';
+import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const UniverseInfo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // États pour les modals Sources et Joueurs
+  const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
 
   // Données d'exemple pour la page d'informations
   const universeInfo = {
@@ -41,30 +48,13 @@ const UniverseInfo = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      {/* Header */}
-      <header className="flex items-center justify-between p-6 bg-primary-blue/90">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/campaigns/create/universe')}
-            className="text-light hover:text-golden transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button className="text-light hover:text-golden transition-colors">
-            <Settings size={24} />
-          </button>
-          <button className="text-light hover:text-golden transition-colors">
-            <Bell size={24} />
-          </button>
-          <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-dark font-bold">
-            U
-          </div>
-        </div>
-      </header>
+      {/* Header unifié */}
+      <Header 
+        showBackButton={true}
+        onBackClick={() => navigate('/campaigns/create/universe')}
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
+      />
 
       {/* Breadcrumb */}
       <div className="px-6 py-4">
@@ -172,6 +162,12 @@ const UniverseInfo = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Sources */}
+      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

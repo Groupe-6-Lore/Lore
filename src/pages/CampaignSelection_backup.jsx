@@ -5,8 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
-import SourcesModal from '../components/modals/SourcesModal';
-import PlayersModal from '../components/modals/PlayersModal';
 
 const CampaignSelection = () => {
   const { user } = useAuth();
@@ -22,10 +20,6 @@ const CampaignSelection = () => {
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editResume, setEditResume] = useState('');
-
-  // États pour les modals Sources et Joueurs
-  const [showSources, setShowSources] = useState(false);
-  const [showPlayers, setShowPlayers] = useState(false);
 
   // Données par défaut si pas de campagnes
   const defaultCampaign = {
@@ -206,10 +200,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
   return (
     <div className="min-h-screen bg-primary-blue">
       {/* Header unifié */}
-      <Header 
-        onSourcesClick={() => setShowSources(true)}
-        onPlayersClick={() => setShowPlayers(true)}
-      />
+      <Header />
 
       {/* Titre principal avec soulignement doré */}
       <div className="px-6 pt-8 pb-6">
@@ -451,12 +442,6 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
           </div>
         </div>
       )}
-
-      {/* Modal Sources */}
-      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
-
-      {/* Modal Players */}
-      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

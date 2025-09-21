@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, Bell, Newspaper, ArrowLeft, Users, X } from 'lucide-react';
+import { Bell, Newspaper, ArrowLeft, Users, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,6 @@ const Header = ({
   onBackClick, 
   showNewsButton = true, 
   showNotifications = true, 
-  showSettings = true,
   showUserAvatar = true,
   showSourcesButton = true,
   showPlayersButton = true,
@@ -191,12 +190,6 @@ const Header = ({
           </div>
         )}
         
-        {/* Bouton Paramètres */}
-        {showSettings && (
-          <button className="bg-light/20 hover:bg-light/30 text-light p-3 rounded-lg transition-colors">
-            <Settings size={20} />
-          </button>
-        )}
         
         {/* Avatar utilisateur + menu */}
         {showUserAvatar && (

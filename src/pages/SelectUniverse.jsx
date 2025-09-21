@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight, Search, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Header from '../components/Header';
+import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const SelectUniverse = () => {
   const { user } = useAuth();
@@ -21,6 +23,10 @@ const SelectUniverse = () => {
   const itemsPerPage = 12;
   const [userLibrary, setUserLibrary] = useState([]);
   const [userPlayedGames, setUserPlayedGames] = useState([]);
+
+  // États pour les modals Sources et Joueurs
+  const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
 
   const allUniverses = [
     // Univers Fantasy
@@ -241,6 +247,8 @@ const SelectUniverse = () => {
         showBackButton={true}
         onBackClick={() => navigate('/campaigns/create')}
         className="bg-primary-blue/90"
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
       />
 
       {/* Breadcrumb */}
@@ -664,7 +672,13 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
           </div>
         </div>
       </div>
-    </div>
+
+    {/* Modal Sources */}
+    <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+    {/* Modal Players */}
+    <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
+  </div>
   );
 };
 

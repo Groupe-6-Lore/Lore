@@ -3,12 +3,14 @@ import { User, Mail, Calendar, MapPin, Globe, Shield, Bell, Palette, Save, Edit3
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profil');
   const [isEditing, setIsEditing] = useState(false);
   const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
   const [profileData, setProfileData] = useState({
     username: 'JeanDupont',
     email: 'knightnight@example.com',
@@ -101,7 +103,10 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <Header onSourcesClick={() => setShowSources(true)} />
+      <Header 
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
+      />
       
       {/* Bouton Retour */}
       <div className="px-32 pt-6">
@@ -586,6 +591,9 @@ const Profile = () => {
 
       {/* Modal Sources */}
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

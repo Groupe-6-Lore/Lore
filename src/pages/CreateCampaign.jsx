@@ -5,6 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
+import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const CreateCampaign = () => {
   const { user } = useAuth();
@@ -15,6 +17,10 @@ const CreateCampaign = () => {
   const [selectedRules, setSelectedRules] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
+
+  // États pour les modals Sources et Joueurs
+  const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
 
   // Nettoyer les sélections au démarrage (quand on vient de la page campagnes)
   useEffect(() => {
@@ -234,6 +240,8 @@ const CreateCampaign = () => {
       <Header 
         showBackButton={true}
         onBackClick={() => navigate('/campaigns')}
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
       />
 
       {/* Breadcrumb */}
@@ -670,6 +678,12 @@ const CreateCampaign = () => {
           </div>
         </div>
       )}
+
+      {/* Modal Sources */}
+      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { Download, CreditCard, Star, Users, HardDrive, Shield, Settings, Plus, S
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const Subscription = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Subscription = () => {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false); // Simule un abonnement inactif par défaut
   const [userType, setUserType] = useState('free'); // 'free', 'subscribed', 'cancelled'
   const [showCheckout, setShowCheckout] = useState(false);
@@ -111,7 +113,10 @@ const Subscription = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <Header onSourcesClick={() => setShowSources(true)} />
+      <Header 
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
+      />
       
       {/* Bouton Retour */}
       <div className="px-32 pt-6">
@@ -681,6 +686,9 @@ const Subscription = () => {
 
       {/* Modal Sources */}
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

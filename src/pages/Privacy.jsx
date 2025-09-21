@@ -3,11 +3,13 @@ import { Shield, Users, CreditCard, HardDrive, Eye, EyeOff, Lock, Globe, Bell, S
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const Privacy = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('confidentialite');
   const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'private', // 'public', 'private', 'friends'
     showEmail: false,
@@ -56,7 +58,10 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <Header onSourcesClick={() => setShowSources(true)} />
+      <Header 
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
+      />
       
       {/* Bouton Retour */}
       <div className="px-32 pt-6">
@@ -340,6 +345,9 @@ const Privacy = () => {
 
       {/* Modal Sources */}
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };

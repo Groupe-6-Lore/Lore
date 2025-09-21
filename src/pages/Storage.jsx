@@ -3,6 +3,7 @@ import { HardDrive, Upload, Download, Trash2, FileText, Image, File, AlertTriang
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
+import PlayersModal from '../components/modals/PlayersModal';
 
 const Storage = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Storage = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSources, setShowSources] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [storageUsage, setStorageUsage] = useState({
     used: 85, // Mo utilisés
@@ -147,7 +149,10 @@ const Storage = () => {
 
   return (
     <div className="min-h-screen bg-primary-blue">
-      <Header onSourcesClick={() => setShowSources(true)} />
+      <Header 
+        onSourcesClick={() => setShowSources(true)}
+        onPlayersClick={() => setShowPlayers(true)}
+      />
       
       {/* Bouton Retour */}
       <div className="px-32 pt-6">
@@ -542,6 +547,9 @@ const Storage = () => {
 
       {/* Modal Sources */}
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
     </div>
   );
 };
