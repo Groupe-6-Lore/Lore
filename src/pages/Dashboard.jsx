@@ -14,8 +14,12 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      // Forcer la redirection vers la page de connexion
+      window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
+      // Même en cas d'erreur, rediriger vers la page de connexion
+      window.location.href = '/';
     }
   };
 

@@ -5054,16 +5054,7 @@ const CampaignDashboard = () => {
     <div className="min-h-screen bg-primary-blue">
       {/* Header Lore fixe */}
       <header className="flex items-center justify-between p-6 bg-primary-blue border-b border-light/10">
-        <div>
-          <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">
-            {campaignData ? campaignData.title : 'LORE'}
-          </h1>
-          {campaignData && (
-            <div className="text-sm text-light/70 mt-1">
-              {campaignData.universe} • {campaignData.game_system}
-            </div>
-          )}
-        </div>
+        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
         
         <div className="flex items-center space-x-6">
           {/* Indicateur de sauvegarde */}
@@ -5249,11 +5240,14 @@ const CampaignDashboard = () => {
                   onClick={async () => {
                     try {
                       await supabase.auth.signOut();
+                      // Forcer la redirection vers la page de connexion
+                      window.location.href = '/';
                     } catch (e) {
                       console.error('Erreur de déconnexion:', e);
+                      // Même en cas d'erreur, rediriger vers la page de connexion
+                      window.location.href = '/';
                     } finally {
                       setShowUserMenu(false);
-                      navigate('/');
                     }
                   }}
                 >
@@ -5316,7 +5310,14 @@ const CampaignDashboard = () => {
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
+            {campaignData ? (
+              <div>
+                <h2 className="text-2xl font-bold text-light mb-2">{campaignData.title}</h2>
+                <p className="text-light/80 text-lg">{campaignData.game_system} • {campaignData.universe}</p>
+              </div>
+            ) : (
+              <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-light/60 text-sm">{new Date().toLocaleDateString('fr-FR')}</p>

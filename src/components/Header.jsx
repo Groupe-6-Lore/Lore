@@ -251,13 +251,21 @@ const Header = ({
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-black/5 transition-colors text-red-700"
                     onClick={async () => {
+                      console.log('Bouton déconnexion cliqué');
                       try {
+                        console.log('Tentative de déconnexion...');
                         await supabase.auth.signOut();
+                        console.log('Déconnexion réussie');
+                        
+                        // Forcer la redirection vers la page de connexion
+                        console.log('Redirection vers la page de connexion...');
+                        window.location.href = '/';
                       } catch (e) {
                         console.error('Erreur de déconnexion:', e);
+                        // Même en cas d'erreur, rediriger vers la page de connexion
+                        window.location.href = '/';
                       } finally {
                         setShowUserMenu(false);
-                        navigate('/');
                       }
                     }}
                   >
