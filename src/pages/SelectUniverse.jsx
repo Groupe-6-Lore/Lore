@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight, Search, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useGlobalPlayers } from '../hooks/useGlobalPlayers';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
 import PlayersModal from '../components/modals/PlayersModal';
@@ -9,6 +10,7 @@ import PlayersModal from '../components/modals/PlayersModal';
 const SelectUniverse = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { globalCampaignPlayers, characterAssignments, setCharacterAssignments } = useGlobalPlayers();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
@@ -672,6 +674,27 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal Sources */}
+      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
+
+      {/* Modal Players */}
+      <PlayersModal 
+        isOpen={showPlayers} 
+        onClose={() => setShowPlayers(false)}
+        characterAssignments={characterAssignments}
+        onRemoveAssignment={(playerId) => {
+          setCharacterAssignments(prev => {
+            const newAssignments = { ...prev };
+            delete newAssignments[playerId];
+            return newAssignments;
+          });
+        }}
+        campaignPlayers={globalCampaignPlayers}
+        onUpdatePlayers={() => {}}
+        onUpdateAssignments={setCharacterAssignments}
+        onRemovePlayer={() => {}}
+      />
     </div>
   );
 };

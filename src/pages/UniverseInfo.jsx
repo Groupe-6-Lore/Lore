@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Users, Clock, BookOpen, Settings, Bell } from 'lucide-react';
+import { useGlobalPlayers } from '../hooks/useGlobalPlayers';
 import Header from '../components/Header';
 import SourcesModal from '../components/modals/SourcesModal';
 import PlayersModal from '../components/modals/PlayersModal';
@@ -8,6 +9,7 @@ import PlayersModal from '../components/modals/PlayersModal';
 const UniverseInfo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { globalCampaignPlayers, characterAssignments, setCharacterAssignments } = useGlobalPlayers();
 
   // États pour les modals Sources et Joueurs
   const [showSources, setShowSources] = useState(false);
@@ -169,10 +171,18 @@ const UniverseInfo = () => {
       <PlayersModal 
         isOpen={showPlayers} 
         onClose={() => setShowPlayers(false)}
-        characterAssignments={{}}
-        onRemoveAssignment={() => {}}
-        campaignPlayers={[]}
+        characterAssignments={characterAssignments}
+        onRemoveAssignment={(playerId) => {
+          setCharacterAssignments(prev => {
+            const newAssignments = { ...prev };
+            delete newAssignments[playerId];
+            return newAssignments;
+          });
+        }}
+        campaignPlayers={globalCampaignPlayers}
         onUpdatePlayers={() => {}}
+        onUpdateAssignments={setCharacterAssignments}
+        onRemovePlayer={() => {}}
       />
     </div>
   );

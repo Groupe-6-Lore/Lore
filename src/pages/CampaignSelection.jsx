@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Bell, Plus, Users, UserPlus, X, Edit2, Save, X as XIcon } from 'lucide-react';
+import { Settings, Bell, Plus, Users, UserPlus, X, Edit2, Save, X as XIcon, MoreVertical, Trash2, Archive } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -29,36 +29,29 @@ const CampaignSelection = () => {
   
   // États pour l'affichage des joueurs
   const [expandedCampaign, setExpandedCampaign] = useState(null);
-  const [showPlayerDropdown, setShowPlayerDropdown] = useState(null);
   
   // États pour la synchronisation avec la modale joueurs
-  const [globalCampaignPlayers, setGlobalCampaignPlayers] = useState([
-    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
-    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
-    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
-    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
-    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
-    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
-  ]);
+  const [globalCampaignPlayers, setGlobalCampaignPlayers] = useState([]);
   
   // État pour gérer les assignations de personnages aux joueurs (comme dans le dashboard)
   const [characterAssignments, setCharacterAssignments] = useState({
-    'p1': 'Kriks',
-    'p2': 'Vaelene', 
-    'p3': 'Tardek',
-    'p4': 'Gora',
-    'p5': "T'Sari",
-    'p6': 'Lira'
+    '1': 'Elandra',
+    '2': 'Thorin', 
+    '3': 'Kael',
+    '4': 'Seraphine'
   });
-  
-  // État pour le pseudo personnalisé
-  const [selectedPlayerForPseudo, setSelectedPlayerForPseudo] = useState(null);
-  const [customPseudo, setCustomPseudo] = useState('');
-  const [showCustomPseudoInput, setShowCustomPseudoInput] = useState(false);
   
   // États pour l'assignation de personnages
   const [selectedPlayerForAssignment, setSelectedPlayerForAssignment] = useState(null);
   const [showCharacterAssignment, setShowCharacterAssignment] = useState(false);
+  
+  // États pour le menu contextuel des campagnes
+  const [showContextMenu, setShowContextMenu] = useState(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState(null);
+  const [showPlayerSelection, setShowPlayerSelection] = useState(false);
+  const [selectedCampaignForPlayer, setSelectedCampaignForPlayer] = useState(null);
 
   // Liste des joueurs disponibles pour l'ajout (même que dans PlayersModal)
   const availablePlayers = [
@@ -68,31 +61,46 @@ const CampaignSelection = () => {
     { id: 'f4', name: 'Jean', initials: 'J', image: '/images/players/jean.jpg' },
   ];
 
-  // Liste des personnages disponibles pour l'assignation
+  // Liste des personnages disponibles pour l'assignation (basée sur les personnages du TemplatePanel)
   const availableCharacters = [
-    'Kriks', 'Vaelene', 'Tardek', 'Gora', "T'Sari", 'Lira',
-    'Aragorn', 'Legolas', 'Gimli', 'Gandalf', 'Frodo', 'Sam',
-    'Drizzt', 'Bruenor', 'Catti-brie', 'Wulfgar', 'Regis', 'Artemis'
+    { id: 'char-1', name: 'Elandra', level: '5', class: 'Mage' },
+    { id: 'char-2', name: 'Thorin', level: '4', class: 'Guerrier' },
+    { id: 'char-3', name: 'Lyra', level: '3', class: 'Rôdeuse' },
+    { id: 'char-4', name: 'Merric', level: '2', class: 'Voleur' },
+    { id: 'char-5', name: 'Seraphine', level: '6', class: 'Clerc' },
+    { id: 'char-6', name: 'Korgan', level: '5', class: 'Barbare' },
+    { id: 'char-7', name: 'Alistair', level: '4', class: 'Paladin' },
+    { id: 'char-8', name: 'Nymeria', level: '3', class: 'Druide' },
+    { id: 'char-9', name: 'Vargash', level: '7', class: 'Sorcier' },
+    { id: 'char-10', name: 'Kael', level: '4', class: 'Barde' },
+    { id: 'char-11', name: 'Oona', level: '3', class: 'Moine' },
+    { id: 'char-12', name: 'Darius', level: '5', class: 'Rôdeur' }
   ];
 
-  // Synchroniser les joueurs globaux avec les campagnes
+  // Synchroniser les joueurs globaux pour la modale (somme de tous les joueurs de toutes les campagnes)
   useEffect(() => {
-    // Mettre à jour toutes les campagnes avec les joueurs globaux
-    setCampaigns(prev => prev.map(campaign => {
-      // Convertir les joueurs globaux au format de la campagne
-      const campaignFormatPlayers = globalCampaignPlayers.map(player => ({
-        id: player.id,
-        name: player.name,
-        character_name: player.character,
-        status: player.status
-      }));
-      
-      return {
-        ...campaign,
-        players: campaignFormatPlayers
-      };
-    }));
-  }, [globalCampaignPlayers]);
+    const allPlayers = [];
+    campaigns.forEach(campaign => {
+      campaign.players.forEach(player => {
+        // Éviter les doublons en vérifiant si le joueur existe déjà
+        if (!allPlayers.find(p => p.id === player.id)) {
+          allPlayers.push({
+            id: player.id,
+            name: player.name,
+            character: player.character_name,
+            initials: player.name[0]?.toUpperCase() || '?',
+            playerImage: `/images/players/${player.name.toLowerCase()}.jpg`,
+            characterImage: player.character_name ? `/images/characters/${player.character_name.toLowerCase().replace(/\s+/g, '')}.jpg` : null,
+            status: player.status
+          });
+        }
+      });
+    });
+    setGlobalCampaignPlayers(allPlayers);
+    
+    // Sauvegarder les campagnes dans localStorage pour la persistance
+    localStorage.setItem('allCampaigns', JSON.stringify(campaigns));
+  }, [campaigns]);
 
   // Données par défaut si pas de campagnes
   const defaultCampaign = {
@@ -108,10 +116,10 @@ Autrefois emprisonné par un pacte entre les royaumes unis, un fléau immémoria
 
 Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serments trahis forgeront l'histoire, et le sang versé nourrira l'aube incertaine d'une nouvelle ère.`,
     players: [
-      { id: '1', name: 'Alexis', character_name: 'Theron Lameacier', status: 'active' },
-      { id: '2', name: 'Marine', character_name: 'Lyralei Ventargent', status: 'active' },
-      { id: '3', name: 'Thomas', character_name: 'Kael le Vagabond', status: 'active' },
-      { id: '4', name: 'Sophie', character_name: 'Zara Ombreflame', status: 'active' }
+      { id: '1', name: 'Alexis', character_name: 'Elandra', status: 'active' },
+      { id: '2', name: 'Marine', character_name: 'Thorin', status: 'active' },
+      { id: '3', name: 'Thomas', character_name: 'Kael', status: 'active' },
+      { id: '4', name: 'Sophie', character_name: 'Seraphine', status: 'active' }
     ]
   };
 
@@ -135,9 +143,10 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
       
       // Mode démo : récupérer les campagnes du localStorage
       const demoCampaigns = JSON.parse(localStorage.getItem('demoCampaigns') || '[]');
+      const savedCampaigns = JSON.parse(localStorage.getItem('allCampaigns') || '[]');
       
-      // Combiner les campagnes démo avec la campagne par défaut
-      const allCampaigns = [defaultCampaign, ...demoCampaigns];
+      // Utiliser les campagnes sauvegardées si disponibles, sinon utiliser les démo
+      const allCampaigns = savedCampaigns.length > 0 ? savedCampaigns : [defaultCampaign, ...demoCampaigns];
       
       setCampaigns(allCampaigns);
     } catch (error) {
@@ -160,8 +169,28 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
 
   const handleAccessCampaign = (campaignId) => {
     console.log('Navigating to campaign:', campaignId);
-    toast.success('Redirection vers le dashboard de campagne...');
-    navigate(`/campaigns/${campaignId}`);
+    
+    // Trouver la campagne spécifique
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      // Passer les données de la campagne au dashboard
+      const campaignData = {
+        id: campaign.id,
+        title: campaign.title,
+        game_system: campaign.game_system,
+        universe: campaign.universe,
+        resume: campaign.resume,
+        players: campaign.players,
+        // Autres données nécessaires
+      };
+      
+      // Stocker les données dans sessionStorage pour le dashboard
+      sessionStorage.setItem('campaignData', JSON.stringify(campaignData));
+      toast.success('Redirection vers le dashboard de campagne...');
+      navigate(`/campaigns/${campaignId}`);
+    } else {
+      toast.error('Campagne non trouvée');
+    }
   };
 
   const handleNavigateToSystem = (system) => {
@@ -173,81 +202,74 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
   };
 
   const handleAddPlayer = (campaignId) => {
-    setShowPlayerDropdown(showPlayerDropdown === campaignId ? null : campaignId);
+    console.log('=== AJOUT DE JOUEUR ===');
+    console.log('Campaign ID:', campaignId);
+    console.log('availablePlayers:', availablePlayers);
+    
+    // Ouvrir la sélection de joueurs depuis la modale header
+    setSelectedCampaignForPlayer(campaignId);
+    setShowPlayerSelection(true);
+    setShowPlayers(true); // Ouvrir la modale PlayersModal
+    
+    console.log('Modale ouverte avec showPlayerSelection = true');
   };
 
   const handleSelectPlayer = (campaignId, player) => {
-    // Ajouter le joueur à la campagne avec la structure de la modale joueurs
+    // Ajouter le joueur à la campagne spécifique
     const newPlayerId = `invited-${Date.now()}`;
     const newPlayer = {
       id: newPlayerId,
       name: player.name,
-      character: null,
-      initials: player.initials,
-      playerImage: player.image,
-      characterImage: null,
+      character_name: null,
       status: 'active'
     };
     
-    // Mettre à jour les joueurs globaux (la synchronisation avec les campagnes se fait via useEffect)
-    setGlobalCampaignPlayers(prev => [...prev, newPlayer]);
+    // Mettre à jour la campagne spécifique
+    setCampaigns(prev => prev.map(campaign => {
+      if (campaign.id === campaignId) {
+        return {
+          ...campaign,
+          players: [...campaign.players, newPlayer]
+        };
+      }
+      return campaign;
+    }));
     
-    // Ne pas ajouter d'assignation de personnage (le joueur n'a pas de pseudo)
-    
-    setShowPlayerDropdown(null);
     toast.success(`Joueur ${player.name} ajouté à la campagne !`);
   };
 
-  const handleSelectPlayerForPseudo = (player) => {
-    setSelectedPlayerForPseudo(player);
-    setShowCustomPseudoInput(true);
+  const handleSelectPlayerFromModal = (player) => {
+    console.log('=== SÉLECTION DE JOUEUR ===');
+    console.log('Player sélectionné:', player);
+    console.log('Campaign cible:', selectedCampaignForPlayer);
+    
+    if (selectedCampaignForPlayer) {
+      handleSelectPlayer(selectedCampaignForPlayer, player);
+      setShowPlayerSelection(false);
+      setSelectedCampaignForPlayer(null);
+      setShowPlayers(false); // Fermer la modale PlayersModal
+      console.log('Joueur ajouté et modale fermée');
+    } else {
+      console.error('Aucune campagne sélectionnée pour ajouter le joueur');
+    }
   };
 
-  const handleAddPlayerWithPseudo = (campaignId) => {
-    if (!customPseudo.trim()) {
-      toast.error('Veuillez saisir un pseudo');
-      return;
-    }
-
-    if (!selectedPlayerForPseudo) {
-      toast.error('Veuillez sélectionner un joueur');
-      return;
-    }
-
-    const newPlayerId = `invited-${Date.now()}`;
-    const newPlayer = {
-      id: newPlayerId,
-      name: selectedPlayerForPseudo.name,
-      character: customPseudo.trim(),
-      initials: selectedPlayerForPseudo.initials,
-      playerImage: selectedPlayerForPseudo.image,
-      characterImage: null,
-      status: 'active'
-    };
-    
-    // Mettre à jour les joueurs globaux (la synchronisation avec les campagnes se fait via useEffect)
-    setGlobalCampaignPlayers(prev => [...prev, newPlayer]);
-    
-    // Mettre à jour les assignations de personnages
-    setCharacterAssignments(prev => ({
-      ...prev,
-      [newPlayerId]: customPseudo.trim()
-    }));
-    
-    setShowPlayerDropdown(null);
-    setShowCustomPseudoInput(false);
-    setSelectedPlayerForPseudo(null);
-    setCustomPseudo('');
-    toast.success(`Joueur ${selectedPlayerForPseudo.name} ajouté avec le pseudo "${customPseudo.trim()}" !`);
-  };
 
   const handleToggleExpanded = (campaignId) => {
     setExpandedCampaign(expandedCampaign === campaignId ? null : campaignId);
   };
 
-  const handleRemovePlayer = (playerId) => {
-    // Supprimer le joueur des joueurs globaux
-    setGlobalCampaignPlayers(prev => prev.filter(player => player.id !== playerId));
+  const handleRemovePlayer = (playerId, campaignId) => {
+    // Supprimer le joueur de la campagne spécifique
+    setCampaigns(prev => prev.map(campaign => {
+      if (campaign.id === campaignId) {
+        return {
+          ...campaign,
+          players: campaign.players.filter(player => player.id !== playerId)
+        };
+      }
+      return campaign;
+    }));
     
     // Supprimer aussi l'assignation si elle existe
     setCharacterAssignments(prev => {
@@ -259,19 +281,27 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
     toast.success('Joueur supprimé de la campagne !');
   };
 
-  const handleAssignCharacter = (playerId, characterName) => {
+  const handleAssignCharacter = (playerId, characterName, campaignId) => {
     // Mettre à jour l'assignation de personnage
     setCharacterAssignments(prev => ({
       ...prev,
       [playerId]: characterName
     }));
     
-    // Mettre à jour aussi le joueur dans la liste globale
-    setGlobalCampaignPlayers(prev => prev.map(player => 
-      player.id === playerId 
-        ? { ...player, character: characterName }
-        : player
-    ));
+    // Mettre à jour le joueur dans la campagne spécifique
+    setCampaigns(prev => prev.map(campaign => {
+      if (campaign.id === campaignId) {
+        return {
+          ...campaign,
+          players: campaign.players.map(player => 
+            player.id === playerId 
+              ? { ...player, character_name: characterName }
+              : player
+          )
+        };
+      }
+      return campaign;
+    }));
     
     toast.success(`Personnage "${characterName}" assigné au joueur !`);
   };
@@ -281,12 +311,81 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
     setShowCharacterAssignment(true);
   };
 
-  const handleCompleteCharacterAssignment = (characterName) => {
+  const handleCompleteCharacterAssignment = (characterName, campaignId) => {
     if (selectedPlayerForAssignment && characterName) {
-      handleAssignCharacter(selectedPlayerForAssignment.id, characterName);
+      handleAssignCharacter(selectedPlayerForAssignment.id, characterName, campaignId);
       setShowCharacterAssignment(false);
       setSelectedPlayerForAssignment(null);
     }
+  };
+
+  const handleContextMenu = (e, campaignId) => {
+    console.log('=== OUVERTURE MENU CONTEXTUEL ===');
+    console.log('Campaign ID:', campaignId);
+    console.log('Type:', typeof campaignId);
+    console.log('Position:', { x: e.clientX, y: e.clientY });
+    
+    e.preventDefault();
+    e.stopPropagation();
+    setShowContextMenu(campaignId);
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    
+    console.log('Menu contextuel ouvert pour:', campaignId);
+  };
+
+  const handleDeleteCampaign = (campaignId) => {
+    console.log('=== DÉBUT SUPPRESSION ===');
+    console.log('ID de campagne à supprimer:', campaignId);
+    
+    // Vérifier si la campagne existe
+    const campaign = campaigns.find(c => c.id === campaignId);
+    console.log('Campagne trouvée:', campaign);
+    
+    if (!campaign) {
+      console.error('Campagne non trouvée avec l\'ID:', campaignId);
+      toast.error('Campagne non trouvée !');
+      setShowContextMenu(null);
+      return;
+    }
+    
+    // Fermer le menu contextuel et afficher le toast de confirmation
+    setShowContextMenu(null);
+    setCampaignToDelete(campaign);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteCampaign = () => {
+    if (!campaignToDelete) return;
+    
+    console.log('Confirmation reçue, suppression en cours...');
+    
+    setCampaigns(prev => {
+      console.log('État précédent:', prev);
+      const newCampaigns = prev.filter(campaign => campaign.id !== campaignToDelete.id);
+      console.log('Nouvel état:', newCampaigns);
+      return newCampaigns;
+    });
+    
+    setShowDeleteConfirmation(false);
+    setCampaignToDelete(null);
+    toast.success('Campagne supprimée !');
+    console.log('=== FIN SUPPRESSION ===');
+  };
+
+  const cancelDeleteCampaign = () => {
+    console.log('Suppression annulée par l\'utilisateur');
+    setShowDeleteConfirmation(false);
+    setCampaignToDelete(null);
+  };
+
+  const handleArchiveCampaign = (campaignId) => {
+    setCampaigns(prev => prev.map(campaign => 
+      campaign.id === campaignId 
+        ? { ...campaign, archived: !campaign.archived }
+        : campaign
+    ));
+    setShowContextMenu(null);
+    toast.success('Campagne archivée !');
   };
 
   const handleSavePlayer = async () => {
@@ -452,12 +551,21 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                         {campaign.universe}
                       </button>
                     </div>
-                    <button
-                      onClick={() => handleAccessCampaign(campaign.id)}
-                      className="bg-golden hover:bg-golden/80 text-dark px-6 py-3 rounded-lg font-bold transition-colors"
-                    >
-                      Accéder à la campagne
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleAccessCampaign(campaign.id)}
+                        className="bg-golden hover:bg-golden/80 text-dark px-6 py-3 rounded-lg font-bold transition-colors"
+                      >
+                        Accéder à la campagne
+                      </button>
+                      <button
+                        onClick={(e) => handleContextMenu(e, campaign.id)}
+                        className="text-light/70 hover:text-light p-2 hover:bg-light/10 rounded-lg transition-colors"
+                        title="Options de la campagne"
+                      >
+                        <MoreVertical size={20} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Titre de la campagne - Éditable */}
@@ -570,7 +678,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                                   👤
                                 </button>
                                 <button
-                                  onClick={() => handleRemovePlayer(player.id)}
+                                  onClick={() => handleRemovePlayer(player.id, campaign.id)}
                                   className="text-red-400 hover:text-red-300 transition-colors p-1"
                                   title="Supprimer le joueur"
                                 >
@@ -615,7 +723,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                                     👤
                                   </button>
                                   <button
-                                    onClick={() => handleRemovePlayer(player.id)}
+                                    onClick={() => handleRemovePlayer(player.id, campaign.id)}
                                     className="text-red-400 hover:text-red-300 transition-colors p-1"
                                     title="Supprimer le joueur"
                                   >
@@ -627,85 +735,6 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                           </div>
                         )}
                         
-                        {/* Menu déroulant pour ajouter des joueurs */}
-                        {showPlayerDropdown === campaign.id && (
-                          <div className="mt-4 p-4 bg-dark/20 border border-light/20 rounded-lg">
-                            <h4 className="text-light font-semibold mb-3">Ajouter un joueur</h4>
-                            
-                            {/* Interface pour pseudo personnalisé */}
-                            {!showCustomPseudoInput ? (
-                              <div className="space-y-2 max-h-40 overflow-y-auto">
-                                {availablePlayers.map((player) => (
-                                  <div key={player.id} className="flex items-center space-x-2">
-                                    <button
-                                      onClick={() => handleSelectPlayer(campaign.id, player)}
-                                      className="flex-1 flex items-center space-x-3 p-2 hover:bg-light/10 rounded transition-colors"
-                                    >
-                                      <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-dark text-sm font-bold">
-                                        {player.initials}
-                                      </div>
-                                      <span className="text-light">{player.name}</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleSelectPlayerForPseudo(player)}
-                                      className="px-2 py-1 bg-golden/20 text-golden rounded text-xs hover:bg-golden/30 transition-colors"
-                                      title="Ajouter avec pseudo personnalisé"
-                                    >
-                                      Pseudo
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="mb-3 p-3 bg-light/5 border border-light/20 rounded">
-                                <div className="flex items-center space-x-3 mb-3">
-                                  <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-dark text-sm font-bold">
-                                    {selectedPlayerForPseudo?.initials}
-                                  </div>
-                                  <span className="text-light font-medium">{selectedPlayerForPseudo?.name}</span>
-                                </div>
-                                <input
-                                  type="text"
-                                  value={customPseudo}
-                                  onChange={(e) => setCustomPseudo(e.target.value)}
-                                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-black placeholder-light/50 mb-2"
-                                  placeholder="Nom du personnage/pseudo"
-                                  autoFocus
-                                />
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() => handleAddPlayerWithPseudo(campaign.id)}
-                                    className="px-3 py-1 bg-golden text-dark rounded text-sm font-semibold hover:bg-golden/80 transition-colors"
-                                  >
-                                    Ajouter
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setShowCustomPseudoInput(false);
-                                      setSelectedPlayerForPseudo(null);
-                                      setCustomPseudo('');
-                                    }}
-                                    className="px-3 py-1 bg-light/20 text-light rounded text-sm hover:bg-light/30 transition-colors"
-                                  >
-                                    Annuler
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                            
-                            <button
-                              onClick={() => {
-                                setShowPlayerDropdown(null);
-                                setShowCustomPseudoInput(false);
-                                setSelectedPlayerForPseudo(null);
-                                setCustomPseudo('');
-                              }}
-                              className="mt-3 text-light/70 hover:text-light text-sm underline"
-                            >
-                              Fermer
-                            </button>
-                          </div>
-                        )}
                         
                         {/* Interface d'assignation de personnage */}
                         {showCharacterAssignment && selectedPlayerForAssignment && (
@@ -713,14 +742,15 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                             <h4 className="text-light font-semibold mb-3">
                               Assigner un personnage à {selectedPlayerForAssignment.name}
                             </h4>
-                            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                               {availableCharacters.map((character) => (
                                 <button
-                                  key={character}
-                                  onClick={() => handleCompleteCharacterAssignment(character)}
-                                  className="p-2 text-sm bg-light/10 hover:bg-light/20 rounded text-light transition-colors"
+                                  key={character.id}
+                                  onClick={() => handleCompleteCharacterAssignment(character.name, campaign.id)}
+                                  className="p-3 text-sm bg-light/10 hover:bg-light/20 rounded text-light transition-colors text-left"
                                 >
-                                  {character}
+                                  <div className="font-medium">{character.name}</div>
+                                  <div className="text-xs text-light/70">Niveau {character.level} • {character.class}</div>
                                 </button>
                               ))}
                             </div>
@@ -845,7 +875,137 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
               return newAssignments;
             });
           }}
+          // Nouvelles props pour la sélection de joueurs
+          showPlayerSelection={showPlayerSelection}
+          onSelectPlayer={handleSelectPlayerFromModal}
+          onClosePlayerSelection={() => {
+            setShowPlayerSelection(false);
+            setSelectedCampaignForPlayer(null);
+            setShowPlayers(false); // Fermer la modale PlayersModal
+          }}
+          availablePlayers={availablePlayers}
         />
+        
+        {/* Menu contextuel pour les campagnes */}
+        {showContextMenu && (
+          <div 
+            className="fixed inset-0 z-[1000]" 
+            onClick={() => {
+              console.log('Fermeture du menu contextuel');
+              setShowContextMenu(null);
+            }}
+          >
+            <div 
+              className="absolute bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[160px]"
+              style={{ 
+                left: contextMenuPosition.x, 
+                top: contextMenuPosition.y,
+                transform: 'translate(-100%, 0)' // Aligner à droite du clic
+              }}
+              onClick={(e) => {
+                console.log('Clic sur le menu contextuel');
+                e.stopPropagation();
+              }}
+            >
+              <button
+                onClick={(e) => {
+                  console.log('Clic sur Archiver');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleArchiveCampaign(showContextMenu);
+                }}
+                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+              >
+                <Archive size={16} />
+                <span>Archiver</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  console.log('Clic sur Supprimer');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteCampaign(showContextMenu);
+                }}
+                className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              >
+                <Trash2 size={16} />
+                <span>Supprimer</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Toast de confirmation de suppression */}
+        {showDeleteConfirmation && campaignToDelete && (
+          <div className="fixed inset-0 z-[1001] flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={cancelDeleteCampaign} />
+            
+            <div className="relative bg-[#f7f1e5] text-[#1a1a1a] w-full max-w-md mx-4 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 bg-[rgba(255,255,255,0.6)]">
+                <h3 className="text-xl font-semibold flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <Trash2 size={20} className="text-red-600" />
+                  </div>
+                  <span>Supprimer la campagne</span>
+                </h3>
+                <button 
+                  onClick={cancelDeleteCampaign}
+                  className="text-black/60 hover:text-black transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="mb-4">
+                  <p className="text-gray-700 mb-2">
+                    Êtes-vous sûr de vouloir supprimer la campagne :
+                  </p>
+                  <div className="bg-white/50 border border-black/10 rounded-lg p-4">
+                    <h4 className="font-semibold text-lg text-[#1a1a1a] mb-2">
+                      {campaignToDelete.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {campaignToDelete.resume}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-red-600 text-xs font-bold">!</span>
+                    </div>
+                    <div>
+                      <p className="text-red-800 font-medium text-sm mb-1">
+                        Action irréversible
+                      </p>
+                      <p className="text-red-700 text-sm">
+                        Cette action supprimera définitivement la campagne et toutes ses données associées.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelDeleteCampaign}
+                    className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={confirmDeleteCampaign}
+                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Trash2 size={16} />
+                    <span>Supprimer</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

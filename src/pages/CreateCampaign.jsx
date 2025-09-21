@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Bell, ChevronRight, ChevronLeft, Check, CreditCard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useGlobalPlayers } from '../hooks/useGlobalPlayers';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
@@ -11,6 +12,7 @@ import PlayersModal from '../components/modals/PlayersModal';
 const CreateCampaign = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { globalCampaignPlayers, characterAssignments, setCharacterAssignments } = useGlobalPlayers();
   
   // État pour la création de campagne
   const [selectedUniverse, setSelectedUniverse] = useState(null);
@@ -686,10 +688,18 @@ const CreateCampaign = () => {
       <PlayersModal 
         isOpen={showPlayers} 
         onClose={() => setShowPlayers(false)}
-        characterAssignments={{}}
-        onRemoveAssignment={() => {}}
-        campaignPlayers={[]}
+        characterAssignments={characterAssignments}
+        onRemoveAssignment={(playerId) => {
+          setCharacterAssignments(prev => {
+            const newAssignments = { ...prev };
+            delete newAssignments[playerId];
+            return newAssignments;
+          });
+        }}
+        campaignPlayers={globalCampaignPlayers}
         onUpdatePlayers={() => {}}
+        onUpdateAssignments={setCharacterAssignments}
+        onRemovePlayer={() => {}}
       />
     </div>
   );

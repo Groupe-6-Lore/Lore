@@ -11,15 +11,13 @@ const Avatar = ({ image, initials, name }) => (
   </div>
 );
 
-const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssignment = () => {}, campaignPlayers: externalPlayers, onUpdatePlayers, onRemovePlayer, onUpdateAssignments }) => {
+const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssignment = () => {}, campaignPlayers: externalPlayers, onUpdatePlayers, onRemovePlayer, onUpdateAssignments, showPlayerSelection = false, onSelectPlayer, onClosePlayerSelection, availablePlayers = [] }) => {
   // Utiliser les joueurs externes ou un état local par défaut
   const [campaignPlayers, setCampaignPlayers] = useState(externalPlayers || [
-    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
-    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
-    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
-    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
-    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
-    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+    { id: '1', name: 'Alexis', character: 'Elandra', initials: 'A', playerImage: '/images/players/alexis.jpg', characterImage: '/images/characters/elandra.jpg', status: 'active' },
+    { id: '2', name: 'Marine', character: 'Thorin', initials: 'M', playerImage: '/images/players/marine.jpg', characterImage: '/images/characters/thorin.jpg', status: 'active' },
+    { id: '3', name: 'Thomas', character: 'Kael', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/kael.jpg', status: 'active' },
+    { id: '4', name: 'Sophie', character: 'Seraphine', initials: 'S', playerImage: '/images/players/sophie.jpg', characterImage: '/images/characters/seraphine.jpg', status: 'active' },
   ]);
   
   // Synchroniser avec les joueurs externes
@@ -413,7 +411,9 @@ const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssi
 
           {/* Right column */}
           <div className="p-6">
-            <div className="text-lg font-semibold mb-4">Invitez des amis à jouer</div>
+            <div className="text-lg font-semibold mb-4">
+              {showPlayerSelection ? 'Sélectionnez un joueur à ajouter' : 'Invitez des amis à jouer'}
+            </div>
 
             {/* Search */}
             <div className="flex items-center space-x-2 mb-4">
@@ -429,20 +429,31 @@ const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssi
             </div>
 
             {/* All friends */}
-            <div className="mb-3 text-sm font-semibold">Tous les amis – {friends.length}</div>
+            <div className="mb-3 text-sm font-semibold">
+              Tous les amis – {showPlayerSelection ? availablePlayers.length : friends.length}
+            </div>
             <div className="space-y-2 max-h-64 overflow-auto pr-1">
-              {filteredFriends.map(f => (
+              {(showPlayerSelection ? availablePlayers : filteredFriends).map(f => (
                  <div key={f.id} className="flex items-center justify-between bg-white/50 border border-black/10 rounded-lg px-3 py-2">
                    <div className="flex items-center space-x-3">
                      <Avatar image={f.image} initials={f.initials} name={f.name} />
                      <span className="font-medium">{f.name}</span>
                    </div>
-                  <button
-                    onClick={() => handleInvite(f.id)}
-                    className={`px-3 py-1 rounded-lg border border-[#985E41] text-[#985E41] text-sm ${invited[f.id] ? 'bg-[#985E41] text-white' : 'hover:bg-[#985E41]/10'}`}
-                  >
-                    {invited[f.id] ? 'Désinviter' : 'Inviter'}
-                  </button>
+                  {showPlayerSelection ? (
+                    <button
+                      onClick={() => onSelectPlayer && onSelectPlayer(f)}
+                      className="px-3 py-1 rounded-lg border border-[#985E41] text-[#985E41] text-sm hover:bg-[#985E41]/10"
+                    >
+                      Sélectionner
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleInvite(f.id)}
+                      className={`px-3 py-1 rounded-lg border border-[#985E41] text-[#985E41] text-sm ${invited[f.id] ? 'bg-[#985E41] text-white' : 'hover:bg-[#985E41]/10'}`}
+                    >
+                      {invited[f.id] ? 'Désinviter' : 'Inviter'}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -464,7 +475,11 @@ const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssi
             </div>
 
             <div className="flex justify-end mt-6">
-              <button onClick={onClose} className="px-4 py-2 rounded-lg bg-golden hover:bg-golden/80 text-dark-blue font-semibold">Fermer</button>
+              {showPlayerSelection ? (
+                <button onClick={onClosePlayerSelection} className="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-semibold">Annuler</button>
+              ) : (
+                <button onClick={onClose} className="px-4 py-2 rounded-lg bg-golden hover:bg-golden/80 text-dark-blue font-semibold">Fermer</button>
+              )}
             </div>
           </div>
         </div>

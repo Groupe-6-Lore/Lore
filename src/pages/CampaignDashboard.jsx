@@ -2649,23 +2649,97 @@ const CampaignDashboard = () => {
   
   // État pour gérer les assignations de personnages aux joueurs
   const [characterAssignments, setCharacterAssignments] = useState({
-    'p1': 'Kriks',
-    'p2': 'Vaelene', 
-    'p3': 'Tardek',
-    'p4': 'Gora',
-    'p5': "T'Sari",
-    'p6': 'Lira'
+    '1': 'Elandra',
+    '2': 'Thorin', 
+    '3': 'Kael',
+    '4': 'Seraphine'
   });
   
   // État pour gérer les joueurs de la campagne
   const [campaignPlayers, setCampaignPlayers] = useState([
-    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
-    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
-    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
-    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
-    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
-    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+    { id: '1', name: 'Alexis', character: 'Elandra', initials: 'A', playerImage: '/images/players/alexis.jpg', characterImage: '/images/characters/elandra.jpg', status: 'active' },
+    { id: '2', name: 'Marine', character: 'Thorin', initials: 'M', playerImage: '/images/players/marine.jpg', characterImage: '/images/characters/thorin.jpg', status: 'active' },
+    { id: '3', name: 'Thomas', character: 'Kael', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/kael.jpg', status: 'active' },
+    { id: '4', name: 'Sophie', character: 'Seraphine', initials: 'S', playerImage: '/images/players/sophie.jpg', characterImage: '/images/characters/seraphine.jpg', status: 'active' },
   ]);
+
+  // États pour les données de la campagne
+  const [campaignData, setCampaignData] = useState(null);
+  const [isDefaultCampaign, setIsDefaultCampaign] = useState(false);
+
+  // Charger les données de la campagne depuis sessionStorage
+  useEffect(() => {
+    const campaignDataFromStorage = sessionStorage.getItem('campaignData');
+    if (campaignDataFromStorage) {
+      try {
+        const data = JSON.parse(campaignDataFromStorage);
+        console.log('Données de campagne chargées:', data);
+        
+        setCampaignData(data);
+        setIsDefaultCampaign(data.id === 'default-campaign');
+        
+        // Convertir les joueurs de la campagne au format de la modale
+        if (data.players && data.players.length > 0) {
+          const formattedPlayers = data.players.map(player => ({
+            id: player.id,
+            name: player.name,
+            character: player.character_name,
+            initials: player.name[0]?.toUpperCase() || '?',
+            playerImage: `/images/players/${player.name.toLowerCase()}.jpg`,
+            characterImage: player.character_name ? `/images/characters/${player.character_name.toLowerCase().replace(/\s+/g, '')}.jpg` : null,
+            status: player.status
+          }));
+          
+          setCampaignPlayers(formattedPlayers);
+          
+          // Mettre à jour les assignations de personnages
+          const assignments = {};
+          data.players.forEach(player => {
+            if (player.character_name) {
+              assignments[player.id] = player.character_name;
+            }
+          });
+          setCharacterAssignments(assignments);
+        } else {
+          // Nouvelle campagne sans joueurs
+          setCampaignPlayers([]);
+          setCharacterAssignments({});
+        }
+        
+        // Nettoyer sessionStorage après utilisation
+        sessionStorage.removeItem('campaignData');
+      } catch (error) {
+        console.error('Erreur lors du chargement des données de campagne:', error);
+      }
+    }
+  }, []);
+
+  // Fonction pour sauvegarder les joueurs de la campagne
+  const saveCampaignPlayers = (players) => {
+    // Convertir les joueurs au format de la campagne
+    const campaignFormatPlayers = players.map(player => ({
+      id: player.id,
+      name: player.name,
+      character_name: player.character,
+      status: player.status
+    }));
+    
+    // Sauvegarder dans localStorage pour la persistance
+    const campaignId = params.id;
+    const savedCampaigns = JSON.parse(localStorage.getItem('demoCampaigns') || '[]');
+    const updatedCampaigns = savedCampaigns.map(campaign => {
+      if (campaign.id === campaignId) {
+        return {
+          ...campaign,
+          players: campaignFormatPlayers
+        };
+      }
+      return campaign;
+    });
+    
+    localStorage.setItem('demoCampaigns', JSON.stringify(updatedCampaigns));
+    console.log('Joueurs de campagne sauvegardés:', campaignFormatPlayers);
+  };
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
@@ -4980,7 +5054,16 @@ const CampaignDashboard = () => {
     <div className="min-h-screen bg-primary-blue">
       {/* Header Lore fixe */}
       <header className="flex items-center justify-between p-6 bg-primary-blue border-b border-light/10">
-        <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">LORE</h1>
+        <div>
+          <h1 className="text-4xl font-bold tracking-wider text-light eagle-lake-font">
+            {campaignData ? campaignData.title : 'LORE'}
+          </h1>
+          {campaignData && (
+            <div className="text-sm text-light/70 mt-1">
+              {campaignData.universe} • {campaignData.game_system}
+            </div>
+          )}
+        </div>
         
         <div className="flex items-center space-x-6">
           {/* Indicateur de sauvegarde */}
@@ -5175,7 +5258,7 @@ const CampaignDashboard = () => {
                   }}
                 >
                   Déconnexion
-          </button>
+                </button>
               </div>
               </div>
             )}
@@ -5249,6 +5332,9 @@ const CampaignDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Zone centrale - 3 colonnes */}
           <div className="lg:col-span-3 space-y-12">
+            {isDefaultCampaign ? (
+              // Contenu pour "Les Échos de Nerath" (campagne existante)
+              <>
             {/* Notes de campagne - Style Notion avec Drag & Drop */}
             <DndContext
               sensors={sensors}
@@ -5390,6 +5476,24 @@ const CampaignDashboard = () => {
 
 
             </DndContext>
+              </>
+            ) : (
+              // Contenu pour les nouvelles campagnes (vide, à remplir)
+              <div className="text-center py-16">
+                <div className="bg-light/10 backdrop-blur-sm rounded-2xl p-8 border border-light/20">
+                  <BookOpen size={64} className="text-light/60 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-light mb-2">Votre campagne vous attend</h2>
+                  <p className="text-light/70 mb-6">
+                    Commencez à écrire votre histoire en utilisant les templates à droite ou en tapant directement ici.
+                  </p>
+                  <div className="text-sm text-light/60">
+                    <p>• Utilisez <kbd className="bg-light/20 px-2 py-1 rounded">/</kbd> pour insérer des éléments</p>
+                    <p>• Glissez-déposez des templates depuis le panneau de droite</p>
+                    <p>• Le chatbot IA est là pour vous aider</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -5399,7 +5503,7 @@ const CampaignDashboard = () => {
             {/* Image dynamique basée sur les mentions */}
             <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
               <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg">
-                {currentMentionImage ? (
+                {isDefaultCampaign && currentMentionImage ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img 
                       src={currentMentionImage} 
@@ -5423,8 +5527,12 @@ const CampaignDashboard = () => {
                       </div>
                     </div>
                     <div className="absolute bottom-2 left-2 right-2 text-center">
-                      <div className="text-sm text-light/80">Aucune mention détectée</div>
-                      <div className="text-xs text-light/60 mt-1">L'image apparaîtra automatiquement</div>
+                      <div className="text-sm text-light/80">
+                        {isDefaultCampaign ? 'Aucune mention détectée' : 'Image de campagne'}
+                      </div>
+                      <div className="text-xs text-light/60 mt-1">
+                        {isDefaultCampaign ? 'L\'image apparaîtra automatiquement' : 'Ajoutez une image pour votre campagne'}
+                      </div>
                     </div>
                   </>
                 )}
@@ -5550,7 +5658,24 @@ const CampaignDashboard = () => {
           });
         }}
         campaignPlayers={campaignPlayers}
-        onUpdatePlayers={setCampaignPlayers}
+        onUpdatePlayers={(updatedPlayers) => {
+          setCampaignPlayers(updatedPlayers);
+          // Sauvegarder les changements dans la campagne spécifique
+          saveCampaignPlayers(updatedPlayers);
+        }}
+        onUpdateAssignments={setCharacterAssignments}
+        onRemovePlayer={(playerId) => {
+          const updatedPlayers = campaignPlayers.filter(player => player.id !== playerId);
+          setCampaignPlayers(updatedPlayers);
+          saveCampaignPlayers(updatedPlayers);
+          
+          // Supprimer aussi l'assignation si elle existe
+          setCharacterAssignments(prev => {
+            const newAssignments = { ...prev };
+            delete newAssignments[playerId];
+            return newAssignments;
+          });
+        }}
       />
      </div>
    );

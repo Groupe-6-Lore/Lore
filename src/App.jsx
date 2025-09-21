@@ -14,7 +14,6 @@ import UniverseInfo from './pages/UniverseInfo';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
 import CreateCampaign from './pages/CreateCampaign';
-import Payment from './pages/Payment';
 import CampaignDashboard from './pages/CampaignDashboard';
 import News from './pages/News';
 import Subscription from './pages/Subscription';
@@ -202,15 +201,6 @@ function App() {
             } 
           />
           
-          {/* Route protégée - Payment */}
-          <Route 
-            path="/campaigns/create/payment" 
-            element={
-              <ProtectedRoute>
-                <Payment />
-              </ProtectedRoute>
-            } 
-          />
           
           {/* Route protégée - Players */}
           <Route path="/players" element={
