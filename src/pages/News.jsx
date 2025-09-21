@@ -27,7 +27,14 @@ const News = () => {
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
 
       {/* Modal Players */}
-      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
+      <PlayersModal 
+        isOpen={showPlayers} 
+        onClose={() => setShowPlayers(false)}
+        characterAssignments={{}}
+        onRemoveAssignment={() => {}}
+        campaignPlayers={[]}
+        onUpdatePlayers={() => {}}
+      />
     </div>
   );
 };

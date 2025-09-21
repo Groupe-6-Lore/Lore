@@ -672,13 +672,7 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
           </div>
         </div>
       </div>
-
-    {/* Modal Sources */}
-    <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
-
-    {/* Modal Players */}
-    <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
-  </div>
+    </div>
   );
 };
 

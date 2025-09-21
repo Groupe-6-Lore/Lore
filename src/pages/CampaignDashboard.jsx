@@ -2646,6 +2646,26 @@ const CampaignDashboard = () => {
   const [showSources, setShowSources] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  
+  // État pour gérer les assignations de personnages aux joueurs
+  const [characterAssignments, setCharacterAssignments] = useState({
+    'p1': 'Kriks',
+    'p2': 'Vaelene', 
+    'p3': 'Tardek',
+    'p4': 'Gora',
+    'p5': "T'Sari",
+    'p6': 'Lira'
+  });
+  
+  // État pour gérer les joueurs de la campagne
+  const [campaignPlayers, setCampaignPlayers] = useState([
+    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
+    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
+    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
+    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
+    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
+    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+  ]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
@@ -5508,13 +5528,30 @@ const CampaignDashboard = () => {
        />
 
        {/* Template Panel avec languettes */}
-      <TemplatePanel />
+      <TemplatePanel 
+        characterAssignments={characterAssignments}
+        onUpdateAssignments={setCharacterAssignments}
+        campaignPlayers={campaignPlayers}
+      />
 
       {/* Modal Sources */}
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
 
       {/* Modal Players */}
-      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
+      <PlayersModal 
+        isOpen={showPlayers} 
+        onClose={() => setShowPlayers(false)}
+        characterAssignments={characterAssignments}
+        onRemoveAssignment={(playerId) => {
+          setCharacterAssignments(prev => {
+            const newAssignments = { ...prev };
+            delete newAssignments[playerId];
+            return newAssignments;
+          });
+        }}
+        campaignPlayers={campaignPlayers}
+        onUpdatePlayers={setCampaignPlayers}
+      />
      </div>
    );
  };

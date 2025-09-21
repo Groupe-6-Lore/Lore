@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Trash2, ChevronLeft, ChevronRight, Info, ZoomIn, ZoomOut, Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 // Modal Sources avec toast custom (undo)
 const SourcesModal = ({ isOpen, onClose }) => {
-  const navigate = useNavigate();
   // Limites de stockage inspirées de Notion (adaptées à Lore)
   const STORAGE_LIMIT_MB = 100;
   const WARNING_THRESHOLD = 0.8; // 80%
@@ -306,30 +304,11 @@ const SourcesModal = ({ isOpen, onClose }) => {
             {/* Visualiseur */}
             <div className="relative w-full aspect-[3/4] bg-black/5 rounded-lg overflow-hidden border border-black/10">
               {selectedFile?.url ? (
-                <div className="w-full h-full overflow-auto">
-                  <object 
-                    data={`${selectedFile.url}#page=${page}`} 
-                    type="application/pdf" 
-                    className="w-full h-full transition-transform duration-200 ease-in-out"
-                    style={{ 
-                      transform: `scale(${zoom})`,
-                      transformOrigin: 'top left',
-                      width: `${100/zoom}%`,
-                      height: `${100/zoom}%`
-                    }}
-                  >
-                    <div className="w-full h-full flex items-center justify-center text-sm text-black/60">Aperçu indisponible</div>
-                  </object>
-                </div>
+                <object data={`${selectedFile.url}#page=${page}&zoom=${Math.round(zoom*100)}`} type="application/pdf" className="w-full h-full">
+                  <div className="w-full h-full flex items-center justify-center text-sm text-black/60">Aperçu indisponible</div>
+                </object>
               ) : (
-                <div 
-                  className="absolute inset-0 bg-center bg-cover transition-transform duration-200 ease-in-out" 
-                  style={{ 
-                    backgroundImage: `url(${selectedFile?.cover})`,
-                    transform: `scale(${zoom})`,
-                    transformOrigin: 'center center'
-                  }} 
-                />
+                <div className="absolute inset-0 bg-center bg-cover" style={{ backgroundImage: `url(${selectedFile?.cover})` }} />
               )}
             </div>
 
@@ -359,27 +338,11 @@ const SourcesModal = ({ isOpen, onClose }) => {
 
             {/* Zoom */}
             <div className="flex items-center justify-center space-x-2 mt-2">
-              <button 
-                className="px-2 py-1 rounded border border-black/20 hover:bg-black/5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed" 
-                onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))}
-                disabled={zoom <= 0.5}
-                title="Dézoomer"
-              >
+              <button className="px-2 py-1 rounded border border-black/20 hover:bg-black/5" onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))}>
                 <ZoomOut size={16} />
               </button>
-              <button 
-                className="px-2 py-1 text-xs text-black/60 hover:text-black/80 transition-colors duration-150"
-                onClick={() => setZoom(1)}
-                title="Réinitialiser le zoom"
-              >
-                {Math.round(zoom * 100)}%
-              </button>
-              <button 
-                className="px-2 py-1 rounded border border-black/20 hover:bg-black/5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed" 
-                onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))}
-                disabled={zoom >= 3}
-                title="Zoomer"
-              >
+              <span className="text-sm text-black/70 w-14 text-center">{Math.round(zoom * 100)}%</span>
+              <button className="px-2 py-1 rounded border border-black/20 hover:bg-black/5" onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))}>
                 <ZoomIn size={16} />
               </button>
             </div>
@@ -420,8 +383,8 @@ const SourcesModal = ({ isOpen, onClose }) => {
                 <button 
                   onClick={() => {
                     setShowStorageToast(false);
-                    onClose(); // Fermer le modal Sources
-                    navigate('/stockage'); // Redirection vers la page stockage
+                    // Redirection vers la page stockage
+                    window.location.href = '/stockage';
                   }}
                   className="px-3 py-1 rounded bg-golden hover:bg-golden/80 text-dark-blue font-semibold text-xs transition-colors"
                 >

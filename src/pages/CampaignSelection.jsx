@@ -26,6 +26,73 @@ const CampaignSelection = () => {
   // États pour les modals Sources et Joueurs
   const [showSources, setShowSources] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
+  
+  // États pour l'affichage des joueurs
+  const [expandedCampaign, setExpandedCampaign] = useState(null);
+  const [showPlayerDropdown, setShowPlayerDropdown] = useState(null);
+  
+  // États pour la synchronisation avec la modale joueurs
+  const [globalCampaignPlayers, setGlobalCampaignPlayers] = useState([
+    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
+    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
+    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
+    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
+    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
+    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+  ]);
+  
+  // État pour gérer les assignations de personnages aux joueurs (comme dans le dashboard)
+  const [characterAssignments, setCharacterAssignments] = useState({
+    'p1': 'Kriks',
+    'p2': 'Vaelene', 
+    'p3': 'Tardek',
+    'p4': 'Gora',
+    'p5': "T'Sari",
+    'p6': 'Lira'
+  });
+  
+  // État pour le pseudo personnalisé
+  const [selectedPlayerForPseudo, setSelectedPlayerForPseudo] = useState(null);
+  const [customPseudo, setCustomPseudo] = useState('');
+  const [showCustomPseudoInput, setShowCustomPseudoInput] = useState(false);
+  
+  // États pour l'assignation de personnages
+  const [selectedPlayerForAssignment, setSelectedPlayerForAssignment] = useState(null);
+  const [showCharacterAssignment, setShowCharacterAssignment] = useState(false);
+
+  // Liste des joueurs disponibles pour l'ajout (même que dans PlayersModal)
+  const availablePlayers = [
+    { id: 'f1', name: 'Diane', initials: 'D', image: '/images/players/diane.jpg' },
+    { id: 'f2', name: 'Maxime', initials: 'M', image: '/images/players/maxime.jpg' },
+    { id: 'f3', name: 'Justine', initials: 'J', image: '/images/players/justine.jpg' },
+    { id: 'f4', name: 'Jean', initials: 'J', image: '/images/players/jean.jpg' },
+  ];
+
+  // Liste des personnages disponibles pour l'assignation
+  const availableCharacters = [
+    'Kriks', 'Vaelene', 'Tardek', 'Gora', "T'Sari", 'Lira',
+    'Aragorn', 'Legolas', 'Gimli', 'Gandalf', 'Frodo', 'Sam',
+    'Drizzt', 'Bruenor', 'Catti-brie', 'Wulfgar', 'Regis', 'Artemis'
+  ];
+
+  // Synchroniser les joueurs globaux avec les campagnes
+  useEffect(() => {
+    // Mettre à jour toutes les campagnes avec les joueurs globaux
+    setCampaigns(prev => prev.map(campaign => {
+      // Convertir les joueurs globaux au format de la campagne
+      const campaignFormatPlayers = globalCampaignPlayers.map(player => ({
+        id: player.id,
+        name: player.name,
+        character_name: player.character,
+        status: player.status
+      }));
+      
+      return {
+        ...campaign,
+        players: campaignFormatPlayers
+      };
+    }));
+  }, [globalCampaignPlayers]);
 
   // Données par défaut si pas de campagnes
   const defaultCampaign = {
@@ -106,8 +173,120 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
   };
 
   const handleAddPlayer = (campaignId) => {
-    setSelectedCampaignId(campaignId);
-    setShowAddPlayerModal(true);
+    setShowPlayerDropdown(showPlayerDropdown === campaignId ? null : campaignId);
+  };
+
+  const handleSelectPlayer = (campaignId, player) => {
+    // Ajouter le joueur à la campagne avec la structure de la modale joueurs
+    const newPlayerId = `invited-${Date.now()}`;
+    const newPlayer = {
+      id: newPlayerId,
+      name: player.name,
+      character: null,
+      initials: player.initials,
+      playerImage: player.image,
+      characterImage: null,
+      status: 'active'
+    };
+    
+    // Mettre à jour les joueurs globaux (la synchronisation avec les campagnes se fait via useEffect)
+    setGlobalCampaignPlayers(prev => [...prev, newPlayer]);
+    
+    // Ne pas ajouter d'assignation de personnage (le joueur n'a pas de pseudo)
+    
+    setShowPlayerDropdown(null);
+    toast.success(`Joueur ${player.name} ajouté à la campagne !`);
+  };
+
+  const handleSelectPlayerForPseudo = (player) => {
+    setSelectedPlayerForPseudo(player);
+    setShowCustomPseudoInput(true);
+  };
+
+  const handleAddPlayerWithPseudo = (campaignId) => {
+    if (!customPseudo.trim()) {
+      toast.error('Veuillez saisir un pseudo');
+      return;
+    }
+
+    if (!selectedPlayerForPseudo) {
+      toast.error('Veuillez sélectionner un joueur');
+      return;
+    }
+
+    const newPlayerId = `invited-${Date.now()}`;
+    const newPlayer = {
+      id: newPlayerId,
+      name: selectedPlayerForPseudo.name,
+      character: customPseudo.trim(),
+      initials: selectedPlayerForPseudo.initials,
+      playerImage: selectedPlayerForPseudo.image,
+      characterImage: null,
+      status: 'active'
+    };
+    
+    // Mettre à jour les joueurs globaux (la synchronisation avec les campagnes se fait via useEffect)
+    setGlobalCampaignPlayers(prev => [...prev, newPlayer]);
+    
+    // Mettre à jour les assignations de personnages
+    setCharacterAssignments(prev => ({
+      ...prev,
+      [newPlayerId]: customPseudo.trim()
+    }));
+    
+    setShowPlayerDropdown(null);
+    setShowCustomPseudoInput(false);
+    setSelectedPlayerForPseudo(null);
+    setCustomPseudo('');
+    toast.success(`Joueur ${selectedPlayerForPseudo.name} ajouté avec le pseudo "${customPseudo.trim()}" !`);
+  };
+
+  const handleToggleExpanded = (campaignId) => {
+    setExpandedCampaign(expandedCampaign === campaignId ? null : campaignId);
+  };
+
+  const handleRemovePlayer = (playerId) => {
+    // Supprimer le joueur des joueurs globaux
+    setGlobalCampaignPlayers(prev => prev.filter(player => player.id !== playerId));
+    
+    // Supprimer aussi l'assignation si elle existe
+    setCharacterAssignments(prev => {
+      const newAssignments = { ...prev };
+      delete newAssignments[playerId];
+      return newAssignments;
+    });
+    
+    toast.success('Joueur supprimé de la campagne !');
+  };
+
+  const handleAssignCharacter = (playerId, characterName) => {
+    // Mettre à jour l'assignation de personnage
+    setCharacterAssignments(prev => ({
+      ...prev,
+      [playerId]: characterName
+    }));
+    
+    // Mettre à jour aussi le joueur dans la liste globale
+    setGlobalCampaignPlayers(prev => prev.map(player => 
+      player.id === playerId 
+        ? { ...player, character: characterName }
+        : player
+    ));
+    
+    toast.success(`Personnage "${characterName}" assigné au joueur !`);
+  };
+
+  const handleStartCharacterAssignment = (player) => {
+    setSelectedPlayerForAssignment(player);
+    setShowCharacterAssignment(true);
+  };
+
+  const handleCompleteCharacterAssignment = (characterName) => {
+    if (selectedPlayerForAssignment && characterName) {
+      handleAssignCharacter(selectedPlayerForAssignment.id, characterName);
+      setShowCharacterAssignment(false);
+      setSelectedPlayerForAssignment(null);
+    }
   };
 
   const handleSavePlayer = async () => {
@@ -118,7 +297,25 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
 
     try {
       if (selectedCampaignId === 'default-campaign') {
-        // Pour la campagne par défaut, simule l'ajout
+        // Pour la campagne par défaut, simule l'ajout en mettant à jour l'état local
+        const newPlayer = {
+          id: Date.now().toString(),
+          name: newPlayerName,
+          character_name: newCharacterName || null,
+          status: 'active'
+        };
+        
+        // Mettre à jour la campagne par défaut avec le nouveau joueur
+        setCampaigns(prev => prev.map(campaign => {
+          if (campaign.id === 'default-campaign') {
+            return {
+              ...campaign,
+              players: [...campaign.players, newPlayer]
+            };
+          }
+          return campaign;
+        }));
+        
         toast.success(`Joueur ${newPlayerName} ajouté à la campagne !`);
       } else {
         // Pour les vraies campagnes, utilise Supabase
@@ -131,7 +328,10 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
             status: 'active'
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erreur Supabase:', error);
+          throw error;
+        }
         toast.success('Joueur ajouté avec succès !');
         fetchCampaigns(); // Rafraîchit la liste
       }
@@ -143,7 +343,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
       setSelectedCampaignId(null);
     } catch (error) {
       console.error('Erreur ajout joueur:', error);
-      toast.error('Erreur lors de l\'ajout du joueur');
+      toast.error(`Erreur lors de l'ajout du joueur: ${error.message || 'Erreur inconnue'}`);
     }
   };
 
@@ -312,7 +512,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                         <textarea
                           value={editResume}
                           onChange={(e) => setEditResume(e.target.value)}
-                          className="w-full h-64 bg-light/10 border border-light/20 rounded-lg p-4 text-light/90 text-base leading-7 resize-none focus:border-golden focus:outline-none"
+                          className="w-full h-64 bg-light/10 border border-light/20 rounded-lg p-4 text-black text-base leading-7 resize-none focus:border-golden focus:outline-none"
                           placeholder="Décrivez votre campagne, son univers, ses enjeux, ses personnages principaux..."
                         />
                       ) : (
@@ -349,15 +549,33 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                           <p className="text-light/60 text-sm italic">Aucun joueur pour le moment</p>
                         ) : (
                           activePlayers.slice(0, 4).map((player) => (
-                            <div key={player.id} className="flex items-center space-x-4">
-                              <div className="w-12 h-12 bg-golden rounded-full flex items-center justify-center text-dark text-lg font-bold shadow-lg">
-                                {player.name[0]?.toUpperCase()}
+                            <div key={player.id} className="flex items-center justify-between space-x-4">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-golden rounded-full flex items-center justify-center text-dark text-lg font-bold shadow-lg">
+                                  {player.name[0]?.toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="text-light font-semibold text-base">{player.name}</div>
+                                  {player.character_name && (
+                                    <div className="text-light/70 text-sm italic">{player.character_name}</div>
+                                  )}
+                                </div>
                               </div>
-                              <div>
-                                <div className="text-light font-semibold text-base">{player.name}</div>
-                                {player.character_name && (
-                                  <div className="text-light/70 text-sm italic">{player.character_name}</div>
-                                )}
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleStartCharacterAssignment(player)}
+                                  className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+                                  title="Assigner un personnage"
+                                >
+                                  👤
+                                </button>
+                                <button
+                                  onClick={() => handleRemovePlayer(player.id)}
+                                  className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                  title="Supprimer le joueur"
+                                >
+                                  <X size={16} />
+                                </button>
                               </div>
                             </div>
                           ))
@@ -365,11 +583,157 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                         
                         {activePlayers.length > 4 && (
                           <button 
-                            onClick={() => handleAddPlayer(campaign.id)}
+                            onClick={() => handleToggleExpanded(campaign.id)}
                             className="text-light/70 hover:text-light text-sm underline transition-colors"
                           >
-                            Voir plus ({activePlayers.length - 4} autres)
+                            {expandedCampaign === campaign.id ? 'Voir moins' : `Voir plus (${activePlayers.length - 4} autres)`}
                           </button>
+                        )}
+                        
+                        {/* Affichage des joueurs supplémentaires */}
+                        {expandedCampaign === campaign.id && activePlayers.length > 4 && (
+                          <div className="mt-4 space-y-3">
+                            {activePlayers.slice(4).map((player) => (
+                              <div key={player.id} className="flex items-center justify-between space-x-4">
+                                <div className="flex items-center space-x-4">
+                                  <div className="w-12 h-12 bg-golden rounded-full flex items-center justify-center text-dark text-lg font-bold shadow-lg">
+                                    {player.name[0]?.toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="text-light font-semibold text-base">{player.name}</div>
+                                    {player.character_name && (
+                                      <div className="text-light/70 text-sm italic">{player.character_name}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => handleStartCharacterAssignment(player)}
+                                    className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+                                    title="Assigner un personnage"
+                                  >
+                                    👤
+                                  </button>
+                                  <button
+                                    onClick={() => handleRemovePlayer(player.id)}
+                                    className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                    title="Supprimer le joueur"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Menu déroulant pour ajouter des joueurs */}
+                        {showPlayerDropdown === campaign.id && (
+                          <div className="mt-4 p-4 bg-dark/20 border border-light/20 rounded-lg">
+                            <h4 className="text-light font-semibold mb-3">Ajouter un joueur</h4>
+                            
+                            {/* Interface pour pseudo personnalisé */}
+                            {!showCustomPseudoInput ? (
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {availablePlayers.map((player) => (
+                                  <div key={player.id} className="flex items-center space-x-2">
+                                    <button
+                                      onClick={() => handleSelectPlayer(campaign.id, player)}
+                                      className="flex-1 flex items-center space-x-3 p-2 hover:bg-light/10 rounded transition-colors"
+                                    >
+                                      <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-dark text-sm font-bold">
+                                        {player.initials}
+                                      </div>
+                                      <span className="text-light">{player.name}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleSelectPlayerForPseudo(player)}
+                                      className="px-2 py-1 bg-golden/20 text-golden rounded text-xs hover:bg-golden/30 transition-colors"
+                                      title="Ajouter avec pseudo personnalisé"
+                                    >
+                                      Pseudo
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="mb-3 p-3 bg-light/5 border border-light/20 rounded">
+                                <div className="flex items-center space-x-3 mb-3">
+                                  <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-dark text-sm font-bold">
+                                    {selectedPlayerForPseudo?.initials}
+                                  </div>
+                                  <span className="text-light font-medium">{selectedPlayerForPseudo?.name}</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={customPseudo}
+                                  onChange={(e) => setCustomPseudo(e.target.value)}
+                                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-black placeholder-light/50 mb-2"
+                                  placeholder="Nom du personnage/pseudo"
+                                  autoFocus
+                                />
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleAddPlayerWithPseudo(campaign.id)}
+                                    className="px-3 py-1 bg-golden text-dark rounded text-sm font-semibold hover:bg-golden/80 transition-colors"
+                                  >
+                                    Ajouter
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setShowCustomPseudoInput(false);
+                                      setSelectedPlayerForPseudo(null);
+                                      setCustomPseudo('');
+                                    }}
+                                    className="px-3 py-1 bg-light/20 text-light rounded text-sm hover:bg-light/30 transition-colors"
+                                  >
+                                    Annuler
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            
+                            <button
+                              onClick={() => {
+                                setShowPlayerDropdown(null);
+                                setShowCustomPseudoInput(false);
+                                setSelectedPlayerForPseudo(null);
+                                setCustomPseudo('');
+                              }}
+                              className="mt-3 text-light/70 hover:text-light text-sm underline"
+                            >
+                              Fermer
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Interface d'assignation de personnage */}
+                        {showCharacterAssignment && selectedPlayerForAssignment && (
+                          <div className="mt-4 p-4 bg-dark/20 border border-light/20 rounded-lg">
+                            <h4 className="text-light font-semibold mb-3">
+                              Assigner un personnage à {selectedPlayerForAssignment.name}
+                            </h4>
+                            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                              {availableCharacters.map((character) => (
+                                <button
+                                  key={character}
+                                  onClick={() => handleCompleteCharacterAssignment(character)}
+                                  className="p-2 text-sm bg-light/10 hover:bg-light/20 rounded text-light transition-colors"
+                                >
+                                  {character}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setShowCharacterAssignment(false);
+                                setSelectedPlayerForAssignment(null);
+                              }}
+                              className="mt-3 text-light/70 hover:text-light text-sm underline"
+                            >
+                              Annuler
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -415,7 +779,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                   type="text"
                   value={newPlayerName}
                   onChange={(e) => setNewPlayerName(e.target.value)}
-                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-light placeholder-light/50"
+                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-black placeholder-light/50"
                   placeholder="Nom du joueur"
                 />
               </div>
@@ -428,7 +792,7 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
                   type="text"
                   value={newCharacterName}
                   onChange={(e) => setNewCharacterName(e.target.value)}
-                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-light placeholder-light/50"
+                  className="w-full px-3 py-2 bg-light/15 border border-light/30 rounded text-black placeholder-light/50"
                   placeholder="Nom du personnage (optionnel)"
                 />
               </div>
@@ -456,7 +820,32 @@ Chaque choix renforcera ou brisera le destin des Royaumes Fragmentés : les serm
       <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
 
       {/* Modal Players */}
-      <PlayersModal isOpen={showPlayers} onClose={() => setShowPlayers(false)} />
+        <PlayersModal 
+          isOpen={showPlayers} 
+          onClose={() => setShowPlayers(false)}
+          characterAssignments={characterAssignments}
+          onRemoveAssignment={(playerId) => {
+            setCharacterAssignments(prev => {
+              const newAssignments = { ...prev };
+              delete newAssignments[playerId];
+              return newAssignments;
+            });
+          }}
+          campaignPlayers={globalCampaignPlayers}
+          onUpdatePlayers={setGlobalCampaignPlayers}
+          onUpdateAssignments={setCharacterAssignments}
+          onRemovePlayer={(playerId) => {
+            // Supprimer le joueur des joueurs globaux
+            setGlobalCampaignPlayers(prev => prev.filter(player => player.id !== playerId));
+            
+            // Supprimer aussi l'assignation si elle existe
+            setCharacterAssignments(prev => {
+              const newAssignments = { ...prev };
+              delete newAssignments[playerId];
+              return newAssignments;
+            });
+          }}
+        />
     </div>
   );
 };

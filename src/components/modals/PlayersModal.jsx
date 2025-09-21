@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { X, Search, Copy, Trash2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Search, Copy, Trash2, Calendar, ChevronLeft, ChevronRight, UserMinus, UserPlus } from 'lucide-react';
 
 const Avatar = ({ image, initials, name }) => (
   <div className="w-6 h-6 rounded-full overflow-hidden bg-[#46718A] flex items-center justify-center">
@@ -11,15 +11,23 @@ const Avatar = ({ image, initials, name }) => (
   </div>
 );
 
-const PlayersModal = ({ isOpen, onClose }) => {
-  const campaignPlayers = useMemo(() => ([
-    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg' },
-    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg' },
-    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg' },
-    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg' },
-    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg' },
-    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg' },
-  ]), []);
+const PlayersModal = ({ isOpen, onClose, characterAssignments = {}, onRemoveAssignment = () => {}, campaignPlayers: externalPlayers, onUpdatePlayers, onRemovePlayer, onUpdateAssignments }) => {
+  // Utiliser les joueurs externes ou un état local par défaut
+  const [campaignPlayers, setCampaignPlayers] = useState(externalPlayers || [
+    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
+    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
+    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
+    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
+    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
+    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+  ]);
+  
+  // Synchroniser avec les joueurs externes
+  useEffect(() => {
+    if (externalPlayers) {
+      setCampaignPlayers(externalPlayers);
+    }
+  }, [externalPlayers]);
 
   const friends = useMemo(() => ([
     { id: 'f1', name: 'Diane', initials: 'D', image: '/images/players/diane.jpg' },
@@ -37,18 +45,145 @@ const PlayersModal = ({ isOpen, onClose }) => {
   const calendarRef = useRef(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const inviteUrl = 'https://lore.com/join/7FxRctIneUHH/EktwKLcHgAdI';
+  
+  // États pour l'assignation de personnages
+  const [showCharacterSelection, setShowCharacterSelection] = useState(false);
+  const [selectedPlayerForCharacter, setSelectedPlayerForCharacter] = useState(null);
+  
+  // Liste des personnages disponibles (basée sur TemplatePanel)
+  const availableCharacters = [
+    // Aventuriers
+    { id: 'char-1', name: 'Elandra', level: '5', class: 'Mage', category: 'Aventuriers' },
+    { id: 'char-2', name: 'Thorin', level: '4', class: 'Guerrier', category: 'Aventuriers' },
+    { id: 'char-3', name: 'Lyra', level: '3', class: 'Rôdeuse', category: 'Aventuriers' },
+    { id: 'char-4', name: 'Merric', level: '2', class: 'Voleur', category: 'Aventuriers' },
+    // Alliés
+    { id: 'char-5', name: 'Seraphine', level: '6', class: 'Clerc', category: 'Alliés' },
+    { id: 'char-6', name: 'Korgan', level: '5', class: 'Barbare', category: 'Alliés' },
+    { id: 'char-7', name: 'Alistair', level: '4', class: 'Paladin', category: 'Alliés' },
+    { id: 'char-8', name: 'Nymeria', level: '3', class: 'Druide', category: 'Alliés' },
+    // Adversaires
+    { id: 'char-9', name: 'Vargash', level: '7', class: 'Sorcier', category: 'Adversaires' },
+    { id: 'char-10', name: 'Kael', level: '5', class: 'Assassin', category: 'Adversaires' },
+    { id: 'char-11', name: 'Oona', level: '4', class: 'Chaman', category: 'Adversaires' },
+    { id: 'char-12', name: 'Darius', level: '6', class: 'Chevalier noir', category: 'Adversaires' }
+  ];
 
   const filteredFriends = friends.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
 
+  const handleAssignCharacter = (character) => {
+    if (!selectedPlayerForCharacter) return;
+    
+    // Mettre à jour l'assignation dans l'état local
+    const updatedPlayers = campaignPlayers.map(player => 
+      player.id === selectedPlayerForCharacter.id 
+        ? { ...player, character: character.name }
+        : player
+    );
+    setCampaignPlayers(updatedPlayers);
+    
+    // Mettre à jour les joueurs externes si la fonction est fournie
+    if (onUpdatePlayers) {
+      onUpdatePlayers(updatedPlayers);
+    }
+    
+    // Mettre à jour les assignations externes
+    if (onUpdateAssignments) {
+      onUpdateAssignments(prev => ({
+        ...prev,
+        [selectedPlayerForCharacter.id]: character.name
+      }));
+    }
+    
+    // Fermer la sélection
+    setShowCharacterSelection(false);
+    setSelectedPlayerForCharacter(null);
+  };
+
   const handleInvite = (id) => {
-    setInvited(prev => ({ ...prev, [id]: prev[id] === 'sent' ? undefined : 'sent' }));
+    const friend = friends.find(f => f.id === id);
+    if (friend) {
+      // Vérifier si le joueur est déjà invité
+      const isAlreadyInvited = invited[id] === 'sent';
+      
+      if (isAlreadyInvited) {
+        // Désinviter : retirer le joueur de la campagne
+        const updatedPlayers = campaignPlayers.filter(player => 
+          !(player.name === friend.name && player.status === 'pending')
+        );
+        setCampaignPlayers(updatedPlayers);
+        
+        // Mettre à jour les joueurs externes si la fonction est fournie
+        if (onUpdatePlayers) {
+          onUpdatePlayers(updatedPlayers);
+        }
+        
+        setInvited(prev => ({ ...prev, [id]: undefined }));
+      } else {
+        // Inviter : ajouter le joueur à la campagne avec le statut "En attente"
+        const newPlayer = {
+          id: `invited-${Date.now()}`,
+          name: friend.name,
+          character: null,
+          initials: friend.initials,
+          playerImage: friend.image,
+          characterImage: null,
+          status: 'pending'
+        };
+        
+        const updatedPlayers = [...campaignPlayers, newPlayer];
+        setCampaignPlayers(updatedPlayers);
+        
+        // Mettre à jour les joueurs externes si la fonction est fournie
+        if (onUpdatePlayers) {
+          onUpdatePlayers(updatedPlayers);
+        }
+        
+        setInvited(prev => ({ ...prev, [id]: 'sent' }));
+      }
+    }
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(inviteUrl);
+      
+      // Créer une notification de succès
+      const notification = {
+        id: Date.now(),
+        type: 'link_copied',
+        title: 'Lien copié !',
+        message: 'Le lien d\'invitation a été copié dans le presse-papiers',
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      
+      // Stocker la notification dans localStorage
+      const existingNotifications = JSON.parse(localStorage.getItem('lore_notifications') || '[]');
+      existingNotifications.unshift(notification);
+      localStorage.setItem('lore_notifications', JSON.stringify(existingNotifications));
+      
+      // Déclencher un événement personnalisé pour notifier le header
+      window.dispatchEvent(new CustomEvent('notificationAdded', { detail: notification }));
+      
     } catch (e) {
       console.error('Clipboard error', e);
+      
+      // Créer une notification d'erreur
+      const notification = {
+        id: Date.now(),
+        type: 'error',
+        title: 'Erreur de copie',
+        message: 'Impossible de copier le lien d\'invitation',
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      
+      const existingNotifications = JSON.parse(localStorage.getItem('lore_notifications') || '[]');
+      existingNotifications.unshift(notification);
+      localStorage.setItem('lore_notifications', JSON.stringify(existingNotifications));
+      
+      window.dispatchEvent(new CustomEvent('notificationAdded', { detail: notification }));
     }
   };
 
@@ -157,23 +292,99 @@ const PlayersModal = ({ isOpen, onClose }) => {
             <div className="text-lg font-semibold mb-4">Joueurs de la campagne</div>
 
              <div className="space-y-3">
-               {campaignPlayers.map(p => (
-                 <div key={p.id} className="flex items-center justify-between bg-white/50 border border-black/10 rounded-lg px-3 py-2">
-                   <div className="flex items-center space-x-3">
-                     <Avatar image={p.playerImage} initials={p.initials} name={p.name} />
-                      <div className="flex items-center space-x-16">
-                        <span className="font-medium w-24 text-left">{p.name}</span>
-                       <div className="flex items-center space-x-2">
-                         <Avatar image={p.characterImage} initials={p.character[0]} name={p.character} />
-                         <span className="font-medium">{p.character}</span>
+               {campaignPlayers.map(p => {
+                 const assignedCharacter = characterAssignments[p.id] || p.character;
+                 return (
+                   <div key={p.id} className="flex items-center justify-between bg-white/50 border border-black/10 rounded-lg px-3 py-2">
+                     <div className="flex items-center space-x-3">
+                       <Avatar image={p.playerImage} initials={p.initials} name={p.name} />
+                        <div className="flex items-center space-x-16">
+                          <div className="flex flex-col">
+                            <span className="font-medium w-24 text-left">{p.name}</span>
+                            {p.status === 'pending' && (
+                              <span className="text-xs text-amber-600 font-medium">En attente</span>
+                            )}
+                          </div>
+                         <div className="flex items-center space-x-2">
+                           {assignedCharacter ? (
+                             <>
+                               <Avatar image={p.characterImage} initials={assignedCharacter[0]} name={assignedCharacter} />
+                               <span className="font-medium">{assignedCharacter}</span>
+                             </>
+                           ) : (
+                             <div className="flex items-center space-x-2">
+                               <span className="text-gray-500 italic">Aucun personnage</span>
+                               <button
+                                 onClick={() => {
+                                   setSelectedPlayerForCharacter(p);
+                                   setShowCharacterSelection(true);
+                                 }}
+                                 className="text-blue-500 hover:text-blue-600 p-1"
+                                 title="Assigner un personnage"
+                               >
+                                 <UserPlus size={16} />
+                               </button>
+                             </div>
+                           )}
+                         </div>
                        </div>
                      </div>
+                     <div className="flex items-center space-x-2">
+                       {assignedCharacter && (
+                         <button 
+                           onClick={() => {
+                             // Supprimer l'assignation dans l'état local
+                             const updatedPlayers = campaignPlayers.map(player => 
+                               player.id === p.id 
+                                 ? { ...player, character: null }
+                                 : player
+                             );
+                             setCampaignPlayers(updatedPlayers);
+                             
+                             // Mettre à jour les joueurs externes si la fonction est fournie
+                             if (onUpdatePlayers) {
+                               onUpdatePlayers(updatedPlayers);
+                             }
+                             
+                             // Appeler la fonction de suppression d'assignation externe
+                             onRemoveAssignment(p.id);
+                           }}
+                           className="text-orange-600 hover:text-orange-700 p-1" 
+                           title="Supprimer l'assignation du personnage"
+                         >
+                           <UserMinus size={16} />
+                         </button>
+                       )}
+                       <button 
+                         onClick={() => {
+                           // Supprimer le joueur de la liste
+                           const updatedPlayers = campaignPlayers.filter(player => player.id !== p.id);
+                           setCampaignPlayers(updatedPlayers);
+                           
+                           // Mettre à jour les joueurs externes si la fonction est fournie
+                           if (onUpdatePlayers) {
+                             onUpdatePlayers(updatedPlayers);
+                           }
+                           
+                           // Supprimer aussi l'assignation si elle existe
+                           if (assignedCharacter) {
+                             onRemoveAssignment(p.id);
+                           }
+                           
+                           // Appeler la fonction de suppression externe si fournie
+                           if (onRemovePlayer) {
+                             onRemovePlayer(p.id);
+                           }
+                         }}
+                         className="text-red-600 hover:text-red-700 p-1" 
+                         title="Supprimer le joueur de la campagne"
+                       >
+                         <X size={16} />
+                       </button>
+                     </div>
                    </div>
-                   <button className="text-red-600 hover:text-red-700" title="Supprimer le personnage">
-                     <Trash2 size={16} />
-                   </button>
-                 </div>
-               ))}
+                 );
+               })}
              </div>
 
             {/* Notify section */}
@@ -230,7 +441,7 @@ const PlayersModal = ({ isOpen, onClose }) => {
                     onClick={() => handleInvite(f.id)}
                     className={`px-3 py-1 rounded-lg border border-[#985E41] text-[#985E41] text-sm ${invited[f.id] ? 'bg-[#985E41] text-white' : 'hover:bg-[#985E41]/10'}`}
                   >
-                    {invited[f.id] ? 'Invité' : 'Inviter'}
+                    {invited[f.id] ? 'Désinviter' : 'Inviter'}
                   </button>
                 </div>
               ))}
@@ -324,6 +535,58 @@ const PlayersModal = ({ isOpen, onClose }) => {
               >
                 Fermer
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Interface de sélection de personnages */}
+      {showCharacterSelection && selectedPlayerForCharacter && (
+        <div className="fixed inset-0 z-[1001] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => {
+            setShowCharacterSelection(false);
+            setSelectedPlayerForCharacter(null);
+          }} />
+          
+          <div className="relative bg-[#f7f1e5] text-[#1a1a1a] w-full max-w-2xl mx-4 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 bg-[rgba(255,255,255,0.6)]">
+              <h3 className="text-xl font-semibold">
+                Assigner un personnage à {selectedPlayerForCharacter.name}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowCharacterSelection(false);
+                  setSelectedPlayerForCharacter(null);
+                }}
+                className="text-black/60 hover:text-black transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                {availableCharacters.map((character) => (
+                  <button
+                    key={character.id}
+                    onClick={() => handleAssignCharacter(character)}
+                    className="p-4 text-left bg-white/50 border border-black/10 rounded-lg hover:bg-white/80 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-lg">{character.name}</div>
+                        <div className="text-sm text-gray-600">
+                          Niveau {character.level} • {character.class}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{character.category}</div>
+                      </div>
+                      <div className="w-12 h-12 bg-[#46718A] rounded-full flex items-center justify-center text-[#F0EAE1] text-lg font-bold">
+                        {character.name[0]}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

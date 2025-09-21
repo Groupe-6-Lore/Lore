@@ -19,7 +19,7 @@ import {
   Tag
 } from 'lucide-react';
 
-const TemplatePanel = () => {
+const TemplatePanel = ({ characterAssignments: externalAssignments, onUpdateAssignments, campaignPlayers: externalPlayers }) => {
   const [activeTab, setActiveTab] = useState('templates');
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState('templates'); // 'templates', 'new-event', ou 'consultation'
@@ -225,31 +225,46 @@ const TemplatePanel = () => {
   const [editingCharacterTagsId, setEditingCharacterTagsId] = useState(null);
   const [editingCharacterTagInput, setEditingCharacterTagInput] = useState('');
   
-  const AttributionList = () => {
-    const entries = [
-      { id: 'player-1', name: 'Elandra', avatar: '🧝‍♀️' },
-      { id: 'player-2', name: 'Kael', avatar: '🧙‍♂️' },
-      { id: 'player-3', name: 'Mira', avatar: '🏹' },
-      { id: 'player-4', name: 'Thoren', avatar: '🛡️' },
-      { id: 'player-5', name: 'Selwyn', avatar: '🗡️' },
-      { id: 'player-6', name: 'Ilyana', avatar: '🔮' }
-    ];
+  // Utiliser les assignations externes ou un état local par défaut
+  const characterAssignments = externalAssignments || {
+    'p1': 'Kriks',
+    'p2': 'Vaelene', 
+    'p3': 'Tardek',
+    'p4': 'Gora',
+    'p5': "T'Sari",
+    'p6': 'Lira'
+  };
+  
+  const setCharacterAssignments = onUpdateAssignments || (() => {});
+  
+  // Utiliser les joueurs externes ou des données par défaut
+  const campaignPlayers = externalPlayers || [
+    { id: 'p1', name: 'Abdel', character: 'Kriks', initials: 'A', playerImage: '/images/players/abdel.jpg', characterImage: '/images/characters/kriks.jpg', status: 'active' },
+    { id: 'p2', name: 'Thomas', character: 'Vaelene', initials: 'T', playerImage: '/images/players/thomas.jpg', characterImage: '/images/characters/vaelene.jpg', status: 'active' },
+    { id: 'p3', name: 'Chris', character: 'Tardek', initials: 'C', playerImage: '/images/players/chris.jpg', characterImage: '/images/characters/tardek.jpg', status: 'active' },
+    { id: 'p4', name: 'Rick', character: 'Gora', initials: 'R', playerImage: '/images/players/rick.jpg', characterImage: '/images/characters/gora.jpg', status: 'active' },
+    { id: 'p5', name: 'Maya', character: "T'Sari", initials: 'M', playerImage: '/images/players/maya.jpg', characterImage: '/images/characters/tsari.jpg', status: 'active' },
+    { id: 'p6', name: 'Estelle', character: 'Lira', initials: 'E', playerImage: '/images/players/estelle.jpg', characterImage: '/images/characters/lira.jpg', status: 'active' },
+  ];
 
+  const AttributionList = () => {
     return (
       <div className="space-y-3">
-        {entries.map(entry => (
-          <div key={entry.id} className="flex items-center justify-between bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 py-2">
+        {campaignPlayers.map(player => (
+          <div key={player.id} className="flex items-center justify-between bg-[#F5F1E8] border border-[#552E1A]/20 rounded-lg px-3 py-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">{entry.avatar}</div>
-              <span className="text-[#552E1A]">{entry.name}</span>
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold text-[#552E1A]">
+                {player.initials}
+              </div>
+              <span className="text-[#552E1A] font-medium">{player.name}</span>
             </div>
             <button
-              onClick={() => setSelectedAttributionId(entry.id)}
+              onClick={() => setSelectedAttributionId(player.id)}
               className="w-5 h-5 rounded-full border border-[#552E1A]/60 flex items-center justify-center"
-              aria-pressed={selectedAttributionId === entry.id}
+              aria-pressed={selectedAttributionId === player.id}
               title="Sélectionner"
             >
-              {selectedAttributionId === entry.id ? (
+              {selectedAttributionId === player.id ? (
                 <span className="w-2.5 h-2.5 rounded-full bg-[#552E1A]"></span>
               ) : null}
             </button>
@@ -4068,7 +4083,24 @@ const TemplatePanel = () => {
                     Annuler
                   </button>
                   <button
-                    onClick={() => setCharacterCurrentView('consultation')}
+                    onClick={() => {
+                      if (selectedAttributionId && selectedCharacter) {
+                        // Assigner le personnage au joueur sélectionné
+                        setCharacterAssignments(prev => ({
+                          ...prev,
+                          [selectedAttributionId]: selectedCharacter.name
+                        }));
+                        
+                        // Afficher un message de confirmation
+                        showToast(`Personnage "${selectedCharacter.name}" assigné à ${campaignPlayers.find(p => p.id === selectedAttributionId)?.name}`, 'success');
+                        
+                        // Retourner à la vue de consultation
+                        setCharacterCurrentView('consultation');
+                        setSelectedAttributionId(null);
+                      } else {
+                        showToast('Veuillez sélectionner un joueur', 'error');
+                      }
+                    }}
                     className="bg-golden text-[#552E1A] px-6 py-3 rounded-lg font-semibold hover:bg-golden/80 transition-colors"
                   >
                     Attribuer
