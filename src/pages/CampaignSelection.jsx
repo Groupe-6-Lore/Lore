@@ -105,7 +105,7 @@ const CampaignSelection = () => {
   // Données par défaut si pas de campagnes
   const defaultCampaign = {
     id: 'default-campaign',
-    title: 'Les Échos de Nerath',
+    title: 'Les Gardiens de la Flamme Éternelle',
     game_system: 'Donjons & Dragons 5e',
     universe: 'Les Royaumes Fragmentés',
     resume: `Dans un monde où les anciens royaumes se sont effondrés sous le poids de guerres fratricides, seules subsistent des cités-états isolées, reliées par des routes dangereuses et des alliances fragiles. 

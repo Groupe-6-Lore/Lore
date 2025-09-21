@@ -2,55 +2,34 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const HistoryModal = ({ isOpen, onClose }) => {
+const HistoryModal = ({ isOpen, onClose, sessions = [] }) => {
   if (!isOpen) return null;
   const navigate = useNavigate();
 
-  // Données d'exemple pour l'historique des parties
-  const baseHistory = [
-    { id: 1, date: '15 / 01 / 25' }, // Plus récente
-    { id: 2, date: '08 / 01 / 25' },
-    { id: 3, date: '28 / 12 / 24' },
-    { id: 4, date: '20 / 12 / 24' },
-    { id: 5, date: '12 / 12 / 24' },
-    { id: 6, date: '05 / 12 / 24' },
-    { id: 7, date: '28 / 11 / 24' },
-    { id: 8, date: '20 / 11 / 24' },
-    { id: 9, date: '12 / 11 / 24' },
-    { id: 10, date: '05 / 11 / 24' }
+  // Utiliser les vraies sessions ou des données d'exemple si aucune session
+  const gameHistory = sessions.length > 0 ? sessions.map(session => ({
+    id: session.id,
+    date: session.date,
+    title: session.title
+  })) : [
+    // Données d'exemple si aucune session
+    { id: 1, date: '15/01/2025', title: 'Les Gardiens de la Flamme Éternelle' },
+    { id: 2, date: '08/01/2025', title: "La Relique d'Émeraude" },
+    { id: 3, date: '28/12/2024', title: 'La Tombe Oubliée' },
+    { id: 4, date: '20/12/2024', title: 'Le Pacte des Ombres' },
+    { id: 5, date: '12/12/2024', title: 'La Forteresse de Givre' }
   ];
-
-  const sampleTitles = [
-    'Les Gardiens de la Flamme Eternelle', // Partie la plus récente
-    "La Relique d'Émeraude",
-    'La Tombe Oubliée',
-    'Le Pacte des Ombres',
-    'La Forteresse de Givre',
-    'Les Sables du Temps',
-    'Le Phare des Brumes',
-    'Les Lames du Destin',
-    'La Marche des Titans',
-    'Le Voile Cramoisi'
-  ];
-
-  const formatDate = (raw) => {
-    // Accepte des formats "dd / mm / yy" et renvoie "dd/mm/yyyy"
-    const parts = raw.replaceAll(' ', '').split('/');
-    if (parts.length !== 3) return raw;
-    const [dd, mm, yy] = parts;
-    const yyyy = yy.length === 2 ? `20${yy}` : yy;
-    return `${dd}/${mm}/${yyyy}`;
-  };
-
-  const gameHistory = baseHistory.map((g, idx) => ({
-    id: g.id,
-    date: formatDate(g.date),
-    title: sampleTitles[idx % sampleTitles.length]
-  }));
 
   const handleTitleClick = (game) => {
-    // Navigation vers le dashboard de la campagne sélectionnée
-    navigate(`/campaigns/${game.id}`);
+    // Navigation vers la session si c'est une session, sinon vers la campagne
+    if (game.id.toString().startsWith('session-')) {
+      // C'est une session, naviguer vers le dashboard de session
+      const campaignId = 'default-campaign'; // Ou récupérer depuis les données de session
+      navigate(`/campaigns/${campaignId}/session/${game.id}`);
+    } else {
+      // C'est une campagne normale
+      navigate(`/campaigns/${game.id}`);
+    }
     onClose?.();
   };
 

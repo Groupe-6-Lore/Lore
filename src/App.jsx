@@ -96,6 +96,13 @@ function App() {
             </ProtectedRoute>
           } />
 
+          {/* Route protégée - Campaign Session */}
+          <Route path="/campaigns/:campaignId/session/:sessionId" element={
+            <ProtectedRoute>
+              <CampaignDashboard />
+            </ProtectedRoute>
+          } />
+
           {/* Route protégée - Abonnement */}
           <Route path="/abonnement" element={
             <ProtectedRoute>

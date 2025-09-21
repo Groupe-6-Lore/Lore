@@ -2628,7 +2628,7 @@ const SuggestionsPanel = ({ suggestions, onClose, onApplySuggestion }) => {
 };
 
 const CampaignDashboard = () => {
-  const { campaignId } = useParams();
+  const { campaignId, sessionId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -2666,27 +2666,42 @@ const CampaignDashboard = () => {
   // États pour les données de la campagne
   const [campaignData, setCampaignData] = useState(null);
   const [isDefaultCampaign, setIsDefaultCampaign] = useState(false);
+  const [isSessionMode, setIsSessionMode] = useState(false);
+  const [sessionData, setSessionData] = useState(null);
 
-  // Charger les données de la campagne depuis sessionStorage
+  // Charger les données de la campagne depuis sessionStorage ou localStorage
   useEffect(() => {
-    const campaignDataFromStorage = sessionStorage.getItem('campaignData');
-    if (campaignDataFromStorage) {
-      try {
-        const data = JSON.parse(campaignDataFromStorage);
-        console.log('Données de campagne chargées:', data);
+    // Vérifier si c'est une session
+    if (sessionId) {
+      setIsSessionMode(true);
+      
+      // Charger les données de session depuis localStorage
+      const savedDashboards = JSON.parse(localStorage.getItem('lore_dashboards') || '[]');
+      const sessionDashboard = savedDashboards.find(dashboard => 
+        dashboard.sessionId === sessionId && dashboard.campaignId === campaignId
+      );
+      
+      if (sessionDashboard) {
+        console.log('Données de session chargées:', sessionDashboard);
+        setSessionData(sessionDashboard);
+        setCampaignData({
+          id: sessionDashboard.campaignId,
+          title: sessionDashboard.title,
+          universe: sessionDashboard.universe,
+          game_system: sessionDashboard.game_system,
+          players: sessionDashboard.players
+        });
+        setIsDefaultCampaign(false); // Les sessions sont toujours des nouvelles campagnes
         
-        setCampaignData(data);
-        setIsDefaultCampaign(data.id === 'default-campaign');
-        
-        // Convertir les joueurs de la campagne au format de la modale
-        if (data.players && data.players.length > 0) {
-          const formattedPlayers = data.players.map(player => ({
+        // Convertir les joueurs au format de la modale
+        if (sessionDashboard.players && sessionDashboard.players.length > 0) {
+          const formattedPlayers = sessionDashboard.players.map(player => ({
             id: player.id,
             name: player.name,
-            character: player.character_name,
+            character: player.character,
             initials: player.name[0]?.toUpperCase() || '?',
-            playerImage: `/images/players/${player.name.toLowerCase()}.jpg`,
-            characterImage: player.character_name ? `/images/characters/${player.character_name.toLowerCase().replace(/\s+/g, '')}.jpg` : null,
+            playerImage: player.playerImage || `/images/players/${player.name.toLowerCase()}.jpg`,
+            characterImage: player.characterImage || (player.character ? `/images/characters/${player.character.toLowerCase().replace(/\s+/g, '')}.jpg` : null),
             status: player.status
           }));
           
@@ -2694,25 +2709,61 @@ const CampaignDashboard = () => {
           
           // Mettre à jour les assignations de personnages
           const assignments = {};
-          data.players.forEach(player => {
-            if (player.character_name) {
-              assignments[player.id] = player.character_name;
+          sessionDashboard.players.forEach(player => {
+            if (player.character) {
+              assignments[player.id] = player.character;
             }
           });
           setCharacterAssignments(assignments);
-        } else {
-          // Nouvelle campagne sans joueurs
-          setCampaignPlayers([]);
-          setCharacterAssignments({});
         }
-        
-        // Nettoyer sessionStorage après utilisation
-        sessionStorage.removeItem('campaignData');
-      } catch (error) {
-        console.error('Erreur lors du chargement des données de campagne:', error);
+      }
+    } else {
+      // Mode campagne normale
+      const campaignDataFromStorage = sessionStorage.getItem('campaignData');
+      if (campaignDataFromStorage) {
+        try {
+          const data = JSON.parse(campaignDataFromStorage);
+          console.log('Données de campagne chargées:', data);
+          
+          setCampaignData(data);
+          setIsDefaultCampaign(data.id === 'default-campaign');
+          
+          // Convertir les joueurs de la campagne au format de la modale
+          if (data.players && data.players.length > 0) {
+            const formattedPlayers = data.players.map(player => ({
+              id: player.id,
+              name: player.name,
+              character: player.character_name,
+              initials: player.name[0]?.toUpperCase() || '?',
+              playerImage: `/images/players/${player.name.toLowerCase()}.jpg`,
+              characterImage: player.character_name ? `/images/characters/${player.character_name.toLowerCase().replace(/\s+/g, '')}.jpg` : null,
+              status: player.status
+            }));
+            
+            setCampaignPlayers(formattedPlayers);
+            
+            // Mettre à jour les assignations de personnages
+            const assignments = {};
+            data.players.forEach(player => {
+              if (player.character_name) {
+                assignments[player.id] = player.character_name;
+              }
+            });
+            setCharacterAssignments(assignments);
+          } else {
+            // Nouvelle campagne sans joueurs
+            setCampaignPlayers([]);
+            setCharacterAssignments({});
+          }
+          
+          // Nettoyer sessionStorage après utilisation
+          sessionStorage.removeItem('campaignData');
+        } catch (error) {
+          console.error('Erreur lors du chargement des données de campagne:', error);
+        }
       }
     }
-  }, []);
+  }, [sessionId, campaignId]);
 
   // Fonction pour sauvegarder les joueurs de la campagne
   const saveCampaignPlayers = (players) => {
@@ -2748,6 +2799,12 @@ const CampaignDashboard = () => {
   const [sessions, setSessions] = useState([]);
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved'
   const [lastSaveTime, setLastSaveTime] = useState(null);
+
+  // Charger les sessions depuis localStorage
+  useEffect(() => {
+    const savedSessions = JSON.parse(localStorage.getItem('lore_sessions') || '[]');
+    setSessions(savedSessions);
+  }, []);
 
   // États pour le système de mentions dynamiques
   const [currentMentionImage, setCurrentMentionImage] = useState(null);
@@ -3499,6 +3556,12 @@ const CampaignDashboard = () => {
   // Initialiser les textLines selon la campagne
   useEffect(() => {
     if (campaignId) {
+      // En mode session, commencer avec un contenu vide
+      if (isSessionMode) {
+        setTextLines([]);
+        return;
+      }
+      
       // Essayer de charger les textLines sauvegardées
       const savedTextLines = localStorage.getItem(`lore_campaign_${campaignId}_textLines`);
       
@@ -3518,7 +3581,7 @@ const CampaignDashboard = () => {
         setTextLines(campaignTexts);
       }
     }
-  }, [campaignId]);
+  }, [campaignId, isSessionMode]);
 
   // Initialiser les sessions avec les données d'exemple
   useEffect(() => {
@@ -3745,17 +3808,63 @@ const CampaignDashboard = () => {
     const currentDate = new Date().toLocaleDateString('fr-FR');
     const newSession = {
       id: newSessionId,
-      title: `Session ${sessions.length + 1} - Nouvelle partie`,
+      title: 'Les Gardiens de la Flamme Éternelle',
       date: currentDate,
       duration: '0h 00min',
-      players: ['Alice', 'Bob', 'Charlie', 'Diana'],
+      players: campaignPlayers.map(p => p.name),
       summary: 'Nouvelle session créée. Prêt à commencer l\'aventure !',
       status: 'planned'
     };
     
-    setSessions(prevSessions => [newSession, ...prevSessions]);
-    setSelectedSessions([newSessionId]);
-    setShowHistoryMenu(true);
+    // Créer un nouveau dashboard vide pour cette session
+    const newDashboardId = `dashboard-${newSessionId}`;
+    const newDashboardData = {
+      id: newDashboardId,
+      sessionId: newSessionId,
+      campaignId: campaignData?.id || 'default-campaign',
+      title: 'Les Gardiens de la Flamme Éternelle',
+      universe: campaignData?.universe || 'Univers par défaut',
+      game_system: campaignData?.game_system || 'Système par défaut',
+      players: campaignPlayers,
+      content: [
+        {
+          id: 'line-1',
+          content: 'Titre de la partie',
+          type: 'heading1',
+          section: 'title'
+        },
+        {
+          id: 'line-2',
+          content: 'Commencez à écrire votre histoire ici...',
+          type: 'paragraph',
+          section: 'content'
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      isNewSession: true // Marquer comme nouvelle session
+    };
+    
+    // Sauvegarder le nouveau dashboard
+    const existingDashboards = JSON.parse(localStorage.getItem('lore_dashboards') || '[]');
+    const updatedDashboards = [newDashboardData, ...existingDashboards];
+    localStorage.setItem('lore_dashboards', JSON.stringify(updatedDashboards));
+    
+    // Ajouter la session à l'historique
+    const existingSessions = JSON.parse(localStorage.getItem('lore_sessions') || '[]');
+    const updatedSessions = [newSession, ...existingSessions];
+    localStorage.setItem('lore_sessions', JSON.stringify(updatedSessions));
+    
+    // Mettre à jour l'état local des sessions
+    setSessions(updatedSessions);
+    
+    console.log('Nouvelle session créée:', newSession);
+    console.log('Sessions mises à jour:', updatedSessions);
+    console.log('Redirection vers:', `/campaigns/${campaignData?.id || 'default-campaign'}/session/${newSessionId}`);
+    
+    toast.success('Nouvelle partie créée ! Redirection vers le dashboard...');
+    
+    // Rediriger directement vers le nouveau dashboard
+    navigate(`/campaigns/${campaignData?.id || 'default-campaign'}/session/${newSessionId}`);
   };
 
   // Fonction pour obtenir la couleur des quêtes
@@ -5111,6 +5220,17 @@ const CampaignDashboard = () => {
               </button>
             </div>
           )}
+            
+            {/* Bouton retour à la campagne (en mode session) */}
+            {isSessionMode && (
+              <button 
+                onClick={() => navigate(`/campaigns/${campaignId}`)}
+                className="bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-lg transition-colors"
+                title="Retour à la campagne"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
           
           {/* Bouton Sources hexagonal bleu */}
           <button onClick={() => setShowSources(true)} className="relative">
@@ -5252,7 +5372,7 @@ const CampaignDashboard = () => {
                   }}
                 >
                   Déconnexion
-                </button>
+          </button>
               </div>
               </div>
             )}
@@ -5288,7 +5408,12 @@ const CampaignDashboard = () => {
             {/* Bouton Historique */}
             <div className="relative">
               <button
-                onClick={() => setShowHistoryMenu(!showHistoryMenu)}
+                onClick={() => {
+                  // Mettre à jour les sessions depuis localStorage avant d'ouvrir l'historique
+                  const savedSessions = JSON.parse(localStorage.getItem('lore_sessions') || '[]');
+                  setSessions(savedSessions);
+                  setShowHistoryMenu(!showHistoryMenu);
+                }}
                 className="bg-light/20 hover:bg-light/30 text-light px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
               >
                 <Archive size={16} />
@@ -5312,11 +5437,83 @@ const CampaignDashboard = () => {
           <div>
             {campaignData ? (
               <div>
-                <h2 className="text-2xl font-bold text-light mb-2">{campaignData.title}</h2>
-                <p className="text-light/80 text-lg">{campaignData.game_system} • {campaignData.universe}</p>
+                {isSessionMode ? (
+                  // Mode session : afficher le titre de la session (éditable) et le nom de la campagne en dessous
+                  <>
+                    <h2 
+                      className="text-2xl font-bold text-light mb-2 cursor-pointer hover:text-golden transition-colors"
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={(e) => {
+                        const newTitle = e.target.textContent;
+                        if (newTitle !== sessionData?.title) {
+                          // Mettre à jour le titre de la session
+                          setSessionData(prev => ({ ...prev, title: newTitle }));
+                          
+                          // Sauvegarder dans les dashboards
+                          const savedDashboards = JSON.parse(localStorage.getItem('lore_dashboards') || '[]');
+                          const updatedDashboards = savedDashboards.map(dashboard => {
+                            if (dashboard.sessionId === sessionId) {
+                              return { ...dashboard, title: newTitle };
+                            }
+                            return dashboard;
+                          });
+                          localStorage.setItem('lore_dashboards', JSON.stringify(updatedDashboards));
+                          
+                          // Mettre à jour aussi l'historique des sessions
+                          const savedSessions = JSON.parse(localStorage.getItem('lore_sessions') || '[]');
+                          const updatedSessions = savedSessions.map(session => {
+                            if (session.id === sessionId) {
+                              return { ...session, title: newTitle };
+                            }
+                            return session;
+                          });
+                          localStorage.setItem('lore_sessions', JSON.stringify(updatedSessions));
+                          
+                          toast.success('Titre de la session mis à jour !');
+                        }
+                      }}
+                    >
+                      {sessionData?.title || 'Les Gardiens de la Flamme Éternelle'}
+                    </h2>
+                    <h3 className="text-xl font-semibold text-golden mb-2">{campaignData.title}</h3>
+                    <p className="text-light/80 text-lg">{campaignData.game_system} • {campaignData.universe}</p>
+                  </>
+                ) : (
+                  // Mode campagne : afficher le titre de la campagne (éditable)
+                  <>
+                    <h2 
+                      className="text-2xl font-bold text-light mb-2 cursor-pointer hover:text-golden transition-colors"
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      onBlur={(e) => {
+                        const newTitle = e.target.textContent;
+                        if (newTitle !== campaignData.title) {
+                          // Mettre à jour le titre localement
+                          setCampaignData(prev => ({ ...prev, title: newTitle }));
+                          
+                          // Sauvegarder dans les campagnes
+                          const savedCampaigns = JSON.parse(localStorage.getItem('allCampaigns') || '[]');
+                          const updatedCampaigns = savedCampaigns.map(campaign => {
+                            if (campaign.id === campaignData.id) {
+                              return { ...campaign, title: newTitle };
+                            }
+                            return campaign;
+                          });
+                          localStorage.setItem('allCampaigns', JSON.stringify(updatedCampaigns));
+                          
+                          toast.success('Titre mis à jour !');
+                        }
+                      }}
+                    >
+                      {campaignData.title}
+                    </h2>
+                    <p className="text-light/80 text-lg">{campaignData.game_system} • {campaignData.universe}</p>
+                  </>
+                )}
               </div>
             ) : (
-              <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
+            <p className="text-light/80 text-lg">{campaign?.game_system} • {campaign?.universe}</p>
             )}
           </div>
           <div className="text-right">
@@ -5333,7 +5530,7 @@ const CampaignDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Zone centrale - 3 colonnes */}
           <div className="lg:col-span-3 space-y-12">
-            {isDefaultCampaign ? (
+            {isDefaultCampaign && !isSessionMode ? (
               // Contenu pour "Les Échos de Nerath" (campagne existante)
               <>
             {/* Notes de campagne - Style Notion avec Drag & Drop */}
@@ -5479,21 +5676,229 @@ const CampaignDashboard = () => {
             </DndContext>
               </>
             ) : (
-              // Contenu pour les nouvelles campagnes (vide, à remplir)
-              <div className="text-center py-16">
-                <div className="bg-light/10 backdrop-blur-sm rounded-2xl p-8 border border-light/20">
-                  <BookOpen size={64} className="text-light/60 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-light mb-2">Votre campagne vous attend</h2>
-                  <p className="text-light/70 mb-6">
-                    Commencez à écrire votre histoire en utilisant les templates à droite ou en tapant directement ici.
-                  </p>
-                  <div className="text-sm text-light/60">
-                    <p>• Utilisez <kbd className="bg-light/20 px-2 py-1 rounded">/</kbd> pour insérer des éléments</p>
-                    <p>• Glissez-déposez des templates depuis le panneau de droite</p>
-                    <p>• Le chatbot IA est là pour vous aider</p>
+              // Contenu pour les nouvelles campagnes et sessions (vide, à remplir)
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={textLines.map(line => line.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-12">
+                    {/* Zone de contenu vide mais fonctionnelle */}
+                    <div className="pl-8">
+                      <div className="space-y-1">
+                        {/* Zone de drop au début */}
+                        <DropZone 
+                          id="drop-start-all"
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={0}
+                        />
+                        
+                        {/* Titres de section pour les nouvelles sessions */}
+                        {isSessionMode && textLines.length === 0 && (
+                          <>
+                            <div className="text-2xl font-bold text-light mb-4 mt-8">
+                              Situation initiale
+                            </div>
+                            <div 
+                              className="text-light/70 text-lg mb-6 p-4 border border-light/20 rounded-lg cursor-text hover:border-golden/50 transition-colors"
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={(e) => {
+                                const content = e.target.textContent;
+                                if (content.trim()) {
+                                  const newLine = {
+                                    id: `line-${Date.now()}`,
+                                    content: content,
+                                    type: 'paragraph',
+                                    section: 'situation',
+                                    isHeading: false
+                                  };
+                                  setTextLines(prev => [...prev, newLine]);
+                                  e.target.textContent = '';
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  e.target.blur();
+                                }
+                              }}
+                            >
+                              Cliquez ici pour écrire la situation initiale...
+                            </div>
+                            
+                            <div className="text-2xl font-bold text-light mb-4 mt-8">
+                              Début de la partie
+                            </div>
+                            <div 
+                              className="text-light/70 text-lg mb-6 p-4 border border-light/20 rounded-lg cursor-text hover:border-golden/50 transition-colors"
+                              contentEditable={true}
+                              suppressContentEditableWarning={true}
+                              onBlur={(e) => {
+                                const content = e.target.textContent;
+                                if (content.trim()) {
+                                  const newLine = {
+                                    id: `line-${Date.now()}`,
+                                    content: content,
+                                    type: 'paragraph',
+                                    section: 'debut',
+                                    isHeading: false
+                                  };
+                                  setTextLines(prev => [...prev, newLine]);
+                                  e.target.textContent = '';
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  e.target.blur();
+                                }
+                              }}
+                            >
+                              Cliquez ici pour écrire le début de la partie...
+                            </div>
+                            
+                            {/* Instructions d'utilisation */}
+                            <div className="bg-light/10 backdrop-blur-sm rounded-2xl p-6 border border-light/20 mt-8">
+                              <h3 className="text-lg font-semibold text-light mb-4">Comment utiliser cette page :</h3>
+                              <div className="space-y-3 text-sm text-light/70">
+                                <div className="flex items-start gap-3">
+                                  <span className="text-golden">•</span>
+                                  <span><strong>Édition inline :</strong> Cliquez sur les zones de texte pour les éditer directement</span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-golden">•</span>
+                                  <span><strong>Drag & Drop :</strong> Glissez-déposez des templates depuis le panneau de droite</span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-golden">•</span>
+                                  <span><strong>Menu contextuel :</strong> Clic droit sur les éléments pour plus d'options</span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-golden">•</span>
+                                  <span><strong>Copier/Coller :</strong> Utilisez Ctrl+C et Ctrl+V pour copier des éléments</span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-golden">•</span>
+                                  <span><strong>Chatbot IA :</strong> Utilisez le chatbot à droite pour obtenir de l'aide</span>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Lignes de texte (vide au début) */}
+                        {(currentPage ? [currentPage] : textLines).map((line, index) => (
+                          <React.Fragment key={line.id}>
+                            <SortableTextLine
+                              id={line.id}
+                              content={line.content}
+                              section={line.section}
+                              isLink={line.isLink}
+                              linkUrl={line.linkUrl}
+                              onPaste={handlePaste}
+                              onShowContextMenu={handleShowContextMenu}
+                              type={line.type}
+                              isHeading={line.isHeading}
+                              onEdit={handleEditLine}
+                              onDelete={handleDeleteLine}
+                              isEditing={editingLines[line.id]}
+                              onContentChange={handleContentChange}
+                              onAddNewLine={handleAddNewLine}
+                              onMoveToSection={handleMoveLineToSection}
+                              onSlashCommand={handleSlashCommand}
+                            />
+                            {index < textLines.length - 1 && (
+                              <DropZone 
+                                id={`drop-${line.id}`} 
+                                isActive={activeId === line.id}
+                                onTemplateDrop={handleTemplateDrop}
+                                targetIndex={index + 1}
+                              />
+                            )}
+                          </React.Fragment>
+                        ))}
+                        
+                        {/* Zone de drop à la fin */}
+                        <DropZone 
+                          id="drop-end-all" 
+                          isActive={false}
+                          onTemplateDrop={handleTemplateDrop}
+                          targetIndex={textLines.length}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </SortableContext>
+
+                {/* Notification de copie */}
+                {showCopyNotification && (
+                  <div className="fixed top-4 right-4 bg-golden text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
+                    <span>📋</span>
+                    <span>Bloc copié !</span>
+                  </div>
+                )}
+
+                {/* Menu d'insertion rapide */}
+                {showSlashMenu && (
+                  <div 
+                    className="fixed bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-w-sm w-full"
+                    style={{ 
+                      left: Math.min(slashMenuPosition.x, window.innerWidth - 320),
+                      top: Math.min(slashMenuPosition.y, window.innerHeight - 400)
+                    }}
+                  >
+                    <div className="p-3 border-b border-gray-100">
+                      <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        value={slashMenuSearch}
+                        onChange={(e) => setSlashMenuSearch(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-golden"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {filteredSlashItems.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className={`px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-gray-50 ${
+                            index === selectedSlashMenuItem ? 'bg-golden/10 border-r-2 border-golden' : ''
+                          }`}
+                          onClick={() => handleSlashMenuSelect(item)}
+                        >
+                          <span className="text-lg">{item.icon}</span>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{item.name}</div>
+                            <div className="text-sm text-gray-500">{item.description}</div>
+                          </div>
+                          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                            {item.category}
+                          </span>
+                        </div>
+                      ))}
+                      {filteredSlashItems.length === 0 && (
+                        <div className="px-4 py-3 text-gray-500 text-center">
+                          Aucun élément trouvé
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <DragOverlay>
+                  {draggedItem ? (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-300">
+                      <p className="text-gray-800 text-sm">
+                        {draggedItem.content}
+                      </p>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             )}
 
           </div>
@@ -5504,7 +5909,7 @@ const CampaignDashboard = () => {
             {/* Image dynamique basée sur les mentions */}
             <div className="bg-light/15 backdrop-blur-sm rounded-2xl p-4 border border-light/20 shadow-xl">
               <div className="aspect-square bg-gradient-to-br from-primary-blue to-dark-blue rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer transition-all duration-200 hover:shadow-lg">
-                {isDefaultCampaign && currentMentionImage ? (
+                {isDefaultCampaign && !isSessionMode && currentMentionImage ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img 
                       src={currentMentionImage} 
@@ -5529,10 +5934,10 @@ const CampaignDashboard = () => {
                     </div>
                     <div className="absolute bottom-2 left-2 right-2 text-center">
                       <div className="text-sm text-light/80">
-                        {isDefaultCampaign ? 'Aucune mention détectée' : 'Image de campagne'}
+                        {isDefaultCampaign && !isSessionMode ? 'Aucune mention détectée' : 'Image de campagne'}
                       </div>
                       <div className="text-xs text-light/60 mt-1">
-                        {isDefaultCampaign ? 'L\'image apparaîtra automatiquement' : 'Ajoutez une image pour votre campagne'}
+                        {isDefaultCampaign && !isSessionMode ? 'L\'image apparaîtra automatiquement' : 'Ajoutez une image pour votre campagne'}
                       </div>
                     </div>
                   </>
@@ -5546,7 +5951,7 @@ const CampaignDashboard = () => {
       </div>
 
       {/* Modal Historique */}
-      <HistoryModal isOpen={showHistoryMenu} onClose={() => setShowHistoryMenu(false)} />
+      <HistoryModal isOpen={showHistoryMenu} onClose={() => setShowHistoryMenu(false)} sessions={sessions} />
 
        {/* Panneau de suggestions IA */}
        {showSuggestions && (
