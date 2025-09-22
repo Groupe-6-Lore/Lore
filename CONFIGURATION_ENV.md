@@ -15,9 +15,9 @@ VITE_N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/your-webhook-id
 # Token d'autorisation optionnel pour N8N
 # VITE_N8N_TOKEN=your-auth-token-here
 
-# Configuration Supabase (si utilisé)
-# VITE_SUPABASE_URL=your-supabase-url
-# VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+# Configuration Supabase (requis pour authentification réelle)
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
 ### 2. Remplacer les valeurs
