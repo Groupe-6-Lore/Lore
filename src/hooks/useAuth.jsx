@@ -13,29 +13,26 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Vérifier la session existante au chargement
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Erreur lors de la vérification de session:', error);
-          toast.error('Erreur de connexion');
-        } else {
-          setUser(session?.user ?? null);
-        }
-      } catch (error) {
-        console.error('Erreur inattendue:', error);
-        toast.error('Erreur inattendue');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
+    // Désactiver la vérification automatique de session
+    // L'utilisateur doit se connecter manuellement
+    setLoading(false);
 
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Ne pas se reconnecter automatiquement après déconnexion
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setLoading(false);
+          toast.success('Déconnexion réussie !');
+          // Nettoyer les données locales
+          localStorage.removeItem('allCampaigns');
+          localStorage.removeItem('demoCampaigns');
+          sessionStorage.clear();
+          return;
+        }
+        
+        // Pour les autres événements, mettre à jour l'utilisateur
         setUser(session?.user ?? null);
         setLoading(false);
         
@@ -43,9 +40,6 @@ export const AuthProvider = ({ children }) => {
         switch (event) {
           case 'SIGNED_IN':
             toast.success('Connexion réussie !');
-            break;
-          case 'SIGNED_OUT':
-            toast.success('Déconnexion réussie !');
             break;
           case 'TOKEN_REFRESHED':
             console.log('Token rafraîchi');
@@ -141,11 +135,26 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Forcer la déconnexion complète
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         throw error;
       }
+      
+      // Forcer la déconnexion côté client
+      setUser(null);
+      
+      // Nettoyer toutes les données locales
+      localStorage.removeItem('allCampaigns');
+      localStorage.removeItem('demoCampaigns');
+      sessionStorage.clear();
+      
+      // Nettoyer les cookies de session si nécessaire
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
       
       toast.success('Déconnexion réussie !');
     } catch (error) {
