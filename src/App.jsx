@@ -13,7 +13,7 @@ import RulesDetails from './pages/RulesDetails';
 import UniverseInfo from './pages/UniverseInfo';
 import ExtensionDetails from './pages/ExtensionDetails';
 import ConfigureCampaign from './pages/ConfigureCampaign';
-import CreateCampaign from './pages/CreateCampaign';
+import CreateCampaign from './pages/CreateCampaign.jsx';
 import CampaignDashboard from './pages/CampaignDashboard';
 import News from './pages/News';
 import Subscription from './pages/Subscription';

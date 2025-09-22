@@ -16,6 +16,7 @@ const UniverseDetails = () => {
       name: "Forgotten Realms",
       publisher: "Wizards of the Coast",
       price: 0,
+      type: "owned",
       tags: ["Fantasy", "Libres", "Débutant"],
       description: "Forgotten Realms est l'univers fantasy le plus célèbre et le plus développé de Dungeons & Dragons. Centré sur le continent de Faerûn, il offre un monde riche et détaillé avec des centaines de lieux, personnages et histoires. Des villes légendaires comme Waterdeep et Baldur's Gate aux régions sauvages comme la Forêt de Cormyr, Forgotten Realms propose un cadre épique pour toutes sortes d'aventures fantasy. L'univers inclut des dieux puissants, des organisations secrètes, des royaumes en guerre et des mystères anciens qui attendent d'être découverts.",
       included: [
@@ -71,14 +72,14 @@ const UniverseDetails = () => {
           image: "/images/tashas-cauldron.jpg"
         }
       ],
-      image: "/images/forgotten-realms.jpg",
-      type: 'owned'
+      image: "/images/forgotten-realms.jpg"
     },
     2: {
       id: 2,
       name: "Eberron",
       publisher: "Wizards of the Coast",
       price: 0,
+      type: "owned",
       tags: ["Fantasy", "Libres", "Intermédiaire"],
       description: "Eberron est un univers steampunk fantasy unique qui mélange magie et technologie. Dans ce monde, la magie est utilisée comme une force industrielle, créant des trains magiques, des vaisseaux volants et des villes flottantes. L'univers explore des thèmes de guerre, d'espionnage et de mystère dans un cadre où la technologie magique a transformé la société. Les maisons dragonmark, les warforged et les continents mystérieux créent un cadre riche pour des aventures variées.",
       included: [
@@ -112,14 +113,14 @@ const UniverseDetails = () => {
           image: "/images/oracle-war.jpg"
         }
       ],
-      image: "/images/eberron.jpg",
-      type: 'owned'
+      image: "/images/eberron.jpg"
     },
     3: {
       id: 3,
       name: "Ravenloft",
       publisher: "Wizards of the Coast",
       price: 0,
+      type: "free",
       tags: ["Horreur & Mystère", "Libres", "Expert"],
       description: "Ravenloft est le domaine de l'horreur gothique dans D&D. Un monde de ténèbres où des seigneurs vampires, des liches et d'autres créatures maléfiques règnent sur des domaines isolés. Chaque domaine a ses propres règles et horreurs, créant une expérience d'horreur psychologique et gothique unique. L'univers explore les thèmes de la corruption, de la damnation et de la lutte contre les ténèbres.",
       included: [
@@ -153,14 +154,14 @@ const UniverseDetails = () => {
           image: "/images/house-lament.jpg"
         }
       ],
-      image: "/images/ravenloft.jpg",
-      type: 'free'
+      image: "/images/ravenloft.jpg"
     },
     4: {
       id: 4,
       name: "Planescape",
       publisher: "Wizards of the Coast",
       price: 0,
+      type: "free",
       tags: ["Fantasy", "Libres", "Expert"],
       description: "Planescape explore le multivers cosmique de D&D avec Sigil, la Cité des Portes. Cet univers unique mélange philosophie, cosmologie et aventure dans un cadre où les croyances façonnent la réalité. Les factions philosophiques, les plans d'existence et les portails dimensionnels créent un cadre riche pour des aventures épiques et métaphysiques.",
       included: [
@@ -187,14 +188,14 @@ const UniverseDetails = () => {
           image: "/images/sigil-outlands.jpg"
         }
       ],
-      image: "/images/planescape.jpg",
-      type: 'free'
+      image: "/images/planescape.jpg"
     },
     5: {
       id: 5,
       name: "Dark Sun",
       publisher: "Wizards of the Coast",
       price: 0,
+      type: "free",
       tags: ["Fantasy", "Libres", "Expert"],
       description: "Dark Sun présente Athas, un monde désertique post-apocalyptique où la magie a détruit l'environnement. Dans ce monde brutal, l'eau est rare, les métaux précieux, et la survie est un défi constant. Les sorciers-rois tyranniques, les créatures mutées et l'écologie unique créent un cadre sombre et unique pour des aventures de survie et de rébellion.",
       included: [
@@ -221,8 +222,7 @@ const UniverseDetails = () => {
           image: "/images/athas-tyrant.jpg"
         }
       ],
-      image: "/images/dark-sun.jpg",
-      type: 'free'
+      image: "/images/dark-sun.jpg"
     },
     6: {
       id: 6,
@@ -454,8 +454,7 @@ const UniverseDetails = () => {
           image: "/images/force-destiny.jpg"
         }
       ],
-      image: "/images/star-wars.jpg",
-      type: 'owned'
+      image: "/images/star-wars.jpg"
     },
     12: {
       id: 12,
@@ -522,8 +521,7 @@ const UniverseDetails = () => {
           image: "/images/dark-tides.jpg"
         }
       ],
-      image: "/images/warhammer-40k.jpg",
-      type: 'owned'
+      image: "/images/warhammer-40k.jpg"
     },
     14: {
       id: 14,
@@ -556,8 +554,7 @@ const UniverseDetails = () => {
           image: "/images/seattle-sprawl.jpg"
         }
       ],
-      image: "/images/shadowrun.jpg",
-      type: 'owned'
+      image: "/images/shadowrun.jpg"
     },
     15: {
       id: 15,
@@ -843,8 +840,7 @@ const UniverseDetails = () => {
           image: "/images/vampire-masquerade.jpg"
         }
       ],
-      image: "/images/world-darkness.jpg",
-      type: 'owned'
+      image: "/images/world-darkness.jpg"
     },
     23: {
       id: 23,
@@ -1512,8 +1508,7 @@ const UniverseDetails = () => {
           image: "/images/tashas-cauldron.jpg"
         }
       ],
-      image: "/images/forgotten-realms.jpg",
-      type: 'owned'
+      image: "/images/forgotten-realms.jpg"
     },
     'known-2': {
       id: 'known-2',
@@ -1551,8 +1546,7 @@ const UniverseDetails = () => {
           image: "/images/force-destiny.jpg"
         }
       ],
-      image: "/images/star-wars.jpg",
-      type: 'owned'
+      image: "/images/star-wars.jpg"
     },
     'known-3': {
       id: 'known-3',
@@ -1583,8 +1577,7 @@ const UniverseDetails = () => {
           image: "/images/vampire-masquerade.jpg"
         }
       ],
-      image: "/images/world-darkness.jpg",
-      type: 'owned'
+      image: "/images/world-darkness.jpg"
     },
     'known-4': {
       id: 'known-4',
@@ -1615,8 +1608,7 @@ const UniverseDetails = () => {
           image: "/images/masks-nyarlathotep.jpg"
         }
       ],
-      image: "/images/cthulhu-mythos.jpg",
-      type: 'owned'
+      image: "/images/cthulhu-mythos.jpg"
     }
   };
 
@@ -1663,11 +1655,22 @@ const UniverseDetails = () => {
   };
 
   useEffect(() => {
+    console.log('🔍 UniverseDetails useEffect - ID reçu:', id);
+    console.log('🔍 Type de ID:', typeof id);
+    
     const data = universeData[id];
+    console.log('🔍 Données trouvées:', data);
+    
     if (data) {
+      console.log('✅ Univers trouvé, chargement des données');
       setUniverse(data);
+    } else {
+      console.error('❌ Univers non trouvé avec ID:', id);
+      console.log('🔍 IDs disponibles:', Object.keys(universeData));
+      // Rediriger vers la page de sélection si l'univers n'existe pas
+      navigate('/campaigns/create/universe');
     }
-  }, [id]);
+  }, [id, navigate]);
 
   if (!universe) {
     return (

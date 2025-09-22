@@ -239,7 +239,40 @@ const SelectUniverse = () => {
   };
 
   const handleUniverseSelect = (universeId) => {
-    navigate(`/campaigns/create/universe/${universeId}/details`);
+    console.log('🔍 handleUniverseSelect appelé avec ID:', universeId);
+    
+    // Liste des univers qui ont une page de détails (IDs 1-5 dans UniverseDetails.jsx)
+    const universesWithDetails = [1, 2, 3, 4, 5];
+    const universeIdInt = parseInt(universeId);
+    
+    console.log('🔍 universeIdInt:', universeIdInt);
+    console.log('🔍 universesWithDetails:', universesWithDetails);
+    console.log('🔍 includes?', universesWithDetails.includes(universeIdInt));
+    
+    if (universesWithDetails.includes(universeIdInt)) {
+      // Naviguer vers la page de détails pour ces univers
+      console.log('✅ Navigation vers page de détails:', `/campaigns/create/universe/${universeId}/details`);
+      navigate(`/campaigns/create/universe/${universeId}/details`);
+    } else {
+      // Pour les autres univers, sélection directe
+      console.log('⚠️ Sélection directe pour univers ID:', universeId);
+      const universe = allUniverses.find(u => u.id === universeId);
+      if (universe) {
+        const selectedData = {
+          id: universe.id,
+          name: universe.name,
+          publisher: universe.publisher,
+          price: universe.price,
+          type: universe.type,
+          image: universe.image,
+          description: universe.description,
+          totalPrice: universe.price,
+          extensions: []
+        };
+        sessionStorage.setItem('selectedUniverse', JSON.stringify(selectedData));
+        navigate('/campaigns/create');
+      }
+    }
   };
 
   return (
@@ -490,7 +523,7 @@ const SelectUniverse = () => {
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-white mb-4">Univers déjà connus</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {knownUniverses.map((universe) => (
+                  {ownedUniverses.map((universe) => (
                     <RulesCard 
                       key={universe.id}
                       rule={universe}
@@ -618,12 +651,12 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
               </span>
             ))}
             
-            {/* Tags règles - Bleu */}
-            {rule.rules?.map((ruleType, index) => (
+            {/* Tags règles - Bleu (pas utilisé pour les univers) */}
+            {/* {rule.rules?.map((ruleType, index) => (
               <span key={`rule-${index}`} className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
                 {ruleType}
               </span>
-            ))}
+            ))} */}
             
             {/* Tag difficulté - Violet */}
             {rule.difficulty && (
@@ -633,14 +666,14 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
             )}
             
             {/* Tag gratuit avec achats facultatifs - Orange */}
-            {rule.hasOptionalPurchases && rule.price === 0 && (
+            {rule.type === 'free' && rule.price === 0 && (
               <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
-                Achats optionnels
+                Gratuit
               </span>
             )}
             
             {/* Tag gratuit - Vert (seulement si pas déjà possédé et pas freemium) */}
-            {rule.price === 0 && !isKnown && !rule.hasOptionalPurchases && (
+            {rule.price === 0 && !isKnown && rule.type === 'free' && (
               <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
                 Gratuit
               </span>
@@ -665,9 +698,7 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
             <div className="universe-price-content">
               <div className="universe-price-text font-semibold text-white text-sm">
                 {isKnown ? "Déjà possédé" : 
-                 rule.isOwned ? "Déjà possédé" : 
                  rule.type === 'owned' ? "Déjà possédé" :
-                 rule.type === 'freemium' ? "Gratuit avec achats facultatifs" :
                  rule.price === 0 ? "Gratuit" : `${rule.price} €`}
               </div>
             </div>
@@ -675,26 +706,6 @@ const RulesCard = ({ rule, onClick, isKnown = false }) => {
         </div>
       </div>
 
-      {/* Modal Sources */}
-      <SourcesModal isOpen={showSources} onClose={() => setShowSources(false)} />
-
-      {/* Modal Players */}
-      <PlayersModal 
-        isOpen={showPlayers} 
-        onClose={() => setShowPlayers(false)}
-        characterAssignments={characterAssignments}
-        onRemoveAssignment={(playerId) => {
-          setCharacterAssignments(prev => {
-            const newAssignments = { ...prev };
-            delete newAssignments[playerId];
-            return newAssignments;
-          });
-        }}
-        campaignPlayers={globalCampaignPlayers}
-        onUpdatePlayers={() => {}}
-        onUpdateAssignments={setCharacterAssignments}
-        onRemovePlayer={() => {}}
-      />
     </div>
   );
 };
