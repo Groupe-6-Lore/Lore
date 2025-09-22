@@ -159,6 +159,31 @@ const TemplatePanel = ({ characterAssignments: externalAssignments, onUpdateAssi
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [characterActiveTab, setCharacterActiveTab] = useState('biographie');
   
+  // Charger les catégories de personnages sauvegardées (persistance locale)
+  useEffect(() => {
+    try {
+      const savedCategories = localStorage.getItem('lore-character-categories');
+      if (savedCategories) {
+        const parsed = JSON.parse(savedCategories);
+        if (Array.isArray(parsed)) {
+          setCharacterCategories(parsed);
+        }
+      }
+    } catch (e) {
+      // ignore invalid JSON
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sauvegarder toute modification des catégories de personnages
+  useEffect(() => {
+    try {
+      localStorage.setItem('lore-character-categories', JSON.stringify(characterCategories));
+    } catch (e) {
+      // ignore quota errors
+    }
+  }, [characterCategories]);
+  
   // Formulaire Nouveau personnage
   const [newCharacterName, setNewCharacterName] = useState('');
   const [newCharacterDescription, setNewCharacterDescription] = useState('');
@@ -382,21 +407,87 @@ const TemplatePanel = ({ characterAssignments: externalAssignments, onUpdateAssi
     setCharacterCurrentView('consultation');
   };
 
-  const createNewCharacter = () => {
-    if (!newCharacterName.trim() || !newCharacterCategory) return;
+  const createNewCharacter = async () => {
+    const trimmedName = (newCharacterName || '').trim();
+    const combinedName = `${(newCharacterFirstName || '').trim()} ${(newCharacterLastName || '').trim()}`.trim();
+    const finalName = trimmedName || combinedName;
+    console.log('createNewCharacter called with name:', finalName);
+    
+    if (!finalName) {
+      console.log('No name provided, aborting');
+      alert('Veuillez saisir un nom pour le personnage');
+      return;
+    }
+    
+    const targetCategoryId = newCharacterCategory || (characterCategories[0] && characterCategories[0].id) || null;
+    console.log('Target category ID:', targetCategoryId);
+    console.log('Available categories:', characterCategories.map(c => ({ id: c.id, title: c.title })));
+    
+    if (!targetCategoryId) {
+      console.log('No target category found, aborting');
+      alert('Aucune catégorie disponible pour créer le personnage');
+      return;
+    }
+    
     const character = {
       id: `char-${Date.now()}`,
-      name: newCharacterName,
-      description: newCharacterDescription,
+      name: finalName,
+      description: (newCharacterDescription || '').trim(),
       level: newCharacterLevel,
       class: newCharacterClass,
-      tags: newCharacterTags.filter(t => t.trim() !== '')
+      tags: newCharacterTags.filter(t => t.trim() !== ''),
+      isFavorite: false,
+      isArchived: false
     };
+    
+    console.log('Creating character:', character);
+    
+    // Mise à jour locale
     setCharacterCategories(prev => prev.map(cat =>
-      cat.id === newCharacterCategory ? { ...cat, characters: [...cat.characters, character] } : cat
+      cat.id === targetCategoryId ? { ...cat, characters: [...cat.characters, character] } : cat
     ));
+    
+    // Sauvegarde Supabase
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || null;
+      const levelInt = Number.parseInt(newCharacterLevel, 10);
+      const { data, error } = await supabase
+        .from('characters')
+        .insert([{
+          name: finalName,
+          type: 'npc',
+          race: (newCharacterSpecies || '').trim() || 'inconnu',
+          class: (newCharacterClass || '').trim() || 'indéfinie',
+          level: Number.isFinite(levelInt) ? levelInt : 1,
+          description: (newCharacterDescription || '').trim() || null,
+          user_id: userId
+        }])
+        .select();
+        
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        // On continue même si Supabase échoue, les données sont sauvées localement
+      } else {
+        console.log('Personnage sauvé dans Supabase:', data);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde Supabase:', err);
+    }
+    
     setSelectedCharacter(character);
     setCharacterCurrentView('consultation');
+
+    // Reset minimal du formulaire après création
+    setNewCharacterName('');
+    setNewCharacterDescription('');
+    setNewCharacterLevel('');
+    setNewCharacterClass('');
+    setNewCharacterTags([]);
+    setNewCharacterTag('');
+    
+    console.log('Character creation completed');
   };
 
   const cancelNewCharacter = () => {
@@ -3921,7 +4012,7 @@ const TemplatePanel = ({ characterAssignments: externalAssignments, onUpdateAssi
                         <option value="">Sélection de catégorie</option>
                         {characterCategories.map(category => (
                           <option key={category.id} value={category.id}>
-                            {category.name}
+                            {category.title}
                           </option>
                         ))}
                       </select>
